@@ -1,0 +1,1 @@
+Zombie survival adventure. Defend a base, scavenge for supplies, craft weapons, fight increasingly tough waves. Boss zombie every 5 waves. Checkpoints at safe rooms.

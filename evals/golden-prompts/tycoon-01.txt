@@ -1,0 +1,1 @@
+A colorful lumber tycoon for 8 players. Chop trees, sell logs, unlock sawmills, buy pets, and prestige into a new biome every 20 min.

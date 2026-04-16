@@ -1,0 +1,1 @@
+Gun game FFA for 12 players. Get an elimination to upgrade your weapon. Start with a pistol, end with a rocket launcher. First to cycle all 15 weapons wins.

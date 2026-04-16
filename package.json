@@ -1,0 +1,20 @@
+{
+  "name": "forgeai",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "dev": "turbo run dev",
+    "clean": "turbo run clean"
+  },
+  "devDependencies": {
+    "tsx": "^4.21.0",
+    "turbo": "^2.5.0",
+    "typescript": "^5.8.0"
+  }
+}

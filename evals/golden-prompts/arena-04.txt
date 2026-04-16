@@ -1,0 +1,1 @@
+Capture the flag arena for 8v8. Two bases, respawn on elimination, 5-minute rounds. Power weapons spawn mid-map. First to 3 captures wins.

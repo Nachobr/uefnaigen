@@ -1,0 +1,1 @@
+Team deathmatch arena, 4v4. Pick loadouts before each round. Shotguns, snipers, and SMGs. First team to 25 eliminations wins. Best of 3 rounds.

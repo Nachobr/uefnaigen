@@ -1,0 +1,1 @@
+Fantasy dungeon crawler for 4 players. Clear enemy waves in each room, fight bosses, collect loot, unlock deeper floors. Checkpoint after each boss.

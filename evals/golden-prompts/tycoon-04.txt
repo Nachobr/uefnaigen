@@ -1,0 +1,1 @@
+Factory automation tycoon for 4 players. Collect raw materials, build conveyor belts, upgrade machines, sell products. Unlock new factory wings. Prestige after 25 minutes with speed bonuses.

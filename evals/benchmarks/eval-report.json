@@ -1,0 +1,159 @@
+{
+  "timestamp": "2026-04-16T12:22:13.139Z",
+  "total": 15,
+  "passed": 15,
+  "passRate": "100%",
+  "avgDurationMs": 0.03,
+  "results": [
+    {
+      "prompt": "Fantasy dungeon crawler for 4 players. Clear enemy waves in each room, fight bos",
+      "file": "adventure-01.txt",
+      "detectedGenre": "adventure",
+      "expectedGenre": "adventure",
+      "genreMatch": true,
+      "templateId": "adventure/base",
+      "cacheKey": "569f5bdda50ef2bc",
+      "durationMs": 0.0977919999999699
+    },
+    {
+      "prompt": "Pirate island adventure. Explore 5 islands, solve puzzles, fight skeleton crews,",
+      "file": "adventure-02.txt",
+      "detectedGenre": "adventure",
+      "expectedGenre": "adventure",
+      "genreMatch": true,
+      "templateId": "adventure/base",
+      "cacheKey": "d56a023dbda580de",
+      "durationMs": 0.028583000000026004
+    },
+    {
+      "prompt": "Zombie survival adventure. Defend a base, scavenge for supplies, craft weapons, ",
+      "file": "adventure-03.txt",
+      "detectedGenre": "adventure",
+      "expectedGenre": "adventure",
+      "genreMatch": true,
+      "templateId": "adventure/base",
+      "cacheKey": "47e4954a358a6d60",
+      "durationMs": 0.026749999999992724
+    },
+    {
+      "prompt": "Medieval quest adventure for 2 players. Hub village with NPCs giving quests. Hun",
+      "file": "adventure-04.txt",
+      "detectedGenre": "adventure",
+      "expectedGenre": "adventure",
+      "genreMatch": true,
+      "templateId": "adventure/base",
+      "cacheKey": "e982769923d167a9",
+      "durationMs": 0.021583000000021002
+    },
+    {
+      "prompt": "Sci-fi space station adventure. Explore abandoned corridors, hack terminals, fig",
+      "file": "adventure-05.txt",
+      "detectedGenre": "adventure",
+      "expectedGenre": "adventure",
+      "genreMatch": true,
+      "templateId": "adventure/base",
+      "cacheKey": "2703c72a29c682b2",
+      "durationMs": 0.022833000000048287
+    },
+    {
+      "prompt": "Free-for-all arena for 16 players. 3-minute rounds, random weapon loadouts, powe",
+      "file": "arena-01.txt",
+      "detectedGenre": "battle_arena",
+      "expectedGenre": "battle_arena",
+      "genreMatch": true,
+      "templateId": "battle_arena/base",
+      "cacheKey": "b980a07fce3d7b94",
+      "durationMs": 0.02041700000000901
+    },
+    {
+      "prompt": "Team deathmatch arena, 4v4. Pick loadouts before each round. Shotguns, snipers, ",
+      "file": "arena-02.txt",
+      "detectedGenre": "battle_arena",
+      "expectedGenre": "battle_arena",
+      "genreMatch": true,
+      "templateId": "battle_arena/base",
+      "cacheKey": "11ba108d397bb8b9",
+      "durationMs": 0.018709000000001197
+    },
+    {
+      "prompt": "1v1 box fight arena. Small maps, 90-second rounds, build battles allowed. Winner",
+      "file": "arena-03.txt",
+      "detectedGenre": "battle_arena",
+      "expectedGenre": "battle_arena",
+      "genreMatch": true,
+      "templateId": "battle_arena/base",
+      "cacheKey": "9c166376dd7b10cb",
+      "durationMs": 0.019207999999991898
+    },
+    {
+      "prompt": "Capture the flag arena for 8v8. Two bases, respawn on elimination, 5-minute roun",
+      "file": "arena-04.txt",
+      "detectedGenre": "battle_arena",
+      "expectedGenre": "battle_arena",
+      "genreMatch": true,
+      "templateId": "battle_arena/base",
+      "cacheKey": "e5e74825e3020830",
+      "durationMs": 0.017917000000011285
+    },
+    {
+      "prompt": "Gun game FFA for 12 players. Get an elimination to upgrade your weapon. Start wi",
+      "file": "arena-05.txt",
+      "detectedGenre": "battle_arena",
+      "expectedGenre": "battle_arena",
+      "genreMatch": true,
+      "templateId": "battle_arena/base",
+      "cacheKey": "78f928ef81df9a73",
+      "durationMs": 0.018791999999962172
+    },
+    {
+      "prompt": "A colorful lumber tycoon for 8 players. Chop trees, sell logs, unlock sawmills, ",
+      "file": "tycoon-01.txt",
+      "detectedGenre": "tycoon",
+      "expectedGenre": "tycoon",
+      "genreMatch": true,
+      "templateId": "tycoon/base",
+      "cacheKey": "22e547b97f0f97fe",
+      "durationMs": 0.02162500000002865
+    },
+    {
+      "prompt": "Mining empire tycoon. Dig ores, smelt bars, sell at the market. Upgrade pickaxes",
+      "file": "tycoon-02.txt",
+      "detectedGenre": "tycoon",
+      "expectedGenre": "tycoon",
+      "genreMatch": true,
+      "templateId": "tycoon/base",
+      "cacheKey": "4e2290d67c84c858",
+      "durationMs": 0.017959000000018932
+    },
+    {
+      "prompt": "Cozy bakery tycoon. Gather ingredients, bake goods, sell to customers. Unlock re",
+      "file": "tycoon-03.txt",
+      "detectedGenre": "tycoon",
+      "expectedGenre": "tycoon",
+      "genreMatch": true,
+      "templateId": "tycoon/base",
+      "cacheKey": "73afb8d903350736",
+      "durationMs": 0.02962499999995316
+    },
+    {
+      "prompt": "Factory automation tycoon for 4 players. Collect raw materials, build conveyor b",
+      "file": "tycoon-04.txt",
+      "detectedGenre": "tycoon",
+      "expectedGenre": "tycoon",
+      "genreMatch": true,
+      "templateId": "tycoon/base",
+      "cacheKey": "16602b463a47ed2b",
+      "durationMs": 0.02266599999995833
+    },
+    {
+      "prompt": "Tropical island resort tycoon. Build hotels, set up activities, serve tourists. ",
+      "file": "tycoon-05.txt",
+      "detectedGenre": "tycoon",
+      "expectedGenre": "tycoon",
+      "genreMatch": true,
+      "templateId": "tycoon/base",
+      "cacheKey": "450729cfb377d7ed",
+      "durationMs": 0.01875000000001137
+    }
+  ]
+}

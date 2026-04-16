@@ -1,0 +1,47 @@
+{
+  "name": "uefn-ai",
+  "version": "0.1.0-mvp",
+  "description": "ForgeAI — AI-powered UEFN world generator. Turn natural language into UEFN project scaffolds.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "uefn-ai": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "uefn",
+    "fortnite",
+    "verse",
+    "ai",
+    "game-development",
+    "code-generator"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@forgeai/ai": "workspace:*",
+    "@forgeai/core": "workspace:*",
+    "@forgeai/prefabs": "workspace:*",
+    "@forgeai/schemas": "workspace:*",
+    "@forgeai/templates": "workspace:*",
+    "@forgeai/validators": "workspace:*",
+    "commander": "^14.0.0",
+    "pino": "^9.6.0",
+    "pino-pretty": "^13.0.0",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0"
+  }
+}
