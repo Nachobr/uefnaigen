@@ -164,11 +164,13 @@
 - [x] Fallback chain updated: Groq → Google → Anthropic → OpenAI → Ollama
 - [x] 11 packages build, 117 tests passing
 
-### Week 4 — Prefab Expansion
-- [ ] Prefab catalog ingestion from user directories
-- [ ] Variant zone visual preview
-- [ ] `tycoon/lumber-mill` + `tycoon/mining-empire` template polish
-- [ ] Prefab/theme packs: forest, industrial
+### Week 4 — Prefab Expansion ✅
+- [x] Prefab catalog ingestion from user directories (`loadUserCatalog()`)
+  - [x] `findByCategory`, `findByGenre`, `merge`, `size` methods on PrefabCatalog
+- [x] Variant zone visual preview (desktop LayoutPreview with zone inspector + variant selector)
+- [x] `tycoon/lumber-mill` + `tycoon/mining-empire` template polish (richer summaries, more tags/systems)
+- [x] Prefab/theme packs: forest (10 prefabs) + industrial (10 prefabs) — 44 total with starter
+- [x] 126 tests passing across 11 packages
 
 ### Week 5 — Genre Expansion
 - [ ] `battle_arena/base` full implementation

@@ -6,7 +6,7 @@ export const tycoonMiningEmpire: TemplateDefinition = {
   genre: "tycoon",
   extends: "tycoon/base",
   summary:
-    "Mining empire tycoon — dig ores, smelt bars at furnaces, sell metals, unlock deeper caves, hire NPC miners, prestige with depth multipliers.",
+    "Mining empire tycoon — dig ores from surface quarries and deep cave shafts, smelt bars at furnaces, sell refined metals at the trading post, upgrade pickaxes and drill machines, unlock deeper cave layers with rare ores, hire NPC miners for passive income, prestige with depth multipliers and carry-over gems.",
   layoutRules: {
     minZones: 7,
     maxZones: 12,
@@ -21,7 +21,7 @@ export const tycoonMiningEmpire: TemplateDefinition = {
   },
   systemModules: {
     required: ["economy", "progression", "save", "rebirth"],
-    optional: ["loot", "pets", "npc_workers", "depth_progression"],
+    optional: ["loot", "pets", "npc_workers", "depth_progression", "gem_collection", "tool_upgrades"],
   },
   devicePolicies: {
     allowedDeviceTypes: [
@@ -60,6 +60,6 @@ export const tycoonMiningEmpire: TemplateDefinition = {
       "DepthManager",
     ],
   },
-  prefabTags: ["tycoon", "mining", "cave", "ore", "furnace", "pickaxe"],
+  prefabTags: ["tycoon", "mining", "cave", "ore", "furnace", "pickaxe", "drill", "gem", "quarry", "shaft"],
   validationProfiles: ["tycoon-economy-v1", "tycoon-progression-v1"],
 };

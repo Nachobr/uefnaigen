@@ -6,7 +6,7 @@ export const tycoonLumberMill: TemplateDefinition = {
   genre: "tycoon",
   extends: "tycoon/base",
   summary:
-    "Lumber tycoon — chop trees, process logs at sawmills, sell planks, unlock biome islands, hire NPC workers, prestige into new biomes.",
+    "Lumber tycoon — chop trees in forest zones, haul logs to sawmills for processing, sell planks at the market, upgrade axes and sawmill speed, unlock new biome islands (rainforest, swamp, mountain), hire NPC workers for automation, prestige into new biomes with carry-over multipliers.",
   layoutRules: {
     minZones: 7,
     maxZones: 10,
@@ -21,7 +21,7 @@ export const tycoonLumberMill: TemplateDefinition = {
   },
   systemModules: {
     required: ["economy", "progression", "save", "rebirth"],
-    optional: ["loot", "pets", "npc_workers", "biome_progression"],
+    optional: ["loot", "pets", "npc_workers", "biome_progression", "tool_upgrades", "seasonal_events"],
   },
   devicePolicies: {
     allowedDeviceTypes: [
@@ -58,6 +58,6 @@ export const tycoonLumberMill: TemplateDefinition = {
       "NPCWorkerManager",
     ],
   },
-  prefabTags: ["tycoon", "lumber", "forest", "sawmill", "tree", "plank"],
+  prefabTags: ["tycoon", "lumber", "forest", "sawmill", "tree", "plank", "axe", "log", "biome", "bridge"],
   validationProfiles: ["tycoon-economy-v1", "tycoon-progression-v1"],
 };
