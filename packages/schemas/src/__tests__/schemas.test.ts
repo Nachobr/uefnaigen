@@ -455,7 +455,7 @@ describe("ForgeAIConfig", () => {
 
   it("rejects invalid provider", () => {
     expect(() =>
-      ForgeAIConfig.parse({ provider: "google", apiKeys: {} })
+      ForgeAIConfig.parse({ provider: "invalid-provider", apiKeys: {} })
     ).toThrow();
   });
 

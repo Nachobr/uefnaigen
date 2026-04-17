@@ -14,9 +14,11 @@ export const doctorCommand = new Command("doctor")
     const hasAnthropic = !!process.env.ANTHROPIC_API_KEY;
     const hasOpenAI = !!process.env.OPENAI_API_KEY;
     const hasGroq = !!process.env.GROQ_API_KEY;
+    const hasGoogle = !!process.env.GOOGLE_API_KEY;
     console.log(`  Anthropic:  ${hasAnthropic ? "✓ key set" : "✗ ANTHROPIC_API_KEY not set"}`);
     console.log(`  OpenAI:     ${hasOpenAI ? "✓ key set" : "✗ OPENAI_API_KEY not set"}`);
     console.log(`  Groq:       ${hasGroq ? "✓ key set" : "✗ GROQ_API_KEY not set"}`);
+    console.log(`  Google:     ${hasGoogle ? "✓ key set" : "✗ GOOGLE_API_KEY not set"}`);
 
     // Ollama
     let hasOllama = false;
@@ -27,6 +29,6 @@ export const doctorCommand = new Command("doctor")
     console.log(`  Ollama:     ${hasOllama ? "✓ running" : "✗ not detected at localhost:11434"}`);
 
     // Summary
-    const ok = nodeMajor >= 20 && (hasAnthropic || hasOpenAI || hasGroq || hasOllama);
+    const ok = nodeMajor >= 20 && (hasAnthropic || hasOpenAI || hasGroq || hasGoogle || hasOllama);
     console.log(`\n${ok ? "✓ Ready to go!" : "✗ Fix issues above before running."}`);
   });

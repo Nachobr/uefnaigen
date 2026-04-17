@@ -9,7 +9,8 @@
 npm install -g uefn-ai
 
 # Set your API key (any one provider works)
-export ANTHROPIC_API_KEY=sk-...
+export GOOGLE_API_KEY=...
+# or: export ANTHROPIC_API_KEY=sk-...
 # or: export OPENAI_API_KEY=sk-...
 # or: export GROQ_API_KEY=gsk_...
 
@@ -88,12 +89,13 @@ output/
 
 | Provider | Model | Env Variable |
 |---|---|---|
+| Google | Gemini 2.5 Flash | `GOOGLE_API_KEY` |
 | Anthropic | Claude Sonnet 4 | `ANTHROPIC_API_KEY` |
 | OpenAI | GPT-4o | `OPENAI_API_KEY` |
 | Groq | Llama 3.3 70B | `GROQ_API_KEY` |
 | Ollama | Any local model | Auto-detected |
 
-Falls back automatically: Groq → Anthropic → OpenAI → Ollama (local `qwen3.5:9b`).
+Falls back automatically: Groq → Google → Anthropic → OpenAI → Ollama (local `qwen3.5:9b`).
 
 ## Architecture
 

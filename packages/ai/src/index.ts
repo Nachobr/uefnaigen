@@ -4,6 +4,7 @@ export { AnthropicAdapter } from "./anthropic-adapter.js";
 export { OpenAIAdapter } from "./openai-adapter.js";
 export { GroqAdapter } from "./groq-adapter.js";
 export { OllamaAdapter } from "./ollama-adapter.js";
+export { GeminiAdapter } from "./gemini-adapter.js";
 export { FallbackAdapter } from "./fallback-adapter.js";
 export { BudgetAdapter, BudgetExceededError } from "./budget-adapter.js";
 export { IntentExtractor, type NormalizedBrief, detectGenreFromKeywords } from "./intent-extractor.js";

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const LLMProvider = z.enum(["anthropic", "openai", "groq", "ollama"]);
+export const LLMProvider = z.enum(["anthropic", "openai", "groq", "ollama", "google"]);
 export type LLMProvider = z.infer<typeof LLMProvider>;
 
 export const ForgeAIConfig = z.object({
@@ -10,6 +10,7 @@ export const ForgeAIConfig = z.object({
     anthropic: z.string().optional(),
     openai: z.string().optional(),
     groq: z.string().optional(),
+    google: z.string().optional(),
   }),
   ollamaBaseUrl: z.string().default("http://localhost:11434"),
   outputDir: z.string().default("./output"),

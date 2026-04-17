@@ -155,11 +155,14 @@
 
 ## Post-MVP (M1 Beta — Days 15–42, ~$10/day)
 
-### Week 3 — Desktop Shell
-- [ ] Electron + React + Vite app scaffold
-- [ ] Project browser (list/open generated projects)
-- [ ] Prompt wizard UI
-- [ ] Layout preview (2D zone grid visualization)
+### Week 3 — Desktop Shell ✅
+- [x] Electron + React + Vite app scaffold (`apps/desktop/`)
+- [x] Project browser (list/open generated projects)
+- [x] Prompt wizard UI (genre selection, prompt textarea)
+- [x] Layout preview (2D zone grid visualization)
+- [x] **Google Gemini adapter** — `@google/genai` SDK, `GOOGLE_API_KEY` env var, `--provider google`
+- [x] Fallback chain updated: Groq → Google → Anthropic → OpenAI → Ollama
+- [x] 11 packages build, 117 tests passing
 
 ### Week 4 — Prefab Expansion
 - [ ] Prefab catalog ingestion from user directories

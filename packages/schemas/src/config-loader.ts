@@ -33,6 +33,7 @@ function readEnvVars(): Record<string, unknown> {
   if (process.env.ANTHROPIC_API_KEY) apiKeys.anthropic = process.env.ANTHROPIC_API_KEY;
   if (process.env.OPENAI_API_KEY) apiKeys.openai = process.env.OPENAI_API_KEY;
   if (process.env.GROQ_API_KEY) apiKeys.groq = process.env.GROQ_API_KEY;
+  if (process.env.GOOGLE_API_KEY) apiKeys.google = process.env.GOOGLE_API_KEY;
   if (Object.keys(apiKeys).length > 0) env.apiKeys = apiKeys;
 
   if (process.env.FORGEAI_PROVIDER) env.provider = process.env.FORGEAI_PROVIDER;

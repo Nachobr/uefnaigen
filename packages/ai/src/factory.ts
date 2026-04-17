@@ -4,6 +4,7 @@ import { AnthropicAdapter } from "./anthropic-adapter.js";
 import { OpenAIAdapter } from "./openai-adapter.js";
 import { GroqAdapter } from "./groq-adapter.js";
 import { OllamaAdapter } from "./ollama-adapter.js";
+import { GeminiAdapter } from "./gemini-adapter.js";
 import { FallbackAdapter } from "./fallback-adapter.js";
 
 export function createAdapter(config: ForgeAIConfig): LLMAdapter {
@@ -23,6 +24,11 @@ export function createAdapter(config: ForgeAIConfig): LLMAdapter {
       if (!key) throw new Error("GROQ_API_KEY not configured");
       return new GroqAdapter(key, config.model);
     }
+    case "google": {
+      const key = config.apiKeys.google;
+      if (!key) throw new Error("GOOGLE_API_KEY not configured");
+      return new GeminiAdapter(key, config.model);
+    }
     case "ollama": {
       return new OllamaAdapter(config.model, config.ollamaBaseUrl);
     }
@@ -41,6 +47,9 @@ export function createAdapterWithFallback(config: ForgeAIConfig): LLMAdapter {
   // Build chain from available keys
   if (config.apiKeys.groq) {
     adapters.push({ name: "groq", adapter: new GroqAdapter(config.apiKeys.groq, "llama-3.3-70b-versatile") });
+  }
+  if (config.apiKeys.google) {
+    adapters.push({ name: "google", adapter: new GeminiAdapter(config.apiKeys.google, "gemini-2.5-flash") });
   }
   if (config.apiKeys.anthropic) {
     adapters.push({ name: "anthropic", adapter: new AnthropicAdapter(config.apiKeys.anthropic, config.model) });
