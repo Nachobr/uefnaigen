@@ -65,7 +65,7 @@ export FORGEAI_VERBOSE=true
 Override everything per-command:
 
 ```bash
-uefn-ai create "..." --provider google --model gemini-2.5-flash --budget 1.00
+uefn-ai create "A cozy bakery tycoon with recipes and automation" --provider google --model gemini-2.5-flash --budget 1.00
 ```
 
 ---
@@ -91,7 +91,7 @@ Install [Ollama](https://ollama.com), then:
 ollama pull qwen3.5:9b
 
 # Use it with ForgeAI
-uefn-ai create "..." --provider ollama
+uefn-ai create "A zombie survival adventure with crafting and boss waves" --provider ollama
 
 # Or set it as default in config.yaml:
 # provider: ollama
@@ -153,7 +153,7 @@ uefn-ai create "Mining empire tycoon" \
 uefn-ai create "Arena FFA for 16 players" --dry-run
 
 # JSON output (for scripting)
-uefn-ai create "..." --json
+uefn-ai create "Team deathmatch arena for 8 players with loadouts" --json
 ```
 
 ---
@@ -220,7 +220,7 @@ Runs structural, schema, and cross-reference checks. Use `--json` for machine-re
 Cap inference costs per run:
 
 ```bash
-uefn-ai create "..." --budget 1.50
+uefn-ai create "A factory automation tycoon with conveyor belts and prestige" --budget 1.50
 ```
 
 Or set globally in `~/.forgeai/config.yaml`:
