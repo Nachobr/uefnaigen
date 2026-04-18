@@ -42,3 +42,41 @@ export function createIndustrialPack(): PrefabCatalog {
   }
   return catalog;
 }
+
+const ADVENTURE_PACK: PrefabDefinition[] = [
+  { prefabId: "pfb_treasure_chest_01", name: "Treasure Chest", category: "decor", tags: ["treasure", "loot", "adventure"], footprint: { w: 2, d: 1, h: 1 }, style: "medieval", supportedGenres: ["adventure"], compatibleZones: ["combat_area", "boss_area"] },
+  { prefabId: "pfb_dungeon_gate_01", name: "Dungeon Gate", category: "building", tags: ["gate", "dungeon", "adventure"], footprint: { w: 5, d: 2, h: 6 }, style: "medieval", supportedGenres: ["adventure"], compatibleZones: ["unlock_gate", "boss_area"] },
+  { prefabId: "pfb_campfire_01", name: "Campfire", category: "decor", tags: ["campfire", "checkpoint", "adventure"], footprint: { w: 2, d: 2, h: 2 }, style: "medieval", supportedGenres: ["adventure", "roleplay"], compatibleZones: ["social_hub", "starter_area"] },
+  { prefabId: "pfb_quest_board_01", name: "Quest Board", category: "decor", tags: ["quest", "npc", "adventure"], footprint: { w: 2, d: 1, h: 3 }, style: "medieval", supportedGenres: ["adventure", "roleplay"], compatibleZones: ["social_hub", "starter_area"] },
+  { prefabId: "pfb_healing_fountain_01", name: "Healing Fountain", category: "decor", tags: ["healing", "checkpoint", "adventure"], footprint: { w: 3, d: 3, h: 4 }, style: "medieval", supportedGenres: ["adventure"], compatibleZones: ["social_hub", "starter_area"] },
+  { prefabId: "pfb_enemy_totem_01", name: "Enemy Totem", category: "combat", tags: ["enemy", "spawner", "adventure"], footprint: { w: 2, d: 2, h: 5 }, style: "medieval", supportedGenres: ["adventure"], compatibleZones: ["combat_area"] },
+  { prefabId: "pfb_boss_altar_01", name: "Boss Altar", category: "combat", tags: ["boss", "altar", "adventure"], footprint: { w: 4, d: 4, h: 3 }, style: "medieval", supportedGenres: ["adventure"], compatibleZones: ["boss_area"] },
+  { prefabId: "pfb_crystal_pillar_01", name: "Crystal Pillar", category: "decor", tags: ["crystal", "magic", "adventure"], footprint: { w: 1, d: 1, h: 6 }, style: "fantasy", supportedGenres: ["adventure"], compatibleZones: ["boss_area", "combat_area"] },
+  { prefabId: "pfb_rope_bridge_01", name: "Rope Bridge", category: "building", tags: ["bridge", "crossing", "adventure"], footprint: { w: 10, d: 2, h: 3 }, style: "medieval", supportedGenres: ["adventure"], compatibleZones: ["resource_area", "combat_area"] },
+  { prefabId: "pfb_npc_questgiver_01", name: "NPC Quest Giver", category: "npc_set", tags: ["npc", "quest", "adventure"], footprint: { w: 2, d: 2, h: 3 }, style: "medieval", supportedGenres: ["adventure", "roleplay"], compatibleZones: ["social_hub", "starter_area"] },
+];
+
+export function createAdventurePack(): PrefabCatalog {
+  const catalog = new PrefabCatalog();
+  for (const prefab of ADVENTURE_PACK) catalog.add(prefab);
+  return catalog;
+}
+
+const ARENA_PACK: PrefabDefinition[] = [
+  { prefabId: "pfb_cover_wall_01", name: "Cover Wall", category: "combat", tags: ["cover", "wall", "arena"], footprint: { w: 4, d: 1, h: 2 }, style: "military", supportedGenres: ["battle_arena"], compatibleZones: ["combat_area"] },
+  { prefabId: "pfb_cover_crate_01", name: "Cover Crate", category: "combat", tags: ["cover", "crate", "arena"], footprint: { w: 2, d: 2, h: 2 }, style: "military", supportedGenres: ["battle_arena"], compatibleZones: ["combat_area"] },
+  { prefabId: "pfb_weapon_rack_01", name: "Weapon Rack", category: "combat", tags: ["weapon", "rack", "loadout", "arena"], footprint: { w: 2, d: 1, h: 2 }, style: "military", supportedGenres: ["battle_arena"], compatibleZones: ["starter_area", "combat_area"] },
+  { prefabId: "pfb_health_station_01", name: "Health Station", category: "combat", tags: ["health", "powerup", "arena"], footprint: { w: 2, d: 2, h: 3 }, style: "sci-fi", supportedGenres: ["battle_arena", "adventure"], compatibleZones: ["combat_area"] },
+  { prefabId: "pfb_shield_bubble_01", name: "Shield Bubble", category: "combat", tags: ["shield", "powerup", "arena"], footprint: { w: 3, d: 3, h: 3 }, style: "sci-fi", supportedGenres: ["battle_arena"], compatibleZones: ["combat_area"] },
+  { prefabId: "pfb_jump_pad_01", name: "Jump Pad", category: "combat", tags: ["jump", "movement", "arena"], footprint: { w: 2, d: 2, h: 1 }, style: "sci-fi", supportedGenres: ["battle_arena"], compatibleZones: ["combat_area"] },
+  { prefabId: "pfb_scoreboard_01", name: "Scoreboard Display", category: "decor", tags: ["scoreboard", "hud", "arena"], footprint: { w: 3, d: 1, h: 4 }, style: "sci-fi", supportedGenres: ["battle_arena"], compatibleZones: ["starter_area"] },
+  { prefabId: "pfb_team_banner_01", name: "Team Banner", category: "decor", tags: ["team", "banner", "arena"], footprint: { w: 1, d: 1, h: 4 }, style: "military", supportedGenres: ["battle_arena"], compatibleZones: ["starter_area", "combat_area"] },
+  { prefabId: "pfb_loot_drop_01", name: "Loot Drop Pod", category: "combat", tags: ["loot", "drop", "arena"], footprint: { w: 2, d: 2, h: 3 }, style: "sci-fi", supportedGenres: ["battle_arena"], compatibleZones: ["combat_area"] },
+  { prefabId: "pfb_respawn_beacon_01", name: "Respawn Beacon", category: "combat", tags: ["respawn", "spawn", "arena"], footprint: { w: 2, d: 2, h: 4 }, style: "sci-fi", supportedGenres: ["battle_arena"], compatibleZones: ["starter_area", "combat_area"] },
+];
+
+export function createArenaPack(): PrefabCatalog {
+  const catalog = new PrefabCatalog();
+  for (const prefab of ARENA_PACK) catalog.add(prefab);
+  return catalog;
+}

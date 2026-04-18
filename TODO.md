@@ -172,11 +172,23 @@
 - [x] Prefab/theme packs: forest (10 prefabs) + industrial (10 prefabs) — 44 total with starter
 - [x] 126 tests passing across 11 packages
 
-### Week 5 — Genre Expansion
-- [ ] `battle_arena/base` full implementation
-- [ ] `adventure/base` full implementation
-- [ ] Improved repair loop with error categorization
-- [ ] Balance simulator with visualization
+### Week 5 — Genre Expansion + Cognee Memory ✅
+- [x] `battle_arena/base` full implementation
+  - [x] Arena prefab theme pack (10 prefabs: cover walls, weapon racks, jump pads, etc.)
+  - [x] Polished template: expanded summary, power_ups + match_history systems
+  - [x] `ArenaSimulator` — round pacing, kill estimates, power-up timing, balance score
+  - [x] Visualization data: round snapshots + timeline events for desktop preview
+- [x] `adventure/base` full implementation
+  - [x] Adventure prefab theme pack (10 prefabs: treasure chests, boss altars, quest boards, etc.)
+  - [x] Polished template: expanded summary, dialogue + inventory systems
+- [x] Improved repair loop with error categorization (done in Day 13)
+- [x] Balance simulator with visualization (`ArenaSimulator` + `BalanceVisualization`)
+- [x] `@forgeai/knowledge` package — cognee-inspired local knowledge store
+  - [x] `KnowledgeStore`: tag/type/genre search, usage tracking, token-budgeted context builder
+  - [x] Seed data: 8 entries (Verse patterns, device schemas, economy templates per genre)
+  - [x] File-backed persistence at `~/.forgeai/knowledge/entries.json`
+- [x] 64 prefabs total (24 starter + 10 forest + 10 industrial + 10 arena + 10 adventure)
+- [x] 148 tests passing across 12 packages
 
 ### Week 6 — Beta Hardening
 - [ ] `roleplay/base` template

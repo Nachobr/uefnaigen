@@ -185,6 +185,19 @@ importers:
         specifier: ^3.2.0
         version: 3.2.4(@types/node@25.6.0)(tsx@4.21.0)(yaml@2.8.3)
 
+  packages/knowledge:
+    dependencies:
+      '@forgeai/schemas':
+        specifier: workspace:*
+        version: link:../schemas
+    devDependencies:
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@25.6.0)(tsx@4.21.0)(yaml@2.8.3)
+
   packages/packager:
     dependencies:
       '@forgeai/ai':

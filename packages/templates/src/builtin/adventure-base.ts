@@ -5,7 +5,7 @@ export const adventureBase: TemplateDefinition = {
   version: "1.0.0",
   genre: "adventure",
   summary:
-    "Adventure base — hub world with quest zones, quest chains, enemy waves, boss encounters, checkpoints, and loot rewards.",
+    "Adventure base — hub world connecting quest zones via progression gates, multi-step quest chains with NPC dialogue, escalating enemy waves per zone, boss encounters with unique mechanics, checkpoint saves, and loot rewards with rarity tiers.",
   layoutRules: {
     minZones: 5,
     maxZones: 12,
@@ -20,7 +20,7 @@ export const adventureBase: TemplateDefinition = {
   },
   systemModules: {
     required: ["quest", "combat", "checkpoint", "save"],
-    optional: ["loot", "crafting", "pets", "boss_mechanics", "enemy_waves"],
+    optional: ["loot", "crafting", "pets", "boss_mechanics", "enemy_waves", "dialogue", "inventory"],
   },
   devicePolicies: {
     allowedDeviceTypes: [
@@ -65,6 +65,6 @@ export const adventureBase: TemplateDefinition = {
       "InventoryManager",
     ],
   },
-  prefabTags: ["adventure", "quest", "enemy", "boss", "checkpoint", "treasure", "dungeon"],
+  prefabTags: ["adventure", "quest", "enemy", "boss", "checkpoint", "treasure", "dungeon", "campfire", "crystal", "altar"],
   validationProfiles: ["adventure-quests-v1", "adventure-combat-v1"],
 };

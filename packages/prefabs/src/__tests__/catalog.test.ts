@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { PrefabCatalog } from "../catalog.js";
 import { createStarterCatalog } from "../starter-catalog.js";
-import { createForestPack, createIndustrialPack } from "../theme-packs.js";
+import { createForestPack, createIndustrialPack, createArenaPack, createAdventurePack } from "../theme-packs.js";
 
 describe("PrefabCatalog", () => {
   it("adds and retrieves prefabs", () => {
@@ -84,11 +84,39 @@ describe("Theme packs", () => {
     expect(pack.list().every((p) => p.supportedGenres.includes("tycoon"))).toBe(true);
   });
 
+  it("adventure pack has 10 prefabs", () => {
+    const pack = createAdventurePack();
+    expect(pack.list().length).toBe(10);
+  });
+
+  it("adventure pack all support adventure genre", () => {
+    const pack = createAdventurePack();
+    expect(pack.list().every((p) => p.supportedGenres.includes("adventure"))).toBe(true);
+  });
+
   it("packs merge with starter catalog", () => {
     const catalog = createStarterCatalog();
     catalog.merge(createForestPack());
     catalog.merge(createIndustrialPack());
     expect(catalog.size).toBe(44);
+  });
+
+  it("arena pack has 10 prefabs", () => {
+    const pack = createArenaPack();
+    expect(pack.list().length).toBe(10);
+  });
+
+  it("arena pack all support battle_arena genre", () => {
+    const pack = createArenaPack();
+    expect(pack.list().every((p) => p.supportedGenres.includes("battle_arena"))).toBe(true);
+  });
+
+  it("full catalog with all packs has 54 prefabs", () => {
+    const catalog = createStarterCatalog();
+    catalog.merge(createForestPack());
+    catalog.merge(createIndustrialPack());
+    catalog.merge(createArenaPack());
+    expect(catalog.size).toBe(54);
   });
 });
 

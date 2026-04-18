@@ -5,7 +5,7 @@ export const battleArenaBase: TemplateDefinition = {
   version: "1.0.0",
   genre: "battle_arena",
   summary:
-    "Battle arena base — round-based combat with spawn logic, loadout configuration, scoring, and team/FFA modes.",
+    "Battle arena base — round-based FFA or team combat with configurable spawn logic, weapon loadouts, scoring systems, kill streaks, power-up spawns, spectator mode, and leaderboards between rounds.",
   layoutRules: {
     minZones: 3,
     maxZones: 8,
@@ -14,7 +14,7 @@ export const battleArenaBase: TemplateDefinition = {
   },
   systemModules: {
     required: ["round_manager", "scoring", "spawn", "loadout"],
-    optional: ["teams", "leaderboard", "spectator", "kill_streak"],
+    optional: ["teams", "leaderboard", "spectator", "kill_streak", "power_ups", "match_history"],
   },
   devicePolicies: {
     allowedDeviceTypes: [
@@ -58,6 +58,6 @@ export const battleArenaBase: TemplateDefinition = {
       "LeaderboardManager",
     ],
   },
-  prefabTags: ["arena", "combat", "weapon", "spawn", "cover", "powerup"],
+  prefabTags: ["arena", "combat", "weapon", "spawn", "cover", "powerup", "scoreboard", "respawn", "jump_pad"],
   validationProfiles: ["arena-rounds-v1", "arena-scoring-v1"],
 };
