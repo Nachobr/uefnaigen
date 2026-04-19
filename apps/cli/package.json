@@ -30,6 +30,7 @@
   "dependencies": {
     "@forgeai/ai": "workspace:*",
     "@forgeai/core": "workspace:*",
+    "@forgeai/packager": "workspace:*",
     "@forgeai/prefabs": "workspace:*",
     "@forgeai/schemas": "workspace:*",
     "@forgeai/templates": "workspace:*",

@@ -1,6 +1,7 @@
 import { Command } from "commander";
 import { loadConfig, type CLIFlags } from "@forgeai/schemas";
 import { Pipeline } from "@forgeai/core";
+import { ScaffoldPackager } from "@forgeai/packager";
 
 export const createCommand = new Command("create")
   .description("Generate a full UEFN project scaffold from a prompt")
@@ -16,6 +17,7 @@ export const createCommand = new Command("create")
   .option("--verbose", "Detailed logs")
   .option("--json", "Machine-readable output")
   .option("--strict", "Fail on warnings")
+  .option("--zip", "Export output as a .tar.gz archive")
   .action(async (prompt, options) => {
     const config = loadConfig(options as CLIFlags);
     const seed = options.seed ?? Math.floor(Math.random() * 1_000_000);
@@ -55,6 +57,20 @@ export const createCommand = new Command("create")
 
       if (options.dryRun) {
         console.log(`\n  --dry-run: No files written.`);
+      } else if (options.zip) {
+        const packager = new ScaffoldPackager();
+        const archivePath = await packager.packageZip(
+          {
+            project: result.job as never,
+            worldDesign: result.worldDesign,
+            modulePlan: result.modulePlan,
+            lootTables: result.lootTables,
+            balanceReport: result.balanceReport,
+            verseFiles: new Map(),
+          },
+          result.outputPath,
+        );
+        console.log(`\n  Archive:   ${archivePath}`);
       } else {
         console.log(`\n  Output:    ${result.outputPath}`);
         console.log(`\nNext steps:`);

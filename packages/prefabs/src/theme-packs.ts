@@ -80,3 +80,22 @@ export function createArenaPack(): PrefabCatalog {
   for (const prefab of ARENA_PACK) catalog.add(prefab);
   return catalog;
 }
+
+const ROLEPLAY_PACK: PrefabDefinition[] = [
+  { prefabId: "pfb_town_hall_01", name: "Town Hall", category: "building", tags: ["town", "hall", "social", "roleplay"], footprint: { w: 8, d: 8, h: 6 }, style: "rustic", supportedGenres: ["roleplay"], compatibleZones: ["social_hub"] },
+  { prefabId: "pfb_apartment_01", name: "Apartment Building", category: "building", tags: ["housing", "apartment", "home", "roleplay"], footprint: { w: 6, d: 6, h: 8 }, style: "modern", supportedGenres: ["roleplay"], compatibleZones: ["social_hub", "starter_area"] },
+  { prefabId: "pfb_job_board_01", name: "Job Board", category: "decor", tags: ["job", "board", "social", "roleplay"], footprint: { w: 2, d: 1, h: 3 }, style: "rustic", supportedGenres: ["roleplay"], compatibleZones: ["social_hub", "starter_area"] },
+  { prefabId: "pfb_park_bench_01", name: "Park Bench", category: "decor", tags: ["park", "bench", "social", "rest"], footprint: { w: 3, d: 1, h: 1 }, style: "rustic", supportedGenres: ["roleplay"], compatibleZones: ["social_hub", "starter_area"] },
+  { prefabId: "pfb_street_lamp_01", name: "Street Lamp", category: "decor", tags: ["lamp", "street", "light", "town"], footprint: { w: 1, d: 1, h: 4 }, style: "modern", supportedGenres: ["roleplay"], compatibleZones: ["social_hub", "starter_area", "shop"] },
+  { prefabId: "pfb_food_stall_01", name: "Food Stall", category: "building", tags: ["food", "vendor", "shop", "roleplay"], footprint: { w: 3, d: 3, h: 3 }, style: "rustic", supportedGenres: ["roleplay"], compatibleZones: ["shop"] },
+  { prefabId: "pfb_garage_01", name: "Garage Workshop", category: "building", tags: ["garage", "vehicle", "job", "roleplay"], footprint: { w: 6, d: 5, h: 4 }, style: "industrial", supportedGenres: ["roleplay"], compatibleZones: ["resource_area"] },
+  { prefabId: "pfb_mailbox_01", name: "Mailbox", category: "decor", tags: ["mail", "housing", "town", "roleplay"], footprint: { w: 1, d: 1, h: 2 }, style: "rustic", supportedGenres: ["roleplay"], compatibleZones: ["social_hub", "starter_area"] },
+  { prefabId: "pfb_clothing_rack_01", name: "Clothing Rack", category: "decor", tags: ["clothing", "outfit", "fashion", "roleplay"], footprint: { w: 2, d: 1, h: 2 }, style: "modern", supportedGenres: ["roleplay"], compatibleZones: ["shop"] },
+  { prefabId: "pfb_npc_citizen_01", name: "NPC Citizen", category: "npc_set", tags: ["npc", "citizen", "social", "roleplay"], footprint: { w: 2, d: 2, h: 3 }, style: "modern", supportedGenres: ["roleplay"], compatibleZones: ["social_hub", "starter_area"] },
+];
+
+export function createRoleplayPack(): PrefabCatalog {
+  const catalog = new PrefabCatalog();
+  for (const prefab of ROLEPLAY_PACK) catalog.add(prefab);
+  return catalog;
+}

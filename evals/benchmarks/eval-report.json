@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-04-16T12:22:13.139Z",
-  "total": 15,
-  "passed": 15,
+  "timestamp": "2026-04-19T12:54:16.262Z",
+  "total": 40,
+  "passed": 40,
   "passRate": "100%",
-  "avgDurationMs": 0.03,
+  "avgDurationMs": 0.02,
   "results": [
     {
       "prompt": "Fantasy dungeon crawler for 4 players. Clear enemy waves in each room, fight bos",
@@ -13,7 +13,7 @@
       "genreMatch": true,
       "templateId": "adventure/base",
       "cacheKey": "569f5bdda50ef2bc",
-      "durationMs": 0.0977919999999699
+      "durationMs": 0.09650000000002024
     },
     {
       "prompt": "Pirate island adventure. Explore 5 islands, solve puzzles, fight skeleton crews,",
@@ -23,7 +23,7 @@
       "genreMatch": true,
       "templateId": "adventure/base",
       "cacheKey": "d56a023dbda580de",
-      "durationMs": 0.028583000000026004
+      "durationMs": 0.02279199999998127
     },
     {
       "prompt": "Zombie survival adventure. Defend a base, scavenge for supplies, craft weapons, ",
@@ -33,7 +33,7 @@
       "genreMatch": true,
       "templateId": "adventure/base",
       "cacheKey": "47e4954a358a6d60",
-      "durationMs": 0.026749999999992724
+      "durationMs": 0.021290999999990845
     },
     {
       "prompt": "Medieval quest adventure for 2 players. Hub village with NPCs giving quests. Hun",
@@ -43,7 +43,7 @@
       "genreMatch": true,
       "templateId": "adventure/base",
       "cacheKey": "e982769923d167a9",
-      "durationMs": 0.021583000000021002
+      "durationMs": 0.017291999999997643
     },
     {
       "prompt": "Sci-fi space station adventure. Explore abandoned corridors, hack terminals, fig",
@@ -53,7 +53,57 @@
       "genreMatch": true,
       "templateId": "adventure/base",
       "cacheKey": "2703c72a29c682b2",
-      "durationMs": 0.022833000000048287
+      "durationMs": 0.018959000000023707
+    },
+    {
+      "prompt": "Pirate adventure for 4 players. Explore tropical islands, fight skeleton crews, ",
+      "file": "adventure-06.txt",
+      "detectedGenre": "adventure",
+      "expectedGenre": "adventure",
+      "genreMatch": true,
+      "templateId": "adventure/base",
+      "cacheKey": "2269a6f5c8c34e9d",
+      "durationMs": 0.020041000000020404
+    },
+    {
+      "prompt": "Haunted mansion adventure. Solve puzzle rooms to unlock new wings, fight ghost e",
+      "file": "adventure-07.txt",
+      "detectedGenre": "adventure",
+      "expectedGenre": "adventure",
+      "genreMatch": true,
+      "templateId": "adventure/base",
+      "cacheKey": "4b5fe2a49f8ca010",
+      "durationMs": 0.018250000000023192
+    },
+    {
+      "prompt": "Jungle temple adventure for 3 players. Navigate traps, fight stone guardians, co",
+      "file": "adventure-08.txt",
+      "detectedGenre": "adventure",
+      "expectedGenre": "adventure",
+      "genreMatch": true,
+      "templateId": "adventure/base",
+      "cacheKey": "4aaeb229981545c8",
+      "durationMs": 0.018332999999984168
+    },
+    {
+      "prompt": "Deep sea adventure. Explore underwater caves, fight sea creatures, find glowing ",
+      "file": "adventure-09.txt",
+      "detectedGenre": "adventure",
+      "expectedGenre": "adventure",
+      "genreMatch": true,
+      "templateId": "adventure/base",
+      "cacheKey": "0f415c3090318bbf",
+      "durationMs": 0.018041999999979907
+    },
+    {
+      "prompt": "Volcanic island adventure for 2 players. Cross lava zones, fight fire enemies, c",
+      "file": "adventure-10.txt",
+      "detectedGenre": "adventure",
+      "expectedGenre": "adventure",
+      "genreMatch": true,
+      "templateId": "adventure/base",
+      "cacheKey": "0600ca8cfa034aa2",
+      "durationMs": 0.020041999999989457
     },
     {
       "prompt": "Free-for-all arena for 16 players. 3-minute rounds, random weapon loadouts, powe",
@@ -63,7 +113,7 @@
       "genreMatch": true,
       "templateId": "battle_arena/base",
       "cacheKey": "b980a07fce3d7b94",
-      "durationMs": 0.02041700000000901
+      "durationMs": 0.015999999999991132
     },
     {
       "prompt": "Team deathmatch arena, 4v4. Pick loadouts before each round. Shotguns, snipers, ",
@@ -73,7 +123,7 @@
       "genreMatch": true,
       "templateId": "battle_arena/base",
       "cacheKey": "11ba108d397bb8b9",
-      "durationMs": 0.018709000000001197
+      "durationMs": 0.015500000000002956
     },
     {
       "prompt": "1v1 box fight arena. Small maps, 90-second rounds, build battles allowed. Winner",
@@ -83,7 +133,7 @@
       "genreMatch": true,
       "templateId": "battle_arena/base",
       "cacheKey": "9c166376dd7b10cb",
-      "durationMs": 0.019207999999991898
+      "durationMs": 0.016958999999985735
     },
     {
       "prompt": "Capture the flag arena for 8v8. Two bases, respawn on elimination, 5-minute roun",
@@ -93,7 +143,7 @@
       "genreMatch": true,
       "templateId": "battle_arena/base",
       "cacheKey": "e5e74825e3020830",
-      "durationMs": 0.017917000000011285
+      "durationMs": 0.01737500000001546
     },
     {
       "prompt": "Gun game FFA for 12 players. Get an elimination to upgrade your weapon. Start wi",
@@ -103,7 +153,157 @@
       "genreMatch": true,
       "templateId": "battle_arena/base",
       "cacheKey": "78f928ef81df9a73",
-      "durationMs": 0.018791999999962172
+      "durationMs": 0.016250000000013642
+    },
+    {
+      "prompt": "Gladiator arena FFA for 12 players. Melee-only weapons, round-based combat, powe",
+      "file": "arena-06.txt",
+      "detectedGenre": "battle_arena",
+      "expectedGenre": "battle_arena",
+      "genreMatch": true,
+      "templateId": "battle_arena/base",
+      "cacheKey": "5af4f36dc8073943",
+      "durationMs": 0.01737499999998704
+    },
+    {
+      "prompt": "Paintball arena, 6v6 teams. Pick your loadout before each round, capture the ene",
+      "file": "arena-07.txt",
+      "detectedGenre": "battle_arena",
+      "expectedGenre": "battle_arena",
+      "genreMatch": true,
+      "templateId": "battle_arena/base",
+      "cacheKey": "7296a587ed4adc51",
+      "durationMs": 0.016250000000013642
+    },
+    {
+      "prompt": "Robot battle arena for 8 players. Pick a mech loadout with different weapons and",
+      "file": "arena-08.txt",
+      "detectedGenre": "battle_arena",
+      "expectedGenre": "battle_arena",
+      "genreMatch": true,
+      "templateId": "battle_arena/base",
+      "cacheKey": "0e4679846f826f9d",
+      "durationMs": 0.016542000000015378
+    },
+    {
+      "prompt": "Snowball fight arena, 5v5 teams. Build snow forts for cover, pick up ammo around",
+      "file": "arena-09.txt",
+      "detectedGenre": "battle_arena",
+      "expectedGenre": "battle_arena",
+      "genreMatch": true,
+      "templateId": "battle_arena/base",
+      "cacheKey": "7cda64b5d0633629",
+      "durationMs": 0.01649999999997931
+    },
+    {
+      "prompt": "Jousting arena with mounted combat. 1v1 rounds on horseback, upgrade your lance ",
+      "file": "arena-10.txt",
+      "detectedGenre": "battle_arena",
+      "expectedGenre": "battle_arena",
+      "genreMatch": true,
+      "templateId": "battle_arena/base",
+      "cacheKey": "c3b81b7ac1f752bb",
+      "durationMs": 0.017583000000001903
+    },
+    {
+      "prompt": "Cozy small town roleplay. Get a job at the bakery, fire station, or hospital. Ea",
+      "file": "roleplay-01.txt",
+      "detectedGenre": "roleplay",
+      "expectedGenre": "roleplay",
+      "genreMatch": true,
+      "templateId": "roleplay/base",
+      "cacheKey": "2b661bd830be5641",
+      "durationMs": 0.018709000000001197
+    },
+    {
+      "prompt": "City life roleplay for 16 players. Rent apartments, work as a police officer or ",
+      "file": "roleplay-02.txt",
+      "detectedGenre": "roleplay",
+      "expectedGenre": "roleplay",
+      "genreMatch": true,
+      "templateId": "roleplay/base",
+      "cacheKey": "0089196b2626fd41",
+      "durationMs": 0.018833000000000766
+    },
+    {
+      "prompt": "Medieval village roleplay. Become a blacksmith, farmer, or town guard. Trade goo",
+      "file": "roleplay-03.txt",
+      "detectedGenre": "roleplay",
+      "expectedGenre": "roleplay",
+      "genreMatch": true,
+      "templateId": "roleplay/base",
+      "cacheKey": "3ef88b5c20ffb7de",
+      "durationMs": 0.01633300000000304
+    },
+    {
+      "prompt": "Beach resort roleplay. Work as a lifeguard or bartender, enjoy beach activities ",
+      "file": "roleplay-04.txt",
+      "detectedGenre": "roleplay",
+      "expectedGenre": "roleplay",
+      "genreMatch": true,
+      "templateId": "roleplay/base",
+      "cacheKey": "0b7d2decdb396481",
+      "durationMs": 0.01520800000000122
+    },
+    {
+      "prompt": "School campus roleplay for 12 players. Attend classes, join clubs like art or sp",
+      "file": "roleplay-05.txt",
+      "detectedGenre": "roleplay",
+      "expectedGenre": "roleplay",
+      "genreMatch": true,
+      "templateId": "roleplay/base",
+      "cacheKey": "ca9a3fcfa06fc356",
+      "durationMs": 0.01508399999997323
+    },
+    {
+      "prompt": "Space station roleplay. Work as an engineer or pilot, trade supplies at the stat",
+      "file": "roleplay-06.txt",
+      "detectedGenre": "roleplay",
+      "expectedGenre": "roleplay",
+      "genreMatch": true,
+      "templateId": "roleplay/base",
+      "cacheKey": "090a63dca8e1a402",
+      "durationMs": 0.015125000000011823
+    },
+    {
+      "prompt": "Farm life roleplay. Grow crops, raise animals, trade at the farmer's market. Bui",
+      "file": "roleplay-07.txt",
+      "detectedGenre": "roleplay",
+      "expectedGenre": "roleplay",
+      "genreMatch": true,
+      "templateId": "roleplay/base",
+      "cacheKey": "4d1632cc1956c919",
+      "durationMs": 0.017957999999993035
+    },
+    {
+      "prompt": "Suburban neighborhood roleplay for 10 players. Get a job as a mail carrier or me",
+      "file": "roleplay-08.txt",
+      "detectedGenre": "roleplay",
+      "expectedGenre": "roleplay",
+      "genreMatch": true,
+      "templateId": "roleplay/base",
+      "cacheKey": "326e52a334870baa",
+      "durationMs": 0.01650000000000773
+    },
+    {
+      "prompt": "Pirate port town roleplay. Take a job as a sailor, merchant, or tavern keeper. T",
+      "file": "roleplay-09.txt",
+      "detectedGenre": "roleplay",
+      "expectedGenre": "roleplay",
+      "genreMatch": true,
+      "templateId": "roleplay/base",
+      "cacheKey": "6bdbcb115d19b72d",
+      "durationMs": 0.01570800000001782
+    },
+    {
+      "prompt": "Futuristic city roleplay. Work high-tech jobs, customize your hover vehicle, sho",
+      "file": "roleplay-10.txt",
+      "detectedGenre": "roleplay",
+      "expectedGenre": "roleplay",
+      "genreMatch": true,
+      "templateId": "roleplay/base",
+      "cacheKey": "4aea2597c31f8130",
+      "durationMs": 0.01650000000000773
     },
     {
       "prompt": "A colorful lumber tycoon for 8 players. Chop trees, sell logs, unlock sawmills, ",
@@ -113,7 +313,7 @@
       "genreMatch": true,
       "templateId": "tycoon/base",
       "cacheKey": "22e547b97f0f97fe",
-      "durationMs": 0.02162500000002865
+      "durationMs": 0.014791999999999916
     },
     {
       "prompt": "Mining empire tycoon. Dig ores, smelt bars, sell at the market. Upgrade pickaxes",
@@ -123,7 +323,7 @@
       "genreMatch": true,
       "templateId": "tycoon/base",
       "cacheKey": "4e2290d67c84c858",
-      "durationMs": 0.017959000000018932
+      "durationMs": 0.015166000000021995
     },
     {
       "prompt": "Cozy bakery tycoon. Gather ingredients, bake goods, sell to customers. Unlock re",
@@ -133,7 +333,7 @@
       "genreMatch": true,
       "templateId": "tycoon/base",
       "cacheKey": "73afb8d903350736",
-      "durationMs": 0.02962499999995316
+      "durationMs": 0.014666000000005397
     },
     {
       "prompt": "Factory automation tycoon for 4 players. Collect raw materials, build conveyor b",
@@ -143,7 +343,7 @@
       "genreMatch": true,
       "templateId": "tycoon/base",
       "cacheKey": "16602b463a47ed2b",
-      "durationMs": 0.02266599999995833
+      "durationMs": 0.015833000000014863
     },
     {
       "prompt": "Tropical island resort tycoon. Build hotels, set up activities, serve tourists. ",
@@ -153,7 +353,57 @@
       "genreMatch": true,
       "templateId": "tycoon/base",
       "cacheKey": "450729cfb377d7ed",
-      "durationMs": 0.01875000000001137
+      "durationMs": 0.015833000000014863
+    },
+    {
+      "prompt": "Cozy bakery tycoon where you bake bread and pastries, sell them at the counter, ",
+      "file": "tycoon-06.txt",
+      "detectedGenre": "tycoon",
+      "expectedGenre": "tycoon",
+      "genreMatch": true,
+      "templateId": "tycoon/base",
+      "cacheKey": "fc518b89dc5c9c20",
+      "durationMs": 0.015916999999973314
+    },
+    {
+      "prompt": "Space mining tycoon. Drill asteroids for minerals, refine them at your station, ",
+      "file": "tycoon-07.txt",
+      "detectedGenre": "tycoon",
+      "expectedGenre": "tycoon",
+      "genreMatch": true,
+      "templateId": "tycoon/base",
+      "cacheKey": "929d17c8afcca6ce",
+      "durationMs": 0.014624999999995225
+    },
+    {
+      "prompt": "Pet shop tycoon for 6 players. Breed cute animals, sell pets to customers, upgra",
+      "file": "tycoon-08.txt",
+      "detectedGenre": "tycoon",
+      "expectedGenre": "tycoon",
+      "genreMatch": true,
+      "templateId": "tycoon/base",
+      "cacheKey": "c19224d0f9a2a84e",
+      "durationMs": 0.015291999999988093
+    },
+    {
+      "prompt": "Car wash tycoon. Wash dirty cars, upgrade scrubbers and dryers, unlock VIP lanes",
+      "file": "tycoon-09.txt",
+      "detectedGenre": "tycoon",
+      "expectedGenre": "tycoon",
+      "genreMatch": true,
+      "templateId": "tycoon/base",
+      "cacheKey": "60b7c2dc99ebfdbb",
+      "durationMs": 0.020666000000005624
+    },
+    {
+      "prompt": "Pizza delivery tycoon. Make pizzas, sell to hungry customers, upgrade your kitch",
+      "file": "tycoon-10.txt",
+      "detectedGenre": "tycoon",
+      "expectedGenre": "tycoon",
+      "genreMatch": true,
+      "templateId": "tycoon/base",
+      "cacheKey": "26f99ce38b39424d",
+      "durationMs": 0.01700000000002433
     }
   ]
 }

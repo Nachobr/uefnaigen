@@ -1,5 +1,5 @@
 import { TemplateRegistry } from "./registry.js";
-import { tycoonBase, tycoonLumberMill, tycoonMiningEmpire, battleArenaBase, adventureBase } from "./builtin/index.js";
+import { tycoonBase, tycoonLumberMill, tycoonMiningEmpire, battleArenaBase, adventureBase, roleplayBase } from "./builtin/index.js";
 
 export function createDefaultRegistry(): TemplateRegistry {
   const registry = new TemplateRegistry();
@@ -8,5 +8,6 @@ export function createDefaultRegistry(): TemplateRegistry {
   registry.register(tycoonMiningEmpire);
   registry.register(battleArenaBase);
   registry.register(adventureBase);
+  registry.register(roleplayBase);
   return registry;
 }

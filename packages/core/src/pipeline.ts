@@ -22,6 +22,7 @@ import {
 import { createDefaultRegistry } from "@forgeai/templates";
 import { TycoonSimulator, type SimulationResult } from "@forgeai/balance";
 import { JobManager } from "./job-manager.js";
+import { TierGuard } from "./tier-guard.js";
 
 export interface PipelineOptions {
   prompt: string;
@@ -65,6 +66,9 @@ export class Pipeline {
   }
 
   async run(): Promise<PipelineResult> {
+    const tierGuard = new TierGuard(this.options.config.tier ?? "free");
+    tierGuard.checkGenerationAllowed();
+
     const job = this.jobManager.create(this.options.prompt, this.options.seed);
 
     // ── Stage 1: Intent Extraction ──
@@ -163,6 +167,7 @@ export class Pipeline {
     const lootTables = await lootGenerator.generate(brief, worldDesign);
 
     this.jobManager.transition(job.jobId, "generated", 7);
+    tierGuard.recordGeneration();
 
     return {
       job,

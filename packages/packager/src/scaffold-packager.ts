@@ -1,8 +1,12 @@
 import { mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, dirname, basename } from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import type { WorldProject, EconomySpec, LayoutSpec, DeviceInstance } from "@forgeai/schemas";
 import type { SimulationResult } from "@forgeai/balance";
 import type { LootTable, ModulePlan, WorldDesign } from "@forgeai/ai";
+
+const execFileAsync = promisify(execFile);
 
 export interface PackagerInput {
   project: WorldProject;
@@ -63,6 +67,7 @@ export class ScaffoldPackager {
     writeFileSync(join(outputDir, "docs/DEVICE-WIRING.md"), this.genDeviceWiring(project.devices), "utf-8");
     writeFileSync(join(outputDir, "docs/QA-CHECKLIST.md"), this.genQAChecklist(project), "utf-8");
     writeFileSync(join(outputDir, "docs/BALANCE-REPORT.md"), this.genBalanceReport(project.economy, balanceReport), "utf-8");
+    writeFileSync(join(outputDir, "docs/HANDOFF-CHECKLIST.md"), this.genHandoffChecklist(project), "utf-8");
 
     // Config
     writeFileSync(join(outputDir, "worldgen.config.yaml"), `specVersion: "wg/1.0"\nprojectId: ${project.projectId}\nname: ${project.name}\nseed: ${project.source.seed}\ngenre: ${project.target.genre}\n`, "utf-8");
@@ -231,5 +236,73 @@ ${report.adjustments.length === 0 ? "None needed." : report.adjustments.map((a) 
 ## Currencies
 ${economy.currencies.map((c) => `- **${c.name}** (persistent: ${c.persistent})`).join("\n")}
 `;
+  }
+
+  private genHandoffChecklist(project: WorldProject): string {
+    const deviceChecks = project.devices.map((d) => `- [ ] ${d.label} (\`${d.type}\`) placed at correct coordinates`);
+    const currencyChecks = project.economy.currencies.map((c) => `- [ ] ${c.name} (\`${c.currencyId}\`) displays correctly`);
+    const sinkChecks = project.economy.sinks.map((s) => `- [ ] ${s.name} purchasable and applies effect`);
+    const zoneChecks = project.layout.zones.map((z) => `- [ ] Zone "${z.name}" loads and is reachable`);
+
+    return `# UEFN Handoff Checklist — ${project.name}
+
+## Pre-Import Checks
+- [ ] UEFN version is up to date (latest stable)
+- [ ] Verse compiler passes \`verse build\` with no errors
+- [ ] Project settings match target: genre **${project.target.genre}**, session **${project.design.sessionLengthMin} min**
+- [ ] Output scaffold directory reviewed (\`manifests/\`, \`Verse/\`, \`docs/\`)
+
+## Asset Verification
+- [ ] \`manifests/world.project.json\` present and valid JSON
+- [ ] \`manifests/layout.grid.json\` present and valid JSON
+- [ ] \`manifests/device_manifest.json\` present and valid JSON
+- [ ] \`manifests/economy.json\` present and valid JSON
+- [ ] \`manifests/loot_tables.json\` present and valid JSON
+- [ ] \`manifests/progression.json\` present and valid JSON
+- [ ] All Verse files in \`Verse/\` compile without errors
+
+## Device Placement
+${deviceChecks.join("\n")}
+- [ ] All device channel wiring matches \`docs/DEVICE-WIRING.md\`
+
+## Economy Validation
+${currencyChecks.join("\n")}
+${sinkChecks.join("\n")}
+- [ ] First purchase achievable within 90 seconds of gameplay
+- [ ] No currency overflow or negative balance states
+
+## Zone Verification
+${zoneChecks.join("\n")}
+- [ ] Zone transitions work in both directions
+- [ ] Gating requirements enforced correctly
+
+## Playtest Protocol
+- [ ] **Spawn Test:** Player spawns in starter zone, HUD visible
+- [ ] **Loop Test:** Full core loop (${project.design.coreLoop.join(" → ")}) completable
+- [ ] **Session Length Test:** Target pacing of ${project.design.sessionLengthMin} min reached without stalling
+- [ ] **Edge Cases:** AFK timeout, disconnect/reconnect, max players
+
+## Sign-Off
+- [ ] Designer review complete
+- [ ] Balance report reviewed (\`docs/BALANCE-REPORT.md\`)
+- [ ] QA checklist passed (\`docs/QA-CHECKLIST.md\`)
+- [ ] Ready for UEFN publish
+
+**Project:** ${project.name}
+**Genre:** ${project.target.genre}
+**Seed:** ${project.source.seed}
+`;
+  }
+
+  async packageZip(input: PackagerInput, outputDir: string): Promise<string> {
+    await this.package(input, outputDir);
+
+    const parent = dirname(outputDir);
+    const dirName = basename(outputDir);
+    const archivePath = join(parent, `${dirName}.tar.gz`);
+
+    await execFileAsync("tar", ["-czf", archivePath, "-C", parent, dirName]);
+
+    return archivePath;
   }
 }

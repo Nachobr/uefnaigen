@@ -1,0 +1,1 @@
+Cozy bakery tycoon where you bake bread and pastries, sell them at the counter, upgrade ovens, automate delivery routes to nearby shops, and prestige after 25 minutes to unlock exotic recipes.

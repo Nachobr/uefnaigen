@@ -1,5 +1,14 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { loadConfig } from "../config-loader.js";
+
+// Mock node:fs to prevent reading real ~/.forgeai/config.yaml
+vi.mock("node:fs", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs")>();
+  return {
+    ...actual,
+    existsSync: vi.fn(() => false),
+  };
+});
 
 describe("loadConfig", () => {
   const originalEnv = { ...process.env };
@@ -7,6 +16,8 @@ describe("loadConfig", () => {
   beforeEach(() => {
     delete process.env.ANTHROPIC_API_KEY;
     delete process.env.OPENAI_API_KEY;
+    delete process.env.GOOGLE_API_KEY;
+    delete process.env.GROQ_API_KEY;
     delete process.env.FORGEAI_PROVIDER;
     delete process.env.FORGEAI_MODEL;
     delete process.env.FORGEAI_OUTPUT_DIR;

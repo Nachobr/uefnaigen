@@ -1,0 +1,1 @@
+Snowball fight arena, 5v5 teams. Build snow forts for cover, pick up ammo around the map, 3-minute rounds with elimination scoring. Team with the most eliminations after 5 rounds wins.

@@ -190,12 +190,15 @@
 - [x] 64 prefabs total (24 starter + 10 forest + 10 industrial + 10 arena + 10 adventure)
 - [x] 148 tests passing across 12 packages
 
-### Week 6 — Beta Hardening
-- [ ] `roleplay/base` template
-- [ ] Export polish (zip, checklist, handoff docs)
-- [ ] 40 cross-genre golden prompts eval (target ≥75% — AC12)
-- [ ] Pricing hooks (free/pro/studio tier enforcement)
-- [ ] Tag `v0.2.0-beta`
+### Week 6 — Beta Hardening ✅
+- [x] `roleplay/base` template + roleplay prefab theme pack (10 prefabs)
+- [x] Export polish: `packageZip()` tar.gz export, `--zip` CLI flag, `HANDOFF-CHECKLIST.md` doc
+- [x] 40 cross-genre golden prompts eval — **100% pass rate** (40/40, AC12 target was ≥75%)
+- [x] Pricing hooks: `PricingTier` schema, `TierLimits`, `TierGuard` enforcement in pipeline
+- [x] Config-loader test fix (mock `~/.forgeai/config.yaml` in tests)
+- [x] 74 prefabs total (24 starter + 10 forest + 10 industrial + 10 arena + 10 adventure + 10 roleplay)
+- [x] 148 tests passing across 12 packages
+- [ ] Tag `v0.2.0-beta` (awaiting manual git tag)
 
 ---
 

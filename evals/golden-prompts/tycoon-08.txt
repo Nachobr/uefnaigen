@@ -1,0 +1,1 @@
+Pet shop tycoon for 6 players. Breed cute animals, sell pets to customers, upgrade habitats, automate feeding schedules. Prestige by discovering rare species and opening a new branch.

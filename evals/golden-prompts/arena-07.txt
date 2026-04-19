@@ -1,0 +1,1 @@
+Paintball arena, 6v6 teams. Pick your loadout before each round, capture the enemy flag and bring it back. Respawn on elimination, 4-minute rounds. First team to 5 flag captures wins.

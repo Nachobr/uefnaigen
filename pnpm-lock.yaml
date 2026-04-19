@@ -26,6 +26,9 @@ importers:
       '@forgeai/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@forgeai/packager':
+        specifier: workspace:*
+        version: link:../../packages/packager
       '@forgeai/prefabs':
         specifier: workspace:*
         version: link:../../packages/prefabs

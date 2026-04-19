@@ -1,0 +1,1 @@
+Robot battle arena for 8 players. Pick a mech loadout with different weapons and abilities, fight in 3-minute rounds, collect power-ups on the map. Leaderboard tracks total damage and wins.

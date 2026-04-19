@@ -14,12 +14,13 @@ describe("TemplateRegistry", () => {
   it("lists all registered templates", () => {
     const reg = createDefaultRegistry();
     const list = reg.list();
-    expect(list.length).toBe(5);
+    expect(list.length).toBe(6);
     expect(list.map((t) => t.templateId)).toContain("tycoon/base");
     expect(list.map((t) => t.templateId)).toContain("tycoon/lumber-mill");
     expect(list.map((t) => t.templateId)).toContain("tycoon/mining-empire");
     expect(list.map((t) => t.templateId)).toContain("battle_arena/base");
     expect(list.map((t) => t.templateId)).toContain("adventure/base");
+    expect(list.map((t) => t.templateId)).toContain("roleplay/base");
   });
 
   it("returns undefined for unknown template", () => {

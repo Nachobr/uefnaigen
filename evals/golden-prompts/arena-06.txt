@@ -1,0 +1,1 @@
+Gladiator arena FFA for 12 players. Melee-only weapons, round-based combat, power-up shields spawn in the center. Leaderboard tracks wins between rounds. Last gladiator standing takes the crown.
