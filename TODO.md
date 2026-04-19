@@ -198,7 +198,7 @@
 - [x] Config-loader test fix (mock `~/.forgeai/config.yaml` in tests)
 - [x] 74 prefabs total (24 starter + 10 forest + 10 industrial + 10 arena + 10 adventure + 10 roleplay)
 - [x] 148 tests passing across 12 packages
-- [ ] Tag `v0.2.0-beta` (awaiting manual git tag)
+- [x] Tag `v0.2.0-beta`
 
 ---
 

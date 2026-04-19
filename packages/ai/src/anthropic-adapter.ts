@@ -19,7 +19,7 @@ export class AnthropicAdapter implements LLMAdapter {
 
     const response = await this.client.messages.create({
       model: this.model,
-      max_tokens: options?.maxTokens ?? 4096,
+      max_tokens: options?.maxTokens ?? 16384,
       temperature: options?.temperature ?? 0.3,
       ...(systemMsg ? { system: systemMsg.content } : {}),
       messages: nonSystem.map((m) => ({

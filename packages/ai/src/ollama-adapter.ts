@@ -19,7 +19,7 @@ export class OllamaAdapter implements LLMAdapter {
       stream: false,
       options: {
         temperature: options?.temperature ?? 0.3,
-        num_predict: options?.maxTokens ?? 4096,
+        num_predict: options?.maxTokens ?? 16384,
       },
       ...(options?.jsonMode ? { format: "json" } : {}),
     };

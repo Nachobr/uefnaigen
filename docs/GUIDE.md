@@ -1,5 +1,28 @@
 # ForgeAI — Setup & Usage Guide
 
+## Quick Start
+
+```bash
+# Clone and build
+git clone https://github.com/nachobr/uefnaigen.git
+cd uefnaigen
+pnpm install && pnpm build
+
+# Link the CLI globally
+cd apps/cli && pnpm link --global && cd ../..
+
+# Set your API key (any one provider works)
+export GOOGLE_API_KEY=...
+# or: export ANTHROPIC_API_KEY=sk-...
+# or: export OPENAI_API_KEY=sk-...
+# or: export GROQ_API_KEY=gsk_...
+
+# Generate a project
+uefn-ai create "A colorful lumber tycoon for 8 players. Chop trees, sell logs, unlock sawmills, buy pets, and prestige every 20 min."
+```
+
+---
+
 ## 1. Configuration
 
 ForgeAI loads config with this priority (highest wins):
@@ -152,6 +175,9 @@ uefn-ai create "Mining empire tycoon" \
 # Dry run (plan only, no files written)
 uefn-ai create "Arena FFA for 16 players" --dry-run
 
+# Export as .tar.gz archive
+uefn-ai create "Beach resort roleplay with jobs and housing" --zip
+
 # JSON output (for scripting)
 uefn-ai create "Team deathmatch arena for 8 players with loadouts" --json
 ```
@@ -207,11 +233,12 @@ Runs structural, schema, and cross-reference checks. Use `--json` for machine-re
 | Path | What it is |
 |---|---|
 | `~/.forgeai/config.yaml` | Your config file |
+| `~/.forgeai/usage.json` | Tier usage tracking (generations/month, copilot/day) |
 | `~/.forgeai/jobs/` | Saved job records (for `resume`) |
 | `./output/` | Default generated project output |
 | `./output/manifests/` | JSON data (devices, economy, layout) |
 | `./output/Verse/` | Generated Verse scripts |
-| `./output/docs/` | Design docs, wiring guides, QA checklist |
+| `./output/docs/` | Design docs, wiring guides, QA checklist, handoff checklist |
 
 ---
 
@@ -251,3 +278,24 @@ Place `.json` files in a directory, then load them:
 ```
 
 The `loadUserCatalog(dir)` API loads all JSON prefabs from a directory and merges them with the built-in catalog.
+
+---
+
+## 13. Pricing Tiers
+
+ForgeAI enforces usage limits based on your tier (set in `~/.forgeai/config.yaml`):
+
+```yaml
+tier: free   # free | pro | studio
+```
+
+| Feature | Free | Pro ($19/mo) | Studio ($49/mo) |
+|---|---|---|---|
+| Generations/month | 2 | 50 | 500 |
+| Copilot calls/day | 10 | 100 | 1,000 |
+| Premium templates | ✗ | ✓ | ✓ |
+| Desktop app | ✗ | ✓ | ✓ |
+| Private catalogs | ✗ | ✗ | ✓ |
+| Shared templates | ✗ | ✗ | ✓ |
+
+Usage is tracked locally in `~/.forgeai/usage.json`.

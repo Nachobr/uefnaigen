@@ -17,7 +17,7 @@ export class OpenAIAdapter implements LLMAdapter {
     const response = await this.client.chat.completions.create({
       model: this.model,
       temperature: options?.temperature ?? 0.3,
-      max_tokens: options?.maxTokens ?? 4096,
+      max_tokens: options?.maxTokens ?? 16384,
       ...(options?.jsonMode ? { response_format: { type: "json_object" as const } } : {}),
       messages: messages.map((m) => ({
         role: m.role,

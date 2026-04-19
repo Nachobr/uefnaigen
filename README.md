@@ -5,8 +5,13 @@
 ## Quick Start
 
 ```bash
-# Install
-npm install -g uefn-ai
+# Clone and build
+git clone https://github.com/nachobr/uefnaigen.git
+cd uefnaigen
+pnpm install && pnpm build
+
+# Link the CLI globally
+cd apps/cli && pnpm link --global && cd ../..
 
 # Set your API key (any one provider works)
 export GOOGLE_API_KEY=...
@@ -16,18 +21,15 @@ export GOOGLE_API_KEY=...
 
 # Generate a project
 uefn-ai create "A colorful lumber tycoon for 8 players. Chop trees, sell logs, unlock sawmills, buy pets, and prestige every 20 min."
-
-# Or use without installing
-npx uefn-ai create "..."
 ```
 
 ## Features
 
 - **Prompt → Scaffold** — Full UEFN project from a single sentence
-- **5 Genre Templates** — Tycoon (base, lumber-mill, mining-empire), Battle Arena, Adventure
+- **6 Genre Templates** — Tycoon (base, lumber-mill, mining-empire), Battle Arena, Adventure, Roleplay
 - **Verse Copilot** — Generate, fix, and explain Verse scripts
 - **Economy Balancer** — Deterministic simulator validates income/sink curves
-- **Prefab System** — 24 prefabs with variant zone randomization
+- **Prefab System** — 74 prefabs across 6 theme packs with variant zone randomization
 - **Validation + Repair** — Structural, schema, and cross-reference checks with auto-fix
 
 ## Commands
@@ -56,6 +58,7 @@ npx uefn-ai create "..."
 --provider <id>      Choose AI provider (anthropic, openai, groq, ollama)
 --budget <usd>       Stop if inference cost exceeds threshold
 --dry-run            Plan only, no file writes
+--zip                Export as .tar.gz archive
 --json               Machine-readable JSON output
 --strict             Fail on warnings
 --verbose            Detailed logs
@@ -78,7 +81,8 @@ output/
 │   ├── SYSTEMS-OVERVIEW.md
 │   ├── DEVICE-WIRING.md
 │   ├── QA-CHECKLIST.md
-│   └── BALANCE-REPORT.md
+│   ├── BALANCE-REPORT.md
+│   └── HANDOFF-CHECKLIST.md
 ├── .ai/                 # Planner artifacts
 ├── README.md
 ├── README-UEFN-IMPORT.md
@@ -100,7 +104,7 @@ Falls back automatically: Groq → Google → Anthropic → OpenAI → Ollama (l
 ## Architecture
 
 - **Monorepo** — pnpm workspaces + Turborepo
-- **8 packages** — schemas, ai, core, templates, balance, validators, verse, packager, prefabs
+- **12 packages** — schemas, ai, core, templates, balance, validators, verse, packager, prefabs, knowledge, desktop, cli
 - **Pipeline** — Intent → Template → World → Layout → Systems → Balance → Devices → Verse
 
 ## Development
@@ -112,7 +116,7 @@ pnpm install
 # Build all packages
 pnpm build
 
-# Run tests (117 tests)
+# Run tests (148 tests)
 pnpm test
 
 # Run eval suite

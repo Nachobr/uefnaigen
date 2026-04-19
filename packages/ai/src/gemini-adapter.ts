@@ -25,7 +25,7 @@ export class GeminiAdapter implements LLMAdapter {
       config: {
         ...(systemMsg ? { systemInstruction: systemMsg.content } : {}),
         temperature: options?.temperature ?? 0.3,
-        maxOutputTokens: options?.maxTokens ?? 4096,
+        maxOutputTokens: options?.maxTokens ?? 16384,
         ...(options?.jsonMode ? { responseMimeType: "application/json" } : {}),
       },
     });
