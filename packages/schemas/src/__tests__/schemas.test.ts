@@ -220,19 +220,18 @@ describe("DeviceInstance", () => {
     expect(dev.type).toBe("trigger");
   });
 
-  it("rejects invalid device type", () => {
-    expect(() =>
-      DeviceInstance.parse({
-        id: "d",
-        type: "laser_cannon",
-        label: "Bad",
-        transform: {
-          location: { x: 0, y: 0, z: 0 },
-          rotation: { pitch: 0, yaw: 0, roll: 0 },
-        },
-        properties: {},
-      })
-    ).toThrow();
+  it("accepts non-standard device types from LLM output", () => {
+    const dev = DeviceInstance.parse({
+      id: "d",
+      type: "laser_cannon",
+      label: "Laser",
+      transform: {
+        location: { x: 0, y: 0, z: 0 },
+        rotation: { pitch: 0, yaw: 0, roll: 0 },
+      },
+      properties: {},
+    });
+    expect(dev.type).toBe("laser_cannon");
   });
 
   it("accepts optional channels and events", () => {

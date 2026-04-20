@@ -1,6 +1,7 @@
 import { DeviceInstance } from "@forgeai/schemas";
 import { z } from "zod";
 import type { LLMAdapter } from "./adapter.js";
+import { parseJsonResponse } from "./parse-json.js";
 import type { SystemsDesign } from "./systems-planner.js";
 import type { LayoutSpec } from "@forgeai/schemas";
 
@@ -75,17 +76,7 @@ Produce a JSON array of DeviceInstance objects with exact coordinates within eac
       { temperature: 0.1, maxTokens: 8192, jsonMode: true },
     );
 
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(response.content);
-    } catch {
-      const match = response.content.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (match) {
-        parsed = JSON.parse(match[1]);
-      } else {
-        throw new Error("Failed to parse DeviceMapper response as JSON");
-      }
-    }
+    let parsed = parseJsonResponse(response.content, "DeviceMapper");
 
     // Handle wrapped responses like { "devices": [...] }
     if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {

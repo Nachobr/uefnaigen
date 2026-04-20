@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { TemplateDefinition } from "@forgeai/schemas";
 import type { LLMAdapter } from "./adapter.js";
+import { parseJsonResponse } from "./parse-json.js";
 import type { NormalizedBrief } from "./intent-extractor.js";
 
 export const WorldDesign = z.object({
@@ -87,17 +88,7 @@ Template constraints:
       { temperature: 0.5, jsonMode: true },
     );
 
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(response.content);
-    } catch {
-      const match = response.content.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (match) {
-        parsed = JSON.parse(match[1]);
-      } else {
-        throw new Error(`Failed to parse WorldPlanner response as JSON`);
-      }
-    }
+    const parsed = parseJsonResponse(response.content, "WorldPlanner");
 
     return WorldDesign.parse(parsed);
   }

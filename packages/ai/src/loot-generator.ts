@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { LLMAdapter } from "./adapter.js";
+import { parseJsonResponse } from "./parse-json.js";
 import type { NormalizedBrief } from "./intent-extractor.js";
 import type { WorldDesign } from "./world-planner.js";
 
@@ -71,17 +72,7 @@ Create 1 loot table per resource zone, plus 1 global rare drops table.`;
       { temperature: 0.4, jsonMode: true },
     );
 
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(response.content);
-    } catch {
-      const match = response.content.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (match) {
-        parsed = JSON.parse(match[1]);
-      } else {
-        throw new Error("Failed to parse LootGenerator response as JSON");
-      }
-    }
+    const parsed = parseJsonResponse(response.content, "LootGenerator");
 
     const result = LootTablesResult.parse(parsed);
     return result.tables;

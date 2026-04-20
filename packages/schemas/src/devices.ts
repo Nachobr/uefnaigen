@@ -32,13 +32,13 @@ export type DeviceEventBinding = z.infer<typeof DeviceEventBinding>;
 
 export const DeviceInstance = z.object({
   id: z.string(),
-  type: DeviceType,
+  type: z.string(),
   label: z.string(),
   transform: Transform,
   properties: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.array(z.string())])),
   channels: z.object({
-    listens: z.array(z.string()),
-    transmits: z.array(z.string()),
+    listens: z.array(z.string()).default([]),
+    transmits: z.array(z.string()).default([]),
   }).optional(),
   events: z.array(DeviceEventBinding).optional(),
   zoneId: z.string().optional(),

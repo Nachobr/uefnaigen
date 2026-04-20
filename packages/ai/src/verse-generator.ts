@@ -1,5 +1,6 @@
 import { VerseModule } from "@forgeai/schemas";
 import type { LLMAdapter } from "./adapter.js";
+import { parseJsonResponse } from "./parse-json.js";
 import type { ModulePlan } from "./verse-planner.js";
 
 const SYSTEM_PROMPT = `You are a UEFN Verse code generator. Given a module plan, generate a Verse AST as JSON.
@@ -71,17 +72,7 @@ Generate complete method bodies with real Verse logic. Use proper failable patte
       { temperature: 0.2, maxTokens: 4096, jsonMode: true },
     );
 
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(response.content);
-    } catch {
-      const match = response.content.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (match) {
-        parsed = JSON.parse(match[1]);
-      } else {
-        throw new Error("Failed to parse VerseGenerator response as JSON");
-      }
-    }
+    const parsed = parseJsonResponse(response.content, "VerseGenerator");
 
     return VerseModule.parse(parsed);
   }

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { LLMAdapter } from "./adapter.js";
+import { parseJsonResponse } from "./parse-json.js";
 import type { SystemsDesign } from "./systems-planner.js";
 import type { DeviceInstance, TemplateDefinition } from "@forgeai/schemas";
 
@@ -114,17 +115,7 @@ Plan ALL required modules and any relevant optional modules.`;
       { temperature: 0.2, maxTokens: 8192, jsonMode: true },
     );
 
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(response.content);
-    } catch {
-      const match = response.content.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (match) {
-        parsed = JSON.parse(match[1]);
-      } else {
-        throw new Error("Failed to parse VersePlanner response as JSON");
-      }
-    }
+    const parsed = parseJsonResponse(response.content, "VersePlanner");
 
     return ModulePlan.parse(parsed);
   }

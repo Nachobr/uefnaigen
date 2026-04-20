@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { Genre } from "@forgeai/schemas";
 import type { LLMAdapter } from "./adapter.js";
+import { parseJsonResponse } from "./parse-json.js";
 
 export const NormalizedBrief = z.object({
   genre: z.enum(["tycoon", "battle_arena", "adventure", "roleplay"]),
@@ -101,18 +102,7 @@ export class IntentExtractor {
       { temperature: 0.2, jsonMode: true },
     );
 
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(response.content);
-    } catch {
-      // Try to extract JSON from markdown code blocks
-      const match = response.content.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (match) {
-        parsed = JSON.parse(match[1]);
-      } else {
-        throw new Error(`Failed to parse LLM response as JSON: ${response.content.slice(0, 200)}`);
-      }
-    }
+    const parsed = parseJsonResponse(response.content, "IntentExtractor");
 
     const brief = NormalizedBrief.parse(parsed);
 

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { LLMAdapter } from "./adapter.js";
+import { parseJsonResponse } from "./parse-json.js";
 import type { NormalizedBrief } from "./intent-extractor.js";
 import type { WorldDesign } from "./world-planner.js";
 import type { TemplateDefinition } from "@forgeai/schemas";
@@ -124,18 +125,37 @@ Required device types: ${template.devicePolicies.requiredDeviceTypes.join(", ")}
       { temperature: 0.3, jsonMode: true },
     );
 
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(response.content);
-    } catch {
-      const match = response.content.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (match) {
-        parsed = JSON.parse(match[1]);
-      } else {
-        throw new Error("Failed to parse SystemsPlanner response as JSON");
-      }
-    }
+    const parsed = parseJsonResponse(response.content, "SystemsPlanner");
 
+    this.coerceEnums(parsed as Record<string, unknown>);
     return SystemsDesign.parse(parsed);
+  }
+
+  private coerceEnums(data: Record<string, unknown>): void {
+    const RATE_UNIT_MAP: Record<string, string> = {
+      per_action: "per_action", per_second: "per_second", per_minute: "per_minute",
+      per_log: "per_action", per_item: "per_action", per_hit: "per_action",
+      per_kill: "per_action", per_harvest: "per_action", per_click: "per_action",
+      per_second_per_level: "per_second", per_tick: "per_second",
+      per_prestige: "per_action",
+    };
+    const SINK_TYPE_MAP: Record<string, string> = {
+      purchase: "purchase", upgrade: "upgrade", unlock: "unlock", prestige: "prestige",
+      item_purchase: "purchase", buy: "purchase",
+      zone_unlock: "unlock", area_unlock: "unlock",
+      prestige_upgrade: "prestige", rebirth: "prestige",
+    };
+
+    const economy = data.economy as Record<string, unknown[]> | undefined;
+    if (!economy) return;
+
+    for (const gen of (economy.generators ?? []) as Record<string, unknown>[]) {
+      const unit = String(gen.rateUnit ?? "");
+      gen.rateUnit = RATE_UNIT_MAP[unit] ?? "per_action";
+    }
+    for (const sink of (economy.sinks ?? []) as Record<string, unknown>[]) {
+      const type = String(sink.type ?? "");
+      sink.type = SINK_TYPE_MAP[type] ?? "purchase";
+    }
   }
 }
