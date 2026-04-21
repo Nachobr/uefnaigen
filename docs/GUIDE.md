@@ -114,7 +114,7 @@ Install [Ollama](https://ollama.com), then:
 ollama pull qwen3.5:9b
 
 # Use it with ForgeAI
-uefn-ai create "A zombie survival adventure with crafting and boss waves" --provider ollama
+uefn-ai create "A zombie survival adventure with crafting and boss waves" --provider ollama --model yourlocalmodel
 
 # Or set it as default in config.yaml:
 # provider: ollama
