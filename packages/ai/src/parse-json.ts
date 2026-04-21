@@ -50,5 +50,6 @@ export function parseJsonResponse(raw: string, agentName: string): unknown {
     }
   }
 
-  throw new Error(`Failed to parse ${agentName} response as JSON: ${trimmed.slice(0, 200)}`);
+  const preview = trimmed.length > 0 ? trimmed.slice(0, 500) : "(empty response)";
+  throw new Error(`Failed to parse ${agentName} response as JSON.\nRaw length: ${raw.length} | After strip: ${trimmed.length}\nPreview:\n${preview}`);
 }

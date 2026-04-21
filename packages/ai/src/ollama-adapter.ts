@@ -40,8 +40,14 @@ export class OllamaAdapter implements LLMAdapter {
       eval_count?: number;
     };
 
+    const content = data.message.content;
+    if (process.env.FORGEAI_VERBOSE === "true") {
+      console.error(`[Ollama/${this.model}] ${content.length} chars | in:${data.prompt_eval_count ?? "?"} out:${data.eval_count ?? "?"}`);
+      console.error(`[Ollama/${this.model}] Response preview: ${content.slice(0, 300)}`);
+    }
+
     return {
-      content: data.message.content,
+      content,
       usage: {
         inputTokens: data.prompt_eval_count ?? 0,
         outputTokens: data.eval_count ?? 0,
