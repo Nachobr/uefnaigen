@@ -45,8 +45,8 @@ export const SystemsDesign = z.object({
       purpose: z.string(),
       channels: z
         .object({
-          listens: z.array(z.string()),
-          transmits: z.array(z.string()),
+          listens: z.array(z.string()).default([]),
+          transmits: z.array(z.string()).default([]),
         })
         .optional(),
     }),
@@ -62,25 +62,18 @@ export const SystemsDesign = z.object({
 });
 export type SystemsDesign = z.infer<typeof SystemsDesign>;
 
-const SYSTEM_PROMPT = `You are a UEFN systems designer. Given a world design and template, design the game systems: economy, devices, and rules.
+const ECONOMY_PROMPT = `You are a UEFN economy designer. Design ONLY the economy and game rules.
 
-Return ONLY valid JSON matching this schema:
+Return ONLY valid JSON:
 {
-  "economy": {
-    "currencies": [{ "currencyId": "gold", "name": "Gold", "icon": "🪙", "persistent": true }],
-    "generators": [{
-      "sourceId": "gen_1", "name": "Tree Chopping", "currencyId": "gold",
-      "baseRate": 10, "rateUnit": "per_action", "zoneId": "zone_1"
-    }],
-    "sinks": [{
-      "sinkId": "sink_1", "name": "Sawmill Upgrade", "currencyId": "gold",
-      "cost": 100, "type": "upgrade", "repeatable": false
-    }]
-  },
-  "devices": [{
-    "id": "dev_1", "type": "trigger|button|tracker|barrier|...",
-    "label": "Sell Trigger", "zoneId": "zone_1", "purpose": "what this device does",
-    "channels": { "listens": ["ch_1"], "transmits": ["ch_2"] }
+  "currencies": [{ "currencyId": "gold", "name": "Gold", "icon": "🪙", "persistent": true }],
+  "generators": [{
+    "sourceId": "gen_1", "name": "Tree Chopping", "currencyId": "gold",
+    "baseRate": 10, "rateUnit": "per_action", "zoneId": "zone_1"
+  }],
+  "sinks": [{
+    "sinkId": "sink_1", "name": "Sawmill Upgrade", "currencyId": "gold",
+    "cost": 100, "type": "upgrade", "repeatable": false
   }],
   "gameRules": [{
     "ruleId": "rule_1", "description": "When player sells logs, grant gold",
@@ -88,12 +81,22 @@ Return ONLY valid JSON matching this schema:
   }]
 }
 
+rateUnit MUST be exactly one of: per_action, per_second, per_minute
+sink type MUST be exactly one of: purchase, upgrade, unlock, prestige
+
 Rules:
-- Each zone should have at least 1 device
-- Economy should have clear income sources and sinks
 - Upgrade costs should escalate (1.5x-2.5x multiplier per tier)
-- Include devices for: selling, purchasing upgrades, zone unlocks, barriers
-- For tycoon: first purchase achievable in 45-90 seconds of gathering`;
+- For tycoon: first purchase achievable in 45-90 seconds`;
+
+const DEVICES_PROMPT = `You are a UEFN device planner. Given zones and an economy, list the devices needed.
+
+Return ONLY a valid JSON array:
+[{
+  "id": "dev_1", "type": "trigger", "label": "Sell Trigger",
+  "zoneId": "zone_1", "purpose": "sells items for gold"
+}]
+
+Each zone should have at least 1 device. Use types like: trigger, button, item_granter, item_spawner, barrier, tracker, score_manager, hud_message, timer, spawn_pad, teleporter.`;
 
 export class SystemsPlanner {
   constructor(private llm: LLMAdapter) {}
@@ -103,32 +106,56 @@ export class SystemsPlanner {
     worldDesign: WorldDesign,
     template: TemplateDefinition,
   ): Promise<SystemsDesign> {
-    const userMsg = `Design game systems for:
+    const zoneInfo = worldDesign.zones
+      .map((z) => `- ${z.zoneId}: "${z.name}" (${z.purpose}, tier ${z.tier})`)
+      .join("\n");
 
-Genre: ${brief.genre}
+    const sharedContext = `Genre: ${brief.genre}
 Core Loop: ${brief.coreLoop.join(" → ")}
 Session: ${brief.sessionLengthMin} min
 Key Features: ${brief.keyFeatures.join(", ")}
+Zones:\n${zoneInfo}`;
 
-World Design:
-${worldDesign.zones.map((z) => `- ${z.zoneId}: "${z.name}" (${z.purpose}, tier ${z.tier})`).join("\n")}
-
-Template required systems: ${template.systemModules.required.join(", ")}
-Allowed device types: ${template.devicePolicies.allowedDeviceTypes.join(", ")}
-Required device types: ${template.devicePolicies.requiredDeviceTypes.join(", ")}`;
-
-    const response = await this.llm.chat(
+    // Call 1: Economy + Rules
+    const econResponse = await this.llm.chat(
       [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: userMsg },
+        { role: "system", content: ECONOMY_PROMPT },
+        { role: "user", content: `Design economy and rules for:\n\n${sharedContext}\n\nTemplate systems: ${template.systemModules.required.join(", ")}` },
       ],
       { temperature: 0.3, jsonMode: true },
     );
 
-    const parsed = parseJsonResponse(response.content, "SystemsPlanner");
+    const econParsed = parseJsonResponse(econResponse.content, "SystemsPlanner:Economy") as Record<string, unknown>;
+    this.coerceEnums(econParsed);
 
-    this.coerceEnums(parsed as Record<string, unknown>);
-    return SystemsDesign.parse(parsed);
+    // Call 2: Devices
+    const currencyNames = ((econParsed.currencies ?? []) as Array<{ name: string }>).map((c) => c.name).join(", ");
+    const devResponse = await this.llm.chat(
+      [
+        { role: "system", content: DEVICES_PROMPT },
+        { role: "user", content: `Place devices for:\n\n${sharedContext}\nCurrencies: ${currencyNames}\nAllowed types: ${template.devicePolicies.allowedDeviceTypes.join(", ")}\nRequired types: ${template.devicePolicies.requiredDeviceTypes.join(", ")}` },
+      ],
+      { temperature: 0.3, jsonMode: true },
+    );
+
+    let devices = parseJsonResponse(devResponse.content, "SystemsPlanner:Devices");
+    if (devices && typeof devices === "object" && !Array.isArray(devices)) {
+      const obj = devices as Record<string, unknown>;
+      const arrayKey = Object.keys(obj).find((k) => Array.isArray(obj[k]));
+      if (arrayKey) devices = obj[arrayKey];
+    }
+
+    const gameRules = (econParsed.gameRules ?? []) as unknown[];
+
+    return SystemsDesign.parse({
+      economy: {
+        currencies: econParsed.currencies,
+        generators: econParsed.generators,
+        sinks: econParsed.sinks,
+      },
+      devices,
+      gameRules,
+    });
   }
 
   private coerceEnums(data: Record<string, unknown>): void {
@@ -146,14 +173,11 @@ Required device types: ${template.devicePolicies.requiredDeviceTypes.join(", ")}
       prestige_upgrade: "prestige", rebirth: "prestige",
     };
 
-    const economy = data.economy as Record<string, unknown[]> | undefined;
-    if (!economy) return;
-
-    for (const gen of (economy.generators ?? []) as Record<string, unknown>[]) {
+    for (const gen of ((data.generators ?? []) as Record<string, unknown>[])) {
       const unit = String(gen.rateUnit ?? "");
       gen.rateUnit = RATE_UNIT_MAP[unit] ?? "per_action";
     }
-    for (const sink of (economy.sinks ?? []) as Record<string, unknown>[]) {
+    for (const sink of ((data.sinks ?? []) as Record<string, unknown>[])) {
       const type = String(sink.type ?? "");
       sink.type = SINK_TYPE_MAP[type] ?? "purchase";
     }
