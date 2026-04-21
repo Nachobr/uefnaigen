@@ -1,0 +1,57 @@
+{
+  "worldType": "hub_and_spoke",
+  "bounds": {
+    "width": 8000,
+    "depth": 8000,
+    "height": 50
+  },
+  "zones": [
+    {
+      "zoneId": "zone_1",
+      "name": "Lively Lobby",
+      "purpose": "starter_area",
+      "footprint": {
+        "x": 2000,
+        "y": 4000,
+        "w": 2000,
+        "h": 2000
+      },
+      "elevation": 0
+    },
+    {
+      "zoneId": "zone_2",
+      "name": "NPC Shop",
+      "purpose": "shop",
+      "footprint": {
+        "x": 4000,
+        "y": 3000,
+        "w": 1500,
+        "h": 1500
+      },
+      "elevation": 0
+    },
+    {
+      "zoneId": "zone_3",
+      "name": "Job Board",
+      "purpose": "resource_area",
+      "footprint": {
+        "x": 6000,
+        "y": 2000,
+        "w": 1500,
+        "h": 1500
+      },
+      "elevation": 0
+    }
+  ],
+  "spawnPoints": [
+    {
+      "id": "sp_1",
+      "location": {
+        "x": 2500,
+        "y": 4500,
+        "z": 0
+      },
+      "zoneId": "zone_1"
+    }
+  ]
+}

@@ -66,8 +66,11 @@ export class Pipeline {
   }
 
   async run(): Promise<PipelineResult> {
+    const isLocal = this.options.config.provider === "ollama";
     const tierGuard = new TierGuard(this.options.config.tier ?? "free");
-    tierGuard.checkGenerationAllowed();
+    if (!isLocal) {
+      tierGuard.checkGenerationAllowed();
+    }
 
     const job = this.jobManager.create(this.options.prompt, this.options.seed);
 

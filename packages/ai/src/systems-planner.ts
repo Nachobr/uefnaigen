@@ -42,7 +42,7 @@ export const SystemsDesign = z.object({
       type: z.string(),
       label: z.string(),
       zoneId: z.string(),
-      purpose: z.string(),
+      purpose: z.string().default(""),
       channels: z
         .object({
           listens: z.array(z.string()).default([]),
@@ -141,8 +141,23 @@ Zones:\n${zoneInfo}`;
     let devices = parseJsonResponse(devResponse.content, "SystemsPlanner:Devices");
     if (devices && typeof devices === "object" && !Array.isArray(devices)) {
       const obj = devices as Record<string, unknown>;
-      const arrayKey = Object.keys(obj).find((k) => Array.isArray(obj[k]));
-      if (arrayKey) devices = obj[arrayKey];
+      // Prefer a top-level "devices" key
+      if (Array.isArray(obj.devices)) {
+        devices = obj.devices;
+      } else {
+        // Handle nested: { zones: [{ devices: [...] }] }
+        const arrayKey = Object.keys(obj).find((k) => Array.isArray(obj[k]));
+        if (arrayKey) {
+          const arr = obj[arrayKey] as unknown[];
+          const nested = arr.flatMap((item) => {
+            if (item && typeof item === "object" && "devices" in item && Array.isArray((item as Record<string, unknown>).devices)) {
+              return (item as Record<string, unknown>).devices as unknown[];
+            }
+            return [item];
+          });
+          devices = nested;
+        }
+      }
     }
 
     const gameRules = (econParsed.gameRules ?? []) as unknown[];

@@ -1,0 +1,11 @@
+{
+  "progressionBeats": [
+    "First job in 30s",
+    "First upgrade at 60s"
+  ],
+  "sessionPacing": {
+    "earlyGame": "In the first minute, you start by interacting with NPCs to get a feel for the Lobby. By the second minute, you can take on your first job and earn some currency.",
+    "midGame": "At around five minutes in, you have completed several jobs and earned enough currency to visit the NPC Shop for upgrades. The Lobby remains bustling with activity as you continue to interact and upgrade.",
+    "lateGame": "In the final few minutes, you focus on completing more challenging jobs and making significant upgrades to your character before deciding whether to prestige or end the session."
+  }
+}

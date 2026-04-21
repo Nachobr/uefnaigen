@@ -1,0 +1,53 @@
+{
+  "currencies": [
+    {
+      "currencyId": "gold",
+      "name": "Gold",
+      "persistent": true
+    },
+    {
+      "currencyId": "silver",
+      "name": "Silver",
+      "persistent": false
+    }
+  ],
+  "generators": [
+    {
+      "sourceId": "gen_1",
+      "name": "Lively Lobby",
+      "currencyId": "gold",
+      "baseRate": 5,
+      "rateUnit": "per_minute"
+    },
+    {
+      "sourceId": "gen_2",
+      "name": "NPC Shop",
+      "currencyId": "silver",
+      "baseRate": 3,
+      "rateUnit": "per_action"
+    }
+  ],
+  "sinks": [
+    {
+      "sinkId": "sink_1",
+      "name": "NPC Upgrade",
+      "currencyId": "gold",
+      "cost": 50,
+      "type": "upgrade",
+      "repeatable": false
+    },
+    {
+      "sinkId": "sink_2",
+      "name": "Job Board Subscription",
+      "currencyId": "silver",
+      "cost": 10,
+      "type": "purchase",
+      "repeatable": true
+    }
+  ],
+  "targetCurves": {
+    "timeToFirstUpgradeSec": 30,
+    "timeToAutomationMin": 5,
+    "timeToPrestigeMin": 20
+  }
+}

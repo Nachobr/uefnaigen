@@ -1,0 +1,453 @@
+{
+  "modules": [
+    {
+      "moduleName": "GameManager",
+      "className": "game_manager",
+      "extends": "creative_device",
+      "purpose": "Manages game initialization, zones, and transitions between states",
+      "editableFields": [
+        {
+          "name": "LobbyEntryTrigger",
+          "type": "trigger_device",
+          "deviceId": "dev_1"
+        },
+        {
+          "name": "SpawnPad",
+          "type": "spawn_pad",
+          "deviceId": "dev_2"
+        },
+        {
+          "name": "WelcomeGiftItemGranter",
+          "type": "item_granter",
+          "deviceId": "dev_3"
+        },
+        {
+          "name": "LobbyWelcomeMessage",
+          "type": "hud_message",
+          "deviceId": "dev_4"
+        }
+      ],
+      "methods": [
+        {
+          "name": "OnBegin",
+          "purpose": "Initialize game zones and set up initial events",
+          "params": [],
+          "returnType": "void",
+          "attributes": [
+            "override",
+            "suspends"
+          ]
+        },
+        {
+          "name": "HandleLobbyEntry",
+          "purpose": "Trigger actions when player enters the lobby",
+          "params": [
+            "Agent:agent"
+          ],
+          "returnType": "void"
+        }
+      ],
+      "imports": [
+        "/Fortnite.com/Devices",
+        "/Verse.org/Simulation"
+      ],
+      "dependsOn": []
+    },
+    {
+      "moduleName": "JobManager",
+      "className": "job_manager",
+      "extends": "creative_device",
+      "purpose": "Manages job boards and quests for players",
+      "editableFields": [
+        {
+          "name": "JobBoardEntryTrigger",
+          "type": "trigger_device",
+          "deviceId": "dev_8"
+        },
+        {
+          "name": "QuestItemSpawner",
+          "type": "item_spawner",
+          "deviceId": "dev_9"
+        },
+        {
+          "name": "JobBoardMessage",
+          "type": "hud_message",
+          "deviceId": "dev_10"
+        }
+      ],
+      "methods": [
+        {
+          "name": "OnBegin",
+          "purpose": "Initialize job board and set up events for quest spawning",
+          "params": [],
+          "returnType": "void",
+          "attributes": [
+            "override",
+            "suspends"
+          ]
+        },
+        {
+          "name": "HandleJobBoardEntry",
+          "purpose": "Trigger actions when player enters the job board area",
+          "params": [
+            "Agent:agent"
+          ],
+          "returnType": "void"
+        }
+      ],
+      "imports": [
+        "/Fortnite.com/Devices",
+        "/Verse.org/Simulation"
+      ],
+      "dependsOn": []
+    },
+    {
+      "moduleName": "CurrencyManager",
+      "className": "currency_manager",
+      "extends": "creative_device",
+      "purpose": "Manages player currencies and transactions",
+      "editableFields": [
+        {
+          "name": "SellTrigger",
+          "type": "trigger_device",
+          "deviceId": "dev_1"
+        },
+        {
+          "name": "ShopEntryTrigger",
+          "type": "trigger_device",
+          "deviceId": "dev_5"
+        }
+      ],
+      "methods": [
+        {
+          "name": "OnBegin",
+          "purpose": "Subscribe to device events on game start and initialize currencies",
+          "params": [],
+          "returnType": "void",
+          "attributes": [
+            "override",
+            "suspends"
+          ]
+        },
+        {
+          "name": "HandleSell",
+          "purpose": "Grant silver when player sells resources",
+          "params": [
+            "Agent:agent"
+          ],
+          "returnType": "void"
+        },
+        {
+          "name": "HandleShopEntry",
+          "purpose": "Initialize shop transactions and currency sinks",
+          "params": [],
+          "returnType": "void"
+        }
+      ],
+      "imports": [
+        "/Fortnite.com/Devices",
+        "/Verse.org/Simulation"
+      ],
+      "dependsOn": [
+        "EconomyManager"
+      ]
+    },
+    {
+      "moduleName": "ShopController",
+      "className": "shop_controller",
+      "extends": "creative_device",
+      "purpose": "Controls the NPC shop and item transactions",
+      "editableFields": [
+        {
+          "name": "UpgradeItemGranter",
+          "type": "item_granter",
+          "deviceId": "dev_6"
+        },
+        {
+          "name": "ShopMessage",
+          "type": "hud_message",
+          "deviceId": "dev_7"
+        }
+      ],
+      "methods": [
+        {
+          "name": "OnBegin",
+          "purpose": "Initialize shop items and set up events for purchases",
+          "params": [],
+          "returnType": "void",
+          "attributes": [
+            "override",
+            "suspends"
+          ]
+        },
+        {
+          "name": "HandleUpgradePurchase",
+          "purpose": "Grant upgrades when player uses silver in the NPC Shop",
+          "params": [
+            "Agent:agent"
+          ],
+          "returnType": "void"
+        }
+      ],
+      "imports": [
+        "/Fortnite.com/Devices",
+        "/Verse.org/Simulation"
+      ],
+      "dependsOn": [
+        "CurrencyManager"
+      ]
+    },
+    {
+      "moduleName": "HousingManager",
+      "className": "housing_manager",
+      "extends": "creative_device",
+      "purpose": "Manages player housing and subscription purchases",
+      "editableFields": [
+        {
+          "name": "SubscriptionPurchaseTrigger",
+          "type": "trigger_device",
+          "deviceId": "dev_8"
+        }
+      ],
+      "methods": [
+        {
+          "name": "OnBegin",
+          "purpose": "Initialize housing subscriptions and set up purchase events",
+          "params": [],
+          "returnType": "void",
+          "attributes": [
+            "override",
+            "suspends"
+          ]
+        },
+        {
+          "name": "HandleSubscriptionPurchase",
+          "purpose": "Process subscription purchases for housing upgrades",
+          "params": [
+            "Agent:agent"
+          ],
+          "returnType": "void"
+        }
+      ],
+      "imports": [
+        "/Fortnite.com/Devices",
+        "/Verse.org/Simulation"
+      ],
+      "dependsOn": []
+    },
+    {
+      "moduleName": "HUDController",
+      "className": "hud_controller",
+      "extends": "creative_device",
+      "purpose": "Controls HUD messages and notifications for players",
+      "editableFields": [
+        {
+          "name": "LobbyWelcomeMessage",
+          "type": "hud_message",
+          "deviceId": "dev_4"
+        },
+        {
+          "name": "ShopUpgradeMessage",
+          "type": "hud_message",
+          "deviceId": "dev_7"
+        },
+        {
+          "name": "JobBoardQuestMessage",
+          "type": "hud_message",
+          "deviceId": "dev_10"
+        }
+      ],
+      "methods": [
+        {
+          "name": "OnBegin",
+          "purpose": "Initialize HUD messages and set up notifications for different zones",
+          "params": [],
+          "returnType": "void",
+          "attributes": [
+            "override",
+            "suspends"
+          ]
+        },
+        {
+          "name": "HandleHUDNotification",
+          "purpose": "Display appropriate HUD messages based on player actions",
+          "params": [
+            "Agent:agent"
+          ],
+          "returnType": "void"
+        }
+      ],
+      "imports": [
+        "/Fortnite.com/Devices",
+        "/Verse.org/Simulation"
+      ],
+      "dependsOn": []
+    },
+    {
+      "moduleName": "OutfitManager",
+      "className": "outfit_manager",
+      "extends": "creative_device",
+      "purpose": "Manages player outfits and cosmetic items",
+      "editableFields": [
+        {
+          "name": "ItemGranter",
+          "type": "item_granter",
+          "deviceId": "dev_3"
+        }
+      ],
+      "methods": [
+        {
+          "name": "OnBegin",
+          "purpose": "Initialize outfit grants and set up events for cosmetic items",
+          "params": [],
+          "returnType": "void",
+          "attributes": [
+            "override",
+            "suspends"
+          ]
+        },
+        {
+          "name": "HandleOutfitGrant",
+          "purpose": "Grant player outfits when entering the lobby",
+          "params": [
+            "Agent:agent"
+          ],
+          "returnType": "void"
+        }
+      ],
+      "imports": [
+        "/Fortnite.com/Devices",
+        "/Verse.org/Simulation"
+      ],
+      "dependsOn": []
+    },
+    {
+      "moduleName": "PetController",
+      "className": "pet_controller",
+      "extends": "creative_device",
+      "purpose": "Manages player pets and interactions",
+      "editableFields": [],
+      "methods": [
+        {
+          "name": "OnBegin",
+          "purpose": "Initialize pet management and set up events for pet interactions",
+          "params": [],
+          "returnType": "void",
+          "attributes": [
+            "override",
+            "suspends"
+          ]
+        },
+        {
+          "name": "HandlePetInteraction",
+          "purpose": "Process player interactions with pets",
+          "params": [
+            "Agent:agent"
+          ],
+          "returnType": "void"
+        }
+      ],
+      "imports": [
+        "/Fortnite.com/Devices",
+        "/Verse.org/Simulation"
+      ],
+      "dependsOn": []
+    },
+    {
+      "moduleName": "VehicleManager",
+      "className": "vehicle_manager",
+      "extends": "creative_device",
+      "purpose": "Manages player vehicles and transportation",
+      "editableFields": [],
+      "methods": [
+        {
+          "name": "OnBegin",
+          "purpose": "Initialize vehicle management and set up events for vehicle interactions",
+          "params": [],
+          "returnType": "void",
+          "attributes": [
+            "override",
+            "suspends"
+          ]
+        },
+        {
+          "name": "HandleVehicleInteraction",
+          "purpose": "Process player interactions with vehicles",
+          "params": [
+            "Agent:agent"
+          ],
+          "returnType": "void"
+        }
+      ],
+      "imports": [
+        "/Fortnite.com/Devices",
+        "/Verse.org/Simulation"
+      ],
+      "dependsOn": []
+    },
+    {
+      "moduleName": "SocialEventManager",
+      "className": "social_event_manager",
+      "extends": "creative_device",
+      "purpose": "Manages social events and interactions within the game world",
+      "editableFields": [],
+      "methods": [
+        {
+          "name": "OnBegin",
+          "purpose": "Initialize social event management and set up events for player interactions",
+          "params": [],
+          "returnType": "void",
+          "attributes": [
+            "override",
+            "suspends"
+          ]
+        },
+        {
+          "name": "HandleSocialEvent",
+          "purpose": "Process social events such as trading or teaming up with other players",
+          "params": [
+            "Agent:agent"
+          ],
+          "returnType": "void"
+        }
+      ],
+      "imports": [
+        "/Fortnite.com/Devices",
+        "/Verse.org/Simulation"
+      ],
+      "dependsOn": []
+    },
+    {
+      "moduleName": "DialogueManager",
+      "className": "dialogue_manager",
+      "extends": "creative_device",
+      "purpose": "Manages dialogue and conversations with NPCs in the game world",
+      "editableFields": [],
+      "methods": [
+        {
+          "name": "OnBegin",
+          "purpose": "Initialize dialogue management and set up events for NPC interactions",
+          "params": [],
+          "returnType": "void",
+          "attributes": [
+            "override",
+            "suspends"
+          ]
+        },
+        {
+          "name": "HandleDialogueInteraction",
+          "purpose": "Process player interactions with NPCs through dialogue",
+          "params": [
+            "Agent:agent"
+          ],
+          "returnType": "void"
+        }
+      ],
+      "imports": [
+        "/Fortnite.com/Devices",
+        "/Verse.org/Simulation"
+      ],
+      "dependsOn": []
+    }
+  ]
+}

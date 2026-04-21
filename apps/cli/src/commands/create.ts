@@ -55,33 +55,60 @@ export const createCommand = new Command("create")
       console.log(`  Loot:      ${result.lootTables.length} tables`);
       console.log(`  Seed:      ${seed}`);
 
+      const now = new Date().toISOString();
+      const project = {
+        specVersion: "wg/1.0" as const,
+        projectId: result.job.projectId,
+        name: result.brief.fantasy.slice(0, 60),
+        slug: result.job.jobId,
+        createdAt: now,
+        updatedAt: now,
+        source: {
+          mode: "map-studio" as const,
+          prompt,
+          seed,
+        },
+        target: {
+          genre: result.brief.genre,
+          uefnVersion: "32.00",
+          outputMode: "scaffold" as const,
+        },
+        design: {
+          fantasy: result.brief.fantasy,
+          coreLoop: result.brief.coreLoop,
+          sessionLengthMin: result.brief.sessionLengthMin,
+          progressionStyle: result.brief.progressionStyle,
+        },
+        layout: result.layout,
+        economy: result.economy,
+        devices: result.devices,
+        prefabs: [],
+        scripts: [],
+        validation: [],
+      };
+
+      const packagerInput = {
+        project,
+        worldDesign: result.worldDesign,
+        modulePlan: result.modulePlan,
+        lootTables: result.lootTables,
+        balanceReport: result.balanceReport,
+        verseFiles: new Map<string, string>(),
+      };
+
       if (options.dryRun) {
         console.log(`\n  --dry-run: No files written.`);
       } else if (options.zip) {
         const packager = new ScaffoldPackager();
         const archivePath = await packager.packageZip(
-          {
-            project: result.job as never,
-            worldDesign: result.worldDesign,
-            modulePlan: result.modulePlan,
-            lootTables: result.lootTables,
-            balanceReport: result.balanceReport,
-            verseFiles: new Map(),
-          },
+          packagerInput,
           result.outputPath,
         );
         console.log(`\n  Archive:   ${archivePath}`);
       } else {
         const packager = new ScaffoldPackager();
         await packager.package(
-          {
-            project: result.job as never,
-            worldDesign: result.worldDesign,
-            modulePlan: result.modulePlan,
-            lootTables: result.lootTables,
-            balanceReport: result.balanceReport,
-            verseFiles: new Map(),
-          },
+          packagerInput,
           result.outputPath,
         );
         console.log(`\n  Output:    ${result.outputPath}`);

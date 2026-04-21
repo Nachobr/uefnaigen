@@ -1,0 +1,86 @@
+[
+  {
+    "tableId": "loot_zone_1",
+    "name": "Lively Lobby Drops",
+    "zoneId": "starter_area",
+    "entries": [
+      {
+        "itemId": "item_3",
+        "name": "Basic Tool",
+        "weight": 70,
+        "rarity": "common",
+        "effect": "+2 gold"
+      },
+      {
+        "itemId": "item_4",
+        "name": "Wooden Shield",
+        "weight": 15,
+        "rarity": "uncommon",
+        "effect": "+10 health"
+      }
+    ]
+  },
+  {
+    "tableId": "loot_zone_2",
+    "name": "NPC Shop Drops",
+    "zoneId": "shop",
+    "entries": [
+      {
+        "itemId": "item_5",
+        "name": "Iron Sword",
+        "weight": 40,
+        "rarity": "uncommon",
+        "effect": "+15 damage"
+      },
+      {
+        "itemId": "item_6",
+        "name": "Leather Armor",
+        "weight": 30,
+        "rarity": "rare",
+        "effect": "+20 health"
+      }
+    ]
+  },
+  {
+    "tableId": "loot_zone_3",
+    "name": "Job Board Drops",
+    "zoneId": "resource_area",
+    "entries": [
+      {
+        "itemId": "item_7",
+        "name": "Rare Material",
+        "weight": 20,
+        "rarity": "uncommon",
+        "effect": "+50 gold"
+      },
+      {
+        "itemId": "item_8",
+        "name": "Epic Scroll",
+        "weight": 10,
+        "rarity": "epic",
+        "effect": "+100 health"
+      }
+    ]
+  },
+  {
+    "tableId": "global_rare_drops",
+    "name": "Global Rare Drops",
+    "zoneId": "",
+    "entries": [
+      {
+        "itemId": "item_9",
+        "name": "Legendary Weapon",
+        "weight": 3,
+        "rarity": "legendary",
+        "effect": "+200 damage"
+      },
+      {
+        "itemId": "item_10",
+        "name": "Eternal Shield",
+        "weight": 2,
+        "rarity": "epic",
+        "effect": "+50 health"
+      }
+    ]
+  }
+]
