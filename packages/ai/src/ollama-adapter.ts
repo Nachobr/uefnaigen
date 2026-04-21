@@ -13,9 +13,18 @@ export class OllamaAdapter implements LLMAdapter {
     messages: LLMMessage[],
     options?: { temperature?: number; maxTokens?: number; jsonMode?: boolean },
   ): Promise<LLMResponse> {
+    // For thinking models (qwen3, deepseek-r1), prepend /no_think to suppress chain-of-thought
+    const isThinkingModel = /qwen3|deepseek-r1/i.test(this.model);
+    const patchedMessages = messages.map((m) => {
+      if (isThinkingModel && m.role === "system") {
+        return { role: m.role, content: `/no_think\n${m.content}` };
+      }
+      return { role: m.role, content: m.content };
+    });
+
     const body = {
       model: this.model,
-      messages: messages.map((m) => ({ role: m.role, content: m.content })),
+      messages: patchedMessages,
       stream: false,
       options: {
         temperature: options?.temperature ?? 0.3,
