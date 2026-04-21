@@ -24,21 +24,36 @@ export class OllamaAdapter implements LLMAdapter {
       ...(options?.jsonMode ? { format: "json" } : {}),
     };
 
-    const res = await fetch(`${this.baseUrl}/api/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${this.baseUrl}/api/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    } catch (err) {
+      throw new Error(`Ollama connection failed at ${this.baseUrl}. Is Ollama running? (${err instanceof Error ? err.message : err})`);
+    }
 
     if (!res.ok) {
-      throw new Error(`Ollama error ${res.status}: ${await res.text()}`);
+      const text = await res.text();
+      throw new Error(`Ollama error ${res.status}: ${text}`);
     }
 
     const data = (await res.json()) as {
-      message: { content: string };
+      message?: { content: string };
+      error?: string;
       prompt_eval_count?: number;
       eval_count?: number;
     };
+
+    if (data.error) {
+      throw new Error(`Ollama model error: ${data.error}`);
+    }
+
+    if (!data.message?.content) {
+      throw new Error(`Ollama returned empty response. Model "${this.model}" may not be installed. Run: ollama pull ${this.model}`);
+    }
 
     const content = data.message.content;
     if (process.env.FORGEAI_VERBOSE === "true") {
