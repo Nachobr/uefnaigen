@@ -1,10 +1,12 @@
 /**
  * Robust JSON extractor for LLM responses.
  * Handles: raw JSON, markdown code blocks, JSON embedded in text,
- * and Gemini's thinking-block prefixes.
+ * DeepSeek R1 <think> blocks, and Gemini's thinking prefixes.
  */
 export function parseJsonResponse(raw: string, agentName: string): unknown {
-  const trimmed = raw.trim();
+  // Strip R1-style <think>...</think> blocks before parsing
+  const stripped = raw.replace(/<think>[\s\S]*?<\/think>/g, "");
+  const trimmed = stripped.trim();
 
   // 1. Direct parse
   try {

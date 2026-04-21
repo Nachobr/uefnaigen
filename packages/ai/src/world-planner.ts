@@ -37,7 +37,7 @@ Return ONLY valid JSON matching this schema:
     {
       "zoneId": "zone_1",
       "name": "Human-readable zone name",
-      "purpose": "starter_area|resource_area|combat_area|shop|upgrade_lane|boss_area|social_hub|unlock_gate",
+      "purpose": "starter_area",  // MUST be exactly ONE of: starter_area, resource_area, combat_area, shop, upgrade_lane, boss_area, social_hub, unlock_gate
       "description": "What this zone contains and its role in gameplay",
       "tier": 1,  // progression tier (1 = earliest)
       "unlockRequirement": "optional - what player needs to access this zone"
@@ -53,8 +53,8 @@ Return ONLY valid JSON matching this schema:
 }
 
 Rules:
-- Respect the template's minZones/maxZones constraints
-- Include all requiredZonePurposes from the template
+- Respect the template's minZones/maxZones constraints, BUT if the user explicitly requests fewer zones, honor the user's request
+- Include all requiredZonePurposes from the template (combine them if fewer zones are requested)
 - Zones should be ordered by progression tier
 - Session pacing should match the target session length
 - Each zone needs a clear gameplay purpose`;
@@ -89,6 +89,19 @@ Template constraints:
     );
 
     const parsed = parseJsonResponse(response.content, "WorldPlanner");
+
+    // Fix local-model quirks: pipe-delimited purposes ("starter_area|social_hub" → "starter_area")
+    if (parsed && typeof parsed === "object") {
+      const obj = parsed as Record<string, unknown>;
+      const zones = obj.zones as Record<string, unknown>[] | undefined;
+      if (Array.isArray(zones)) {
+        for (const zone of zones) {
+          if (typeof zone.purpose === "string" && zone.purpose.includes("|")) {
+            zone.purpose = zone.purpose.split("|")[0].trim();
+          }
+        }
+      }
+    }
 
     return WorldDesign.parse(parsed);
   }
