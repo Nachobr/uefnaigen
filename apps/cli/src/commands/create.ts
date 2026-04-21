@@ -72,6 +72,18 @@ export const createCommand = new Command("create")
         );
         console.log(`\n  Archive:   ${archivePath}`);
       } else {
+        const packager = new ScaffoldPackager();
+        await packager.package(
+          {
+            project: result.job as never,
+            worldDesign: result.worldDesign,
+            modulePlan: result.modulePlan,
+            lootTables: result.lootTables,
+            balanceReport: result.balanceReport,
+            verseFiles: new Map(),
+          },
+          result.outputPath,
+        );
         console.log(`\n  Output:    ${result.outputPath}`);
         console.log(`\nNext steps:`);
         console.log(`  1. Open README-UEFN-IMPORT.md`);
