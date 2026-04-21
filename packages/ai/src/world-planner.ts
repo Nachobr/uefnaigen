@@ -73,6 +73,7 @@ Player Count: ${brief.playerCount}
 Progression: ${brief.progressionStyle}
 Key Features: ${brief.keyFeatures.join(", ")}
 ${brief.style ? `Style: ${brief.style}` : ""}
+${brief.constraints?.length ? `\nUSER CONSTRAINTS (MUST obey these):\n${brief.constraints.map((c) => `- ${c}`).join("\n")}` : ""}
 
 Template constraints:
 - Zones: ${template.layoutRules.minZones}–${template.layoutRules.maxZones}
