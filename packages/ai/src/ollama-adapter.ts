@@ -52,7 +52,31 @@ export class OllamaAdapter implements LLMAdapter {
     }
 
     if (!data.message?.content) {
-      throw new Error(`Ollama returned empty response. Model "${this.model}" may not be installed. Run: ollama pull ${this.model}`);
+      if (process.env.FORGEAI_VERBOSE === "true") {
+        console.error(`[Ollama/${this.model}] Empty response. Retrying without JSON mode...`);
+      }
+      // Retry without JSON format constraint — some models choke on complex JSON mode prompts
+      if (options?.jsonMode) {
+        const retryBody = { ...body, format: undefined };
+        const retryRes = await fetch(`${this.baseUrl}/api/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(retryBody),
+        });
+        if (retryRes.ok) {
+          const retryData = (await retryRes.json()) as typeof data;
+          if (retryData.message?.content) {
+            return {
+              content: retryData.message.content,
+              usage: {
+                inputTokens: retryData.prompt_eval_count ?? 0,
+                outputTokens: retryData.eval_count ?? 0,
+              },
+            };
+          }
+        }
+      }
+      throw new Error(`Ollama returned empty response for model "${this.model}". The prompt may be too complex.`);
     }
 
     const content = data.message.content;
