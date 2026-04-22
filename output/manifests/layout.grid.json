@@ -1,18 +1,18 @@
 {
   "worldType": "hub_and_spoke",
   "bounds": {
-    "width": 8000,
-    "depth": 8000,
+    "width": 10000,
+    "depth": 10000,
     "height": 50
   },
   "zones": [
     {
       "zoneId": "zone_1",
-      "name": "Lively Lobby",
+      "name": "Welcome Square",
       "purpose": "starter_area",
       "footprint": {
         "x": 2000,
-        "y": 4000,
+        "y": 2000,
         "w": 2000,
         "h": 2000
       },
@@ -20,11 +20,11 @@
     },
     {
       "zoneId": "zone_2",
-      "name": "NPC Shop",
+      "name": "NPC Shop District",
       "purpose": "shop",
       "footprint": {
-        "x": 4000,
-        "y": 3000,
+        "x": 4500,
+        "y": 3500,
         "w": 1500,
         "h": 1500
       },
@@ -32,12 +32,24 @@
     },
     {
       "zoneId": "zone_3",
-      "name": "Job Board",
+      "name": "Job Plaza",
       "purpose": "resource_area",
       "footprint": {
-        "x": 6000,
-        "y": 2000,
-        "w": 1500,
+        "x": 6500,
+        "y": 4500,
+        "w": 2000,
+        "h": 1500
+      },
+      "elevation": 0
+    },
+    {
+      "zoneId": "zone_4",
+      "name": "Character Upgrade Plaza",
+      "purpose": "social_hub",
+      "footprint": {
+        "x": 8500,
+        "y": 6500,
+        "w": 2000,
         "h": 1500
       },
       "elevation": 0
@@ -48,7 +60,7 @@
       "id": "sp_1",
       "location": {
         "x": 2500,
-        "y": 4500,
+        "y": 2500,
         "z": 0
       },
       "zoneId": "zone_1"

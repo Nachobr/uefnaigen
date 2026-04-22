@@ -5,9 +5,10 @@
 - [ ] All zones reachable via intended progression
 
 ## Zones
-- [ ] Zone "Lively Lobby" accessible and correctly gated
-- [ ] Zone "NPC Shop" accessible and correctly gated
-- [ ] Zone "Job Board" accessible and correctly gated
+- [ ] Zone "Welcome Square" accessible and correctly gated
+- [ ] Zone "NPC Shop District" accessible and correctly gated
+- [ ] Zone "Job Plaza" accessible and correctly gated
+- [ ] Zone "Character Upgrade Plaza" accessible and correctly gated
 
 ## Economy
 - [ ] First purchase achievable within 90 seconds

@@ -2,10 +2,45 @@
   {
     "id": "dev_1",
     "type": "trigger",
-    "label": "Lobby Entry Trigger",
+    "label": "Welcome Square Entry Trigger",
     "transform": {
       "location": {
         "x": 2500,
+        "y": 2500,
+        "z": 0
+      },
+      "rotation": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      }
+    },
+    "properties": {},
+    "channels": {
+      "listens": [
+        "ch_1"
+      ],
+      "transmits": []
+    },
+    "events": [
+      {
+        "event": "OnTriggered",
+        "target": "dev_3",
+        "action": "Activate"
+      }
+    ],
+    "zoneId": "zone_1",
+    "tags": [
+      "entry"
+    ]
+  },
+  {
+    "id": "dev_2",
+    "type": "teleporter",
+    "label": "NPC Shop District Teleport Pad",
+    "transform": {
+      "location": {
+        "x": 5000,
         "y": 4000,
         "z": 0
       },
@@ -18,57 +53,24 @@
     "properties": {},
     "channels": {
       "listens": [
-        "ch_lobby_entry"
+        "ch_2"
       ],
       "transmits": []
     },
-    "events": [
-      {
-        "event": "OnTriggered",
-        "target": "dev_2",
-        "action": "Activate"
-      }
-    ],
-    "zoneId": "zone_1",
-    "tags": [
-      "entry"
-    ]
-  },
-  {
-    "id": "dev_2",
-    "type": "spawn_pad",
-    "label": "Spawn Pad for Players",
-    "transform": {
-      "location": {
-        "x": 2500,
-        "y": 4300,
-        "z": 0
-      },
-      "rotation": {
-        "pitch": 0,
-        "yaw": 0,
-        "roll": 0
-      }
-    },
-    "properties": {},
-    "channels": {
-      "listens": [],
-      "transmits": []
-    },
     "events": [],
-    "zoneId": "zone_1",
+    "zoneId": "zone_2",
     "tags": [
-      "spawn"
+      "teleport"
     ]
   },
   {
     "id": "dev_3",
     "type": "item_granter",
-    "label": "Welcome Gift Item Granter",
+    "label": "Welcome Square Item Granter",
     "transform": {
       "location": {
         "x": 2500,
-        "y": 4100,
+        "y": 2500,
         "z": 0
       },
       "rotation": {
@@ -79,29 +81,25 @@
     },
     "properties": {},
     "channels": {
-      "listens": [],
+      "listens": [
+        "ch_1"
+      ],
       "transmits": []
     },
-    "events": [
-      {
-        "event": "OnTriggered",
-        "target": "dev_4",
-        "action": "Activate"
-      }
-    ],
+    "events": [],
     "zoneId": "zone_1",
     "tags": [
-      "welcome"
+      "initial_items"
     ]
   },
   {
     "id": "dev_4",
     "type": "hud_message",
-    "label": "Lobby Welcome Message",
+    "label": "NPC Shop District Welcome Message",
     "transform": {
       "location": {
-        "x": 2500,
-        "y": 3900,
+        "x": 5000,
+        "y": 4000,
         "z": 10
       },
       "rotation": {
@@ -112,207 +110,15 @@
     },
     "properties": {},
     "channels": {
-      "listens": [],
+      "listens": [
+        "ch_2"
+      ],
       "transmits": []
     },
     "events": [],
-    "zoneId": "zone_1",
+    "zoneId": "zone_2",
     "tags": [
       "welcome_message"
-    ]
-  },
-  {
-    "id": "dev_5",
-    "type": "trigger",
-    "label": "Shop Entry Trigger",
-    "transform": {
-      "location": {
-        "x": 4750,
-        "y": 3000,
-        "z": 0
-      },
-      "rotation": {
-        "pitch": 0,
-        "yaw": 0,
-        "roll": 0
-      }
-    },
-    "properties": {},
-    "channels": {
-      "listens": [
-        "ch_shop_entry"
-      ],
-      "transmits": []
-    },
-    "events": [
-      {
-        "event": "OnTriggered",
-        "target": "dev_6",
-        "action": "Activate"
-      }
-    ],
-    "zoneId": "zone_2",
-    "tags": [
-      "entry"
-    ]
-  },
-  {
-    "id": "dev_6",
-    "type": "item_granter",
-    "label": "Upgrade Item Granter",
-    "transform": {
-      "location": {
-        "x": 4750,
-        "y": 3200,
-        "z": 0
-      },
-      "rotation": {
-        "pitch": 0,
-        "yaw": 0,
-        "roll": 0
-      }
-    },
-    "properties": {},
-    "channels": {
-      "listens": [
-        "ch_unlock_shop"
-      ],
-      "transmits": []
-    },
-    "events": [
-      {
-        "event": "OnTriggered",
-        "target": "dev_7",
-        "action": "Activate"
-      }
-    ],
-    "zoneId": "zone_2",
-    "tags": [
-      "upgrade"
-    ]
-  },
-  {
-    "id": "dev_7",
-    "type": "hud_message",
-    "label": "Shop Upgrade Message",
-    "transform": {
-      "location": {
-        "x": 4750,
-        "y": 3100,
-        "z": 10
-      },
-      "rotation": {
-        "pitch": 0,
-        "yaw": 0,
-        "roll": 0
-      }
-    },
-    "properties": {},
-    "channels": {
-      "listens": [],
-      "transmits": []
-    },
-    "events": [],
-    "zoneId": "zone_2",
-    "tags": [
-      "upgrade_message"
-    ]
-  },
-  {
-    "id": "dev_8",
-    "type": "trigger",
-    "label": "Job Board Entry Trigger",
-    "transform": {
-      "location": {
-        "x": 6750,
-        "y": 2000,
-        "z": 0
-      },
-      "rotation": {
-        "pitch": 0,
-        "yaw": 0,
-        "roll": 0
-      }
-    },
-    "properties": {},
-    "channels": {
-      "listens": [
-        "ch_job_board_entry"
-      ],
-      "transmits": []
-    },
-    "events": [
-      {
-        "event": "OnTriggered",
-        "target": "dev_9",
-        "action": "Activate"
-      }
-    ],
-    "zoneId": "zone_3",
-    "tags": [
-      "entry"
-    ]
-  },
-  {
-    "id": "dev_9",
-    "type": "item_spawner",
-    "label": "Quest Item Spawner",
-    "transform": {
-      "location": {
-        "x": 6750,
-        "y": 2200,
-        "z": 0
-      },
-      "rotation": {
-        "pitch": 0,
-        "yaw": 0,
-        "roll": 0
-      }
-    },
-    "properties": {},
-    "channels": {
-      "listens": [
-        "ch_job_board"
-      ],
-      "transmits": []
-    },
-    "events": [
-      {
-        "event": "OnTriggered",
-        "target": "dev_10",
-        "action": "Activate"
-      }
-    ],
-    "zoneId": "zone_3",
-    "tags": [
-      "quest"
-    ]
-  },
-  {
-    "id": "dev_10",
-    "type": "hud_message",
-    "label": "Job Board Quest Message",
-    "transform": {
-      "location": {
-        "x": 6750,
-        "y": 1900,
-        "z": 10
-      },
-      "rotation": {
-        "pitch": 0,
-        "yaw": 0,
-        "roll": 0
-      }
-    },
-    "properties": {},
-    "channels": {
-      "listens": [],
-      "transmits": []
-    },
-    "events": [],
-    "zoneId": "zone_3",
-    "tags": [
-      "quest_message"
     ]
   }
 ]

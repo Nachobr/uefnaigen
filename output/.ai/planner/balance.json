@@ -14,23 +14,23 @@
   "generators": [
     {
       "sourceId": "gen_1",
-      "name": "Lively Lobby",
+      "name": "Tree Chopping",
       "currencyId": "gold",
       "baseRate": 5,
-      "rateUnit": "per_minute"
+      "rateUnit": "per_action"
     },
     {
       "sourceId": "gen_2",
-      "name": "NPC Shop",
+      "name": "Job Plaza Work",
       "currencyId": "silver",
-      "baseRate": 3,
-      "rateUnit": "per_action"
+      "baseRate": 30,
+      "rateUnit": "per_minute"
     }
   ],
   "sinks": [
     {
       "sinkId": "sink_1",
-      "name": "NPC Upgrade",
+      "name": "Sawmill Upgrade",
       "currencyId": "gold",
       "cost": 50,
       "type": "upgrade",
@@ -38,9 +38,9 @@
     },
     {
       "sinkId": "sink_2",
-      "name": "Job Board Subscription",
+      "name": "NPC Shop Purchase",
       "currencyId": "silver",
-      "cost": 10,
+      "cost": 100,
       "type": "purchase",
       "repeatable": true
     }

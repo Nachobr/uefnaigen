@@ -1,20 +1,22 @@
-# Design Summary — Explore the vibrant and quirky Lobby to interact with NPCs a
+# Design Summary — Explore the social hub of a cartoonish world, interact with 
 
 ## Fantasy
-Explore the vibrant and quirky Lobby to interact with NPCs and upgrade your character.
+Explore the social hub of a cartoonish world, interact with NPCs to upgrade your character.
 
 ## Theme
-Cartoonish
+A vibrant and cartoonish fantasy town with colorful buildings and friendly NPCs.
 
 ## Core Loop
 1. interact
 2. upgrade
 
 ## Session Pacing
-- **Early Game:** In the first minute, you start by interacting with NPCs to get a feel for the Lobby. By the second minute, you can take on your first job and earn some currency.
-- **Mid Game:** At around five minutes in, you have completed several jobs and earned enough currency to visit the NPC Shop for upgrades. The Lobby remains bustling with activity as you continue to interact and upgrade.
-- **Late Game:** In the final few minutes, you focus on completing more challenging jobs and making significant upgrades to your character before deciding whether to prestige or end the session.
+- **Early Game:** Players start in Welcome Square, interact with NPCs for initial tasks and upgrades. They then move to the Job Plaza to earn resources.
+- **Mid Game:** Players continue upgrading their character while exploring more shops and taking on jobs. The Character Upgrade Plaza becomes a focal point as they progress.
+- **Late Game:** As players near the end of the session, they focus on final upgrades in the Character Upgrade Plaza before potentially prestige.
 
 ## Progression Beats
-- First job in 30s
-- First upgrade at 60s
+- Welcome to the town
+- First job in 1 minute
+- First upgrade at 5 minutes
+- Prestige at 10 minutes

@@ -1,14 +1,14 @@
 {
   "specVersion": "wg/1.0",
-  "projectId": "68161f70-420c-4b87-aa07-b6020afa05e7",
-  "name": "Explore the vibrant and quirky Lobby to interact with NPCs a",
-  "slug": "0a62bca3-e748-4316-aae1-f4ff7530c252",
-  "createdAt": "2026-04-21T19:00:54.855Z",
-  "updatedAt": "2026-04-21T19:00:54.855Z",
+  "projectId": "cf89647f-5fe2-4926-9852-0b63b721f330",
+  "name": "Explore the social hub of a cartoonish world, interact with ",
+  "slug": "3dd846bd-6352-4ffc-a35f-a8c9e48e1e82",
+  "createdAt": "2026-04-22T13:16:10.177Z",
+  "updatedAt": "2026-04-22T13:16:10.177Z",
   "source": {
     "mode": "map-studio",
     "prompt": "A single-zone game. Style: 'Cartoonish'. Zone 1: name 'The Lobby', purpose 'social_hub', description 'Lobby with NPC for upgrades and a central rock'. Strictly one zone only. No resource_area. Use purpose social_hub.",
-    "seed": 293550
+    "seed": 419571
   },
   "target": {
     "genre": "roleplay",
@@ -16,7 +16,7 @@
     "outputMode": "scaffold"
   },
   "design": {
-    "fantasy": "Explore the vibrant and quirky Lobby to interact with NPCs and upgrade your character.",
+    "fantasy": "Explore the social hub of a cartoonish world, interact with NPCs to upgrade your character.",
     "coreLoop": [
       "interact",
       "upgrade"
@@ -27,18 +27,18 @@
   "layout": {
     "worldType": "hub_and_spoke",
     "bounds": {
-      "width": 8000,
-      "depth": 8000,
+      "width": 10000,
+      "depth": 10000,
       "height": 50
     },
     "zones": [
       {
         "zoneId": "zone_1",
-        "name": "Lively Lobby",
+        "name": "Welcome Square",
         "purpose": "starter_area",
         "footprint": {
           "x": 2000,
-          "y": 4000,
+          "y": 2000,
           "w": 2000,
           "h": 2000
         },
@@ -46,11 +46,11 @@
       },
       {
         "zoneId": "zone_2",
-        "name": "NPC Shop",
+        "name": "NPC Shop District",
         "purpose": "shop",
         "footprint": {
-          "x": 4000,
-          "y": 3000,
+          "x": 4500,
+          "y": 3500,
           "w": 1500,
           "h": 1500
         },
@@ -58,12 +58,24 @@
       },
       {
         "zoneId": "zone_3",
-        "name": "Job Board",
+        "name": "Job Plaza",
         "purpose": "resource_area",
         "footprint": {
-          "x": 6000,
-          "y": 2000,
-          "w": 1500,
+          "x": 6500,
+          "y": 4500,
+          "w": 2000,
+          "h": 1500
+        },
+        "elevation": 0
+      },
+      {
+        "zoneId": "zone_4",
+        "name": "Character Upgrade Plaza",
+        "purpose": "social_hub",
+        "footprint": {
+          "x": 8500,
+          "y": 6500,
+          "w": 2000,
           "h": 1500
         },
         "elevation": 0
@@ -74,7 +86,7 @@
         "id": "sp_1",
         "location": {
           "x": 2500,
-          "y": 4500,
+          "y": 2500,
           "z": 0
         },
         "zoneId": "zone_1"
@@ -97,23 +109,23 @@
     "generators": [
       {
         "sourceId": "gen_1",
-        "name": "Lively Lobby",
+        "name": "Tree Chopping",
         "currencyId": "gold",
         "baseRate": 5,
-        "rateUnit": "per_minute"
+        "rateUnit": "per_action"
       },
       {
         "sourceId": "gen_2",
-        "name": "NPC Shop",
+        "name": "Job Plaza Work",
         "currencyId": "silver",
-        "baseRate": 3,
-        "rateUnit": "per_action"
+        "baseRate": 30,
+        "rateUnit": "per_minute"
       }
     ],
     "sinks": [
       {
         "sinkId": "sink_1",
-        "name": "NPC Upgrade",
+        "name": "Sawmill Upgrade",
         "currencyId": "gold",
         "cost": 50,
         "type": "upgrade",
@@ -121,9 +133,9 @@
       },
       {
         "sinkId": "sink_2",
-        "name": "Job Board Subscription",
+        "name": "NPC Shop Purchase",
         "currencyId": "silver",
-        "cost": 10,
+        "cost": 100,
         "type": "purchase",
         "repeatable": true
       }
@@ -138,10 +150,45 @@
     {
       "id": "dev_1",
       "type": "trigger",
-      "label": "Lobby Entry Trigger",
+      "label": "Welcome Square Entry Trigger",
       "transform": {
         "location": {
           "x": 2500,
+          "y": 2500,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {},
+      "channels": {
+        "listens": [
+          "ch_1"
+        ],
+        "transmits": []
+      },
+      "events": [
+        {
+          "event": "OnTriggered",
+          "target": "dev_3",
+          "action": "Activate"
+        }
+      ],
+      "zoneId": "zone_1",
+      "tags": [
+        "entry"
+      ]
+    },
+    {
+      "id": "dev_2",
+      "type": "teleporter",
+      "label": "NPC Shop District Teleport Pad",
+      "transform": {
+        "location": {
+          "x": 5000,
           "y": 4000,
           "z": 0
         },
@@ -154,57 +201,24 @@
       "properties": {},
       "channels": {
         "listens": [
-          "ch_lobby_entry"
+          "ch_2"
         ],
         "transmits": []
       },
-      "events": [
-        {
-          "event": "OnTriggered",
-          "target": "dev_2",
-          "action": "Activate"
-        }
-      ],
-      "zoneId": "zone_1",
-      "tags": [
-        "entry"
-      ]
-    },
-    {
-      "id": "dev_2",
-      "type": "spawn_pad",
-      "label": "Spawn Pad for Players",
-      "transform": {
-        "location": {
-          "x": 2500,
-          "y": 4300,
-          "z": 0
-        },
-        "rotation": {
-          "pitch": 0,
-          "yaw": 0,
-          "roll": 0
-        }
-      },
-      "properties": {},
-      "channels": {
-        "listens": [],
-        "transmits": []
-      },
       "events": [],
-      "zoneId": "zone_1",
+      "zoneId": "zone_2",
       "tags": [
-        "spawn"
+        "teleport"
       ]
     },
     {
       "id": "dev_3",
       "type": "item_granter",
-      "label": "Welcome Gift Item Granter",
+      "label": "Welcome Square Item Granter",
       "transform": {
         "location": {
           "x": 2500,
-          "y": 4100,
+          "y": 2500,
           "z": 0
         },
         "rotation": {
@@ -215,29 +229,25 @@
       },
       "properties": {},
       "channels": {
-        "listens": [],
+        "listens": [
+          "ch_1"
+        ],
         "transmits": []
       },
-      "events": [
-        {
-          "event": "OnTriggered",
-          "target": "dev_4",
-          "action": "Activate"
-        }
-      ],
+      "events": [],
       "zoneId": "zone_1",
       "tags": [
-        "welcome"
+        "initial_items"
       ]
     },
     {
       "id": "dev_4",
       "type": "hud_message",
-      "label": "Lobby Welcome Message",
+      "label": "NPC Shop District Welcome Message",
       "transform": {
         "location": {
-          "x": 2500,
-          "y": 3900,
+          "x": 5000,
+          "y": 4000,
           "z": 10
         },
         "rotation": {
@@ -248,207 +258,15 @@
       },
       "properties": {},
       "channels": {
-        "listens": [],
+        "listens": [
+          "ch_2"
+        ],
         "transmits": []
       },
       "events": [],
-      "zoneId": "zone_1",
+      "zoneId": "zone_2",
       "tags": [
         "welcome_message"
-      ]
-    },
-    {
-      "id": "dev_5",
-      "type": "trigger",
-      "label": "Shop Entry Trigger",
-      "transform": {
-        "location": {
-          "x": 4750,
-          "y": 3000,
-          "z": 0
-        },
-        "rotation": {
-          "pitch": 0,
-          "yaw": 0,
-          "roll": 0
-        }
-      },
-      "properties": {},
-      "channels": {
-        "listens": [
-          "ch_shop_entry"
-        ],
-        "transmits": []
-      },
-      "events": [
-        {
-          "event": "OnTriggered",
-          "target": "dev_6",
-          "action": "Activate"
-        }
-      ],
-      "zoneId": "zone_2",
-      "tags": [
-        "entry"
-      ]
-    },
-    {
-      "id": "dev_6",
-      "type": "item_granter",
-      "label": "Upgrade Item Granter",
-      "transform": {
-        "location": {
-          "x": 4750,
-          "y": 3200,
-          "z": 0
-        },
-        "rotation": {
-          "pitch": 0,
-          "yaw": 0,
-          "roll": 0
-        }
-      },
-      "properties": {},
-      "channels": {
-        "listens": [
-          "ch_unlock_shop"
-        ],
-        "transmits": []
-      },
-      "events": [
-        {
-          "event": "OnTriggered",
-          "target": "dev_7",
-          "action": "Activate"
-        }
-      ],
-      "zoneId": "zone_2",
-      "tags": [
-        "upgrade"
-      ]
-    },
-    {
-      "id": "dev_7",
-      "type": "hud_message",
-      "label": "Shop Upgrade Message",
-      "transform": {
-        "location": {
-          "x": 4750,
-          "y": 3100,
-          "z": 10
-        },
-        "rotation": {
-          "pitch": 0,
-          "yaw": 0,
-          "roll": 0
-        }
-      },
-      "properties": {},
-      "channels": {
-        "listens": [],
-        "transmits": []
-      },
-      "events": [],
-      "zoneId": "zone_2",
-      "tags": [
-        "upgrade_message"
-      ]
-    },
-    {
-      "id": "dev_8",
-      "type": "trigger",
-      "label": "Job Board Entry Trigger",
-      "transform": {
-        "location": {
-          "x": 6750,
-          "y": 2000,
-          "z": 0
-        },
-        "rotation": {
-          "pitch": 0,
-          "yaw": 0,
-          "roll": 0
-        }
-      },
-      "properties": {},
-      "channels": {
-        "listens": [
-          "ch_job_board_entry"
-        ],
-        "transmits": []
-      },
-      "events": [
-        {
-          "event": "OnTriggered",
-          "target": "dev_9",
-          "action": "Activate"
-        }
-      ],
-      "zoneId": "zone_3",
-      "tags": [
-        "entry"
-      ]
-    },
-    {
-      "id": "dev_9",
-      "type": "item_spawner",
-      "label": "Quest Item Spawner",
-      "transform": {
-        "location": {
-          "x": 6750,
-          "y": 2200,
-          "z": 0
-        },
-        "rotation": {
-          "pitch": 0,
-          "yaw": 0,
-          "roll": 0
-        }
-      },
-      "properties": {},
-      "channels": {
-        "listens": [
-          "ch_job_board"
-        ],
-        "transmits": []
-      },
-      "events": [
-        {
-          "event": "OnTriggered",
-          "target": "dev_10",
-          "action": "Activate"
-        }
-      ],
-      "zoneId": "zone_3",
-      "tags": [
-        "quest"
-      ]
-    },
-    {
-      "id": "dev_10",
-      "type": "hud_message",
-      "label": "Job Board Quest Message",
-      "transform": {
-        "location": {
-          "x": 6750,
-          "y": 1900,
-          "z": 10
-        },
-        "rotation": {
-          "pitch": 0,
-          "yaw": 0,
-          "roll": 0
-        }
-      },
-      "properties": {},
-      "channels": {
-        "listens": [],
-        "transmits": []
-      },
-      "events": [],
-      "zoneId": "zone_3",
-      "tags": [
-        "quest_message"
       ]
     }
   ],

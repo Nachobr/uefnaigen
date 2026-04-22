@@ -1,16 +1,17 @@
-# Explore the vibrant and quirky Lobby to interact with NPCs a
+# Explore the social hub of a cartoonish world, interact with 
 
-> Explore the vibrant and quirky Lobby to interact with NPCs and upgrade your character.
+> Explore the social hub of a cartoonish world, interact with NPCs to upgrade your character.
 
 **Genre:** roleplay
 **Session Length:** 15 minutes
 **Core Loop:** interact → upgrade
 
-## Zones (3)
+## Zones (4)
 
-- **Lively Lobby** — A vibrant and quirky hub where you can interact with various NPCs, complete jobs, and upgrade your character.
-- **NPC Shop** — A cozy shop run by friendly NPCs where you can buy upgrades for your character using the currency earned from jobs.
-- **Job Board** — A board where you can find various jobs to complete, earning currency and experience points.
+- **Welcome Square** — The central hub of the town, where players can interact with NPCs for upgrades and start their journey. Various shops and jobs are available here.
+- **NPC Shop District** — A district filled with colorful shops where players can purchase and sell items, as well as interact with NPCs to upgrade their character.
+- **Job Plaza** — A bustling area where players can take on various jobs and earn resources needed for upgrades.
+- **Character Upgrade Plaza** — A special area dedicated to character customization and upgrading, where players can interact with NPCs for unique upgrades.
 
 ## Generated Files
 

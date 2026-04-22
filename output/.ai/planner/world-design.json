@@ -1,43 +1,53 @@
 {
-  "mapName": "Quirky Lobby",
-  "theme": "Cartoonish",
+  "mapName": "Cartoonish Fantasy Hub",
+  "theme": "A vibrant and cartoonish fantasy town with colorful buildings and friendly NPCs.",
   "zones": [
     {
       "zoneId": "zone_1",
-      "name": "Lively Lobby",
+      "name": "Welcome Square",
       "purpose": "starter_area",
-      "description": "A vibrant and quirky hub where you can interact with various NPCs, complete jobs, and upgrade your character.",
+      "description": "The central hub of the town, where players can interact with NPCs for upgrades and start their journey. Various shops and jobs are available here.",
       "tier": 1,
-      "unlockRequirement": ""
+      "unlockRequirement": "none"
     },
     {
       "zoneId": "zone_2",
-      "name": "NPC Shop",
+      "name": "NPC Shop District",
       "purpose": "shop",
-      "description": "A cozy shop run by friendly NPCs where you can buy upgrades for your character using the currency earned from jobs.",
+      "description": "A district filled with colorful shops where players can purchase and sell items, as well as interact with NPCs to upgrade their character.",
       "tier": 1,
-      "unlockRequirement": ""
+      "unlockRequirement": "none"
     },
     {
       "zoneId": "zone_3",
-      "name": "Job Board",
+      "name": "Job Plaza",
       "purpose": "resource_area",
-      "description": "A board where you can find various jobs to complete, earning currency and experience points.",
-      "tier": 1,
-      "unlockRequirement": ""
+      "description": "A bustling area where players can take on various jobs and earn resources needed for upgrades.",
+      "tier": 2,
+      "unlockRequirement": "none"
+    },
+    {
+      "zoneId": "zone_4",
+      "name": "Character Upgrade Plaza",
+      "purpose": "social_hub",
+      "description": "A special area dedicated to character customization and upgrading, where players can interact with NPCs for unique upgrades.",
+      "tier": 3,
+      "unlockRequirement": "none"
     }
   ],
   "progressionBeats": [
-    "First job in 30s",
-    "First upgrade at 60s"
+    "Welcome to the town",
+    "First job in 1 minute",
+    "First upgrade at 5 minutes",
+    "Prestige at 10 minutes"
   ],
   "coreLoop": [
     "interact",
     "upgrade"
   ],
   "sessionPacing": {
-    "earlyGame": "In the first minute, you start by interacting with NPCs to get a feel for the Lobby. By the second minute, you can take on your first job and earn some currency.",
-    "midGame": "At around five minutes in, you have completed several jobs and earned enough currency to visit the NPC Shop for upgrades. The Lobby remains bustling with activity as you continue to interact and upgrade.",
-    "lateGame": "In the final few minutes, you focus on completing more challenging jobs and making significant upgrades to your character before deciding whether to prestige or end the session."
+    "earlyGame": "Players start in Welcome Square, interact with NPCs for initial tasks and upgrades. They then move to the Job Plaza to earn resources.",
+    "midGame": "Players continue upgrading their character while exploring more shops and taking on jobs. The Character Upgrade Plaza becomes a focal point as they progress.",
+    "lateGame": "As players near the end of the session, they focus on final upgrades in the Character Upgrade Plaza before potentially prestige."
   }
 }

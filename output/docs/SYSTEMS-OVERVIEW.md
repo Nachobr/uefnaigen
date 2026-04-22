@@ -1,4 +1,4 @@
-# Systems Overview — Explore the vibrant and quirky Lobby to interact with NPCs a
+# Systems Overview — Explore the social hub of a cartoonish world, interact with 
 
 ## Economy
 
@@ -7,13 +7,13 @@
 - **Silver** (`silver`)
 
 ### Income Sources
-- Lively Lobby: 5/per_minute
-- NPC Shop: 3/per_action
+- Tree Chopping: 5/per_action
+- Job Plaza Work: 30/per_minute
 
 ### Sinks
-- NPC Upgrade: $50 (upgrade)
-- Job Board Subscription: $10 (purchase)
+- Sawmill Upgrade: $50 (upgrade)
+- NPC Shop Purchase: $100 (purchase)
 
 ## Devices
-10 devices across 3 zones.
+4 devices across 4 zones.
 See `docs/DEVICE-WIRING.md` for full wiring diagram.

@@ -1,4 +1,4 @@
-# UEFN Handoff Checklist — Explore the vibrant and quirky Lobby to interact with NPCs a
+# UEFN Handoff Checklist — Explore the social hub of a cartoonish world, interact with 
 
 ## Pre-Import Checks
 - [ ] UEFN version is up to date (latest stable)
@@ -16,30 +16,25 @@
 - [ ] All Verse files in `Verse/` compile without errors
 
 ## Device Placement
-- [ ] Lobby Entry Trigger (`trigger`) placed at correct coordinates
-- [ ] Spawn Pad for Players (`spawn_pad`) placed at correct coordinates
-- [ ] Welcome Gift Item Granter (`item_granter`) placed at correct coordinates
-- [ ] Lobby Welcome Message (`hud_message`) placed at correct coordinates
-- [ ] Shop Entry Trigger (`trigger`) placed at correct coordinates
-- [ ] Upgrade Item Granter (`item_granter`) placed at correct coordinates
-- [ ] Shop Upgrade Message (`hud_message`) placed at correct coordinates
-- [ ] Job Board Entry Trigger (`trigger`) placed at correct coordinates
-- [ ] Quest Item Spawner (`item_spawner`) placed at correct coordinates
-- [ ] Job Board Quest Message (`hud_message`) placed at correct coordinates
+- [ ] Welcome Square Entry Trigger (`trigger`) placed at correct coordinates
+- [ ] NPC Shop District Teleport Pad (`teleporter`) placed at correct coordinates
+- [ ] Welcome Square Item Granter (`item_granter`) placed at correct coordinates
+- [ ] NPC Shop District Welcome Message (`hud_message`) placed at correct coordinates
 - [ ] All device channel wiring matches `docs/DEVICE-WIRING.md`
 
 ## Economy Validation
 - [ ] Gold (`gold`) displays correctly
 - [ ] Silver (`silver`) displays correctly
-- [ ] NPC Upgrade purchasable and applies effect
-- [ ] Job Board Subscription purchasable and applies effect
+- [ ] Sawmill Upgrade purchasable and applies effect
+- [ ] NPC Shop Purchase purchasable and applies effect
 - [ ] First purchase achievable within 90 seconds of gameplay
 - [ ] No currency overflow or negative balance states
 
 ## Zone Verification
-- [ ] Zone "Lively Lobby" loads and is reachable
-- [ ] Zone "NPC Shop" loads and is reachable
-- [ ] Zone "Job Board" loads and is reachable
+- [ ] Zone "Welcome Square" loads and is reachable
+- [ ] Zone "NPC Shop District" loads and is reachable
+- [ ] Zone "Job Plaza" loads and is reachable
+- [ ] Zone "Character Upgrade Plaza" loads and is reachable
 - [ ] Zone transitions work in both directions
 - [ ] Gating requirements enforced correctly
 
@@ -55,6 +50,6 @@
 - [ ] QA checklist passed (`docs/QA-CHECKLIST.md`)
 - [ ] Ready for UEFN publish
 
-**Project:** Explore the vibrant and quirky Lobby to interact with NPCs a
+**Project:** Explore the social hub of a cartoonish world, interact with 
 **Genre:** roleplay
-**Seed:** 293550
+**Seed:** 419571

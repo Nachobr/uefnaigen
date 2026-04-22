@@ -5,8 +5,11 @@
 2. Name it "Explore the vibrant and quirky Lobby to interact with NPCs a"
 
 ## Step 2: Import Verse Files
-1. Copy all files from `Verse/` into your project's Verse directory
-2. Build to verify compilation
+1. In UEFN, open **Verse → Verse Explorer** from the top menu
+2. For each file in \`Verse/\`:
+   - Right-click the **Content** folder → **Create New Verse File**
+   - Copy-paste the contents of the generated \`.verse\` file
+3. Click **Verse → Build Verse Code** to compile
 
 ## Step 3: Place Devices
 1. Open `manifests/device_manifest.json`
