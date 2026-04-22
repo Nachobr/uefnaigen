@@ -93,7 +93,7 @@ export const createCommand = new Command("create")
         modulePlan: result.modulePlan,
         lootTables: result.lootTables,
         balanceReport: result.balanceReport,
-        verseFiles: new Map<string, string>(),
+        verseFiles: result.verseFiles,
       };
 
       if (options.dryRun) {

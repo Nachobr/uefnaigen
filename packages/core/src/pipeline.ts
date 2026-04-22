@@ -9,6 +9,7 @@ import {
   BalancePlanner,
   DeviceMapper,
   VersePlanner,
+  VerseGenerator,
   LootGenerator,
   BudgetAdapter,
   type LLMAdapter,
@@ -21,6 +22,7 @@ import {
 } from "@forgeai/ai";
 import { createDefaultRegistry } from "@forgeai/templates";
 import { TycoonSimulator, type SimulationResult } from "@forgeai/balance";
+import { VerseEmitter } from "@forgeai/verse";
 import { JobManager } from "./job-manager.js";
 import { TierGuard } from "./tier-guard.js";
 
@@ -47,6 +49,7 @@ export interface PipelineResult {
   devices: DeviceInstance[];
   modulePlan: ModulePlan;
   lootTables: LootTable[];
+  verseFiles: Map<string, string>;
   outputPath: string;
 }
 
@@ -169,6 +172,23 @@ export class Pipeline {
     const lootGenerator = new LootGenerator(this.llm);
     const lootTables = await lootGenerator.generate(brief, worldDesign);
 
+    // ── Stage 8b: Verse Code Generation ──
+    this.emit(8, "Planning Verse", "Generating Verse source files...");
+    const verseGenerator = new VerseGenerator(this.llm);
+    const emitter = new VerseEmitter();
+    const verseFiles = new Map<string, string>();
+
+    for (const mod of modulePlan.modules) {
+      try {
+        const ast = await verseGenerator.generate(mod);
+        const code = emitter.emit(ast);
+        verseFiles.set(`${mod.className}.verse`, code);
+      } catch {
+        // If a module fails, skip it — partial output is better than none
+      }
+    }
+    this.emit(8, "Planning Verse", `${verseFiles.size}/${modulePlan.modules.length} Verse files generated`);
+
     this.jobManager.transition(job.jobId, "generated", 7);
     tierGuard.recordGeneration();
 
@@ -184,6 +204,7 @@ export class Pipeline {
       devices,
       modulePlan,
       lootTables,
+      verseFiles,
       outputPath: this.options.outputDir,
     };
   }
