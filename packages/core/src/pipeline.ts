@@ -22,7 +22,7 @@ import {
 } from "@forgeai/ai";
 import { createDefaultRegistry } from "@forgeai/templates";
 import { TycoonSimulator, type SimulationResult } from "@forgeai/balance";
-import { VerseEmitter } from "@forgeai/verse";
+import { VerseEmitter, lintVerseCode } from "@forgeai/verse";
 import { JobManager } from "./job-manager.js";
 import { TierGuard } from "./tier-guard.js";
 
@@ -181,7 +181,8 @@ export class Pipeline {
     for (const mod of modulePlan.modules) {
       try {
         const ast = await verseGenerator.generate(mod);
-        const code = emitter.emit(ast);
+        const rawCode = emitter.emit(ast);
+        const { code } = lintVerseCode(rawCode);
         verseFiles.set(`${mod.className}.verse`, code);
       } catch {
         // If a module fails, skip it — partial output is better than none
