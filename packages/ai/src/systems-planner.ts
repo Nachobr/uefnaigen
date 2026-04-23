@@ -83,6 +83,7 @@ Return ONLY valid JSON:
 
 rateUnit MUST be exactly one of: per_action, per_second, per_minute
 sink type MUST be exactly one of: purchase, upgrade, unlock, prestige
+sink cost MUST be a single number (e.g. 100), NEVER an array
 
 Rules:
 - Upgrade costs should escalate (1.5x-2.5x multiplier per tier)
@@ -195,6 +196,11 @@ Zones:\n${zoneInfo}`;
     for (const sink of ((data.sinks ?? []) as Record<string, unknown>[])) {
       const type = String(sink.type ?? "");
       sink.type = SINK_TYPE_MAP[type] ?? "purchase";
+      if (Array.isArray(sink.cost)) {
+        sink.cost = Number(sink.cost[0]) || 0;
+      } else if (typeof sink.cost !== "number") {
+        sink.cost = Number(sink.cost) || 0;
+      }
     }
   }
 }
