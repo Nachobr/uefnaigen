@@ -2,6 +2,7 @@ import { DeviceInstance } from "@forgeai/schemas";
 import { z } from "zod";
 import type { LLMAdapter } from "./adapter.js";
 import { parseJsonResponse } from "./parse-json.js";
+import { applyNormalizers } from "./structured-output.js";
 import type { SystemsDesign } from "./systems-planner.js";
 import type { LayoutSpec } from "@forgeai/schemas";
 
@@ -87,6 +88,7 @@ Produce a JSON array of DeviceInstance objects with exact coordinates within eac
       }
     }
 
+    parsed = applyNormalizers(parsed) as typeof parsed;
     return DeviceArray.parse(parsed);
   }
 }

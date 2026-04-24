@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { LayoutSpec } from "@forgeai/schemas";
 import type { LLMAdapter } from "./adapter.js";
-import { parseJsonResponse } from "./parse-json.js";
+import { generateValidated } from "./structured-output.js";
 import type { WorldDesign } from "./world-planner.js";
 
 const SYSTEM_PROMPT = `You are a UEFN layout planner. Given a world design, generate concrete spatial coordinates for each zone.
@@ -49,16 +49,15 @@ ${design.zones.map((z) => `- ${z.zoneId}: "${z.name}" (${z.purpose}, tier ${z.ti
 
 Core loop: ${design.coreLoop.join(" → ")}`;
 
-    const response = await this.llm.chat(
-      [
+    return generateValidated({
+      llm: this.llm,
+      stage: "LayoutPlanner",
+      schema: LayoutSpec,
+      messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userMsg },
       ],
-      { temperature: 0.2, jsonMode: true },
-    );
-
-    const parsed = parseJsonResponse(response.content, "LayoutPlanner");
-
-    return LayoutSpec.parse(parsed);
+      temperature: 0.2,
+    });
   }
 }

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { LLMAdapter } from "./adapter.js";
-import { parseJsonResponse } from "./parse-json.js";
+import { generateValidated } from "./structured-output.js";
 import type { SystemsDesign } from "./systems-planner.js";
 import type { DeviceInstance, TemplateDefinition } from "@forgeai/schemas";
 
@@ -107,16 +107,16 @@ ${systemsDesign.gameRules.map((r) => `- ${r.description}`).join("\n")}
 
 Plan ALL required modules and any relevant optional modules.`;
 
-    const response = await this.llm.chat(
-      [
+    return generateValidated({
+      llm: this.llm,
+      stage: "VersePlanner",
+      schema: ModulePlan,
+      messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userMsg },
       ],
-      { temperature: 0.2, maxTokens: 8192, jsonMode: true },
-    );
-
-    const parsed = parseJsonResponse(response.content, "VersePlanner");
-
-    return ModulePlan.parse(parsed);
+      temperature: 0.2,
+      maxTokens: 8192,
+    });
   }
 }

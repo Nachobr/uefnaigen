@@ -20,3 +20,4 @@ export { VerseGenerator } from "./verse-generator.js";
 export { VerseCopilot } from "./verse-copilot.js";
 export { VariantZoneGenerator } from "./variant-zone-generator.js";
 export { parseJsonResponse } from "./parse-json.js";
+export { generateValidated, applyNormalizers, type RepairPolicy } from "./structured-output.js";

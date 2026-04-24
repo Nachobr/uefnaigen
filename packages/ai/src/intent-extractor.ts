@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { Genre } from "@forgeai/schemas";
 import type { LLMAdapter } from "./adapter.js";
-import { parseJsonResponse } from "./parse-json.js";
+import { generateValidated } from "./structured-output.js";
 
 export const NormalizedBrief = z.object({
   genre: z.enum(["tycoon", "battle_arena", "adventure", "roleplay"]),
@@ -94,17 +94,16 @@ export class IntentExtractor {
       ? `Genre is pre-selected as "${genreOverride}". Extract the brief from:\n\n${prompt}`
       : `Extract the brief from:\n\n${prompt}`;
 
-    const response = await this.llm.chat(
-      [
+    const brief = await generateValidated({
+      llm: this.llm,
+      stage: "IntentExtractor",
+      schema: NormalizedBrief,
+      messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userMsg },
       ],
-      { temperature: 0.2, jsonMode: true },
-    );
-
-    const parsed = parseJsonResponse(response.content, "IntentExtractor");
-
-    const brief = NormalizedBrief.parse(parsed);
+      temperature: 0.2,
+    });
 
     // If LLM genre disagrees with keyword detection and no override, prefer LLM but log
     if (!genreOverride && keywordGenre && brief.genre !== keywordGenre) {

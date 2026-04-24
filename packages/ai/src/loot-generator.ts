@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { LLMAdapter } from "./adapter.js";
-import { parseJsonResponse } from "./parse-json.js";
+import { generateValidated } from "./structured-output.js";
 import type { NormalizedBrief } from "./intent-extractor.js";
 import type { WorldDesign } from "./world-planner.js";
 
@@ -64,17 +64,16 @@ ${worldDesign.zones.map((z) => `- ${z.zoneId}: "${z.name}" (${z.purpose}, tier $
 Key Features: ${brief.keyFeatures.join(", ")}
 Create 1 loot table per resource zone, plus 1 global rare drops table.`;
 
-    const response = await this.llm.chat(
-      [
+    const result = await generateValidated({
+      llm: this.llm,
+      stage: "LootGenerator",
+      schema: LootTablesResult,
+      messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userMsg },
       ],
-      { temperature: 0.4, jsonMode: true },
-    );
-
-    const parsed = parseJsonResponse(response.content, "LootGenerator");
-
-    const result = LootTablesResult.parse(parsed);
+      temperature: 0.4,
+    });
     return result.tables;
   }
 }

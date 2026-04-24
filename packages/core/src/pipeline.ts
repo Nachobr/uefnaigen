@@ -22,7 +22,7 @@ import {
 } from "@forgeai/ai";
 import { createDefaultRegistry } from "@forgeai/templates";
 import { TycoonSimulator, type SimulationResult } from "@forgeai/balance";
-import { VerseEmitter, lintVerseCode } from "@forgeai/verse";
+import { VerseEmitter, lintVerseCode, checkVerseMemory } from "@forgeai/verse";
 import { JobManager } from "./job-manager.js";
 import { TierGuard } from "./tier-guard.js";
 
@@ -178,17 +178,23 @@ export class Pipeline {
     const emitter = new VerseEmitter();
     const verseFiles = new Map<string, string>();
 
+    let memoryWarnings = 0;
     for (const mod of modulePlan.modules) {
       try {
         const ast = await verseGenerator.generate(mod);
         const rawCode = emitter.emit(ast);
         const { code } = lintVerseCode(rawCode);
+        const memCheck = checkVerseMemory(code);
+        memoryWarnings += memCheck.issues.length;
+        if (memCheck.issues.some((i) => i.severity === "error")) {
+          this.emit(8, "Planning Verse", `⚠ ${mod.className}: ${memCheck.issues.filter((i) => i.severity === "error").map((i) => i.message).join("; ")}`);
+        }
         verseFiles.set(`${mod.className}.verse`, code);
       } catch {
         // If a module fails, skip it — partial output is better than none
       }
     }
-    this.emit(8, "Planning Verse", `${verseFiles.size}/${modulePlan.modules.length} Verse files generated`);
+    this.emit(8, "Planning Verse", `${verseFiles.size}/${modulePlan.modules.length} Verse files generated${memoryWarnings > 0 ? ` (${memoryWarnings} memory warnings)` : ""}`);
 
     this.jobManager.transition(job.jobId, "generated", 7);
     tierGuard.recordGeneration();

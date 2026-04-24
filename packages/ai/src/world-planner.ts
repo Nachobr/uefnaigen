@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { TemplateDefinition } from "@forgeai/schemas";
 import type { LLMAdapter } from "./adapter.js";
-import { parseJsonResponse } from "./parse-json.js";
+import { generateValidated } from "./structured-output.js";
 import type { NormalizedBrief } from "./intent-extractor.js";
 
 export const WorldDesign = z.object({
@@ -81,29 +81,15 @@ Template constraints:
 - Layout style: ${template.layoutRules.layoutStyle}
 - Required systems: ${template.systemModules.required.join(", ")}`;
 
-    const response = await this.llm.chat(
-      [
+    return generateValidated({
+      llm: this.llm,
+      stage: "WorldPlanner",
+      schema: WorldDesign,
+      messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userMsg },
       ],
-      { temperature: 0.5, jsonMode: true },
-    );
-
-    const parsed = parseJsonResponse(response.content, "WorldPlanner");
-
-    // Fix local-model quirks: pipe-delimited purposes ("starter_area|social_hub" → "starter_area")
-    if (parsed && typeof parsed === "object") {
-      const obj = parsed as Record<string, unknown>;
-      const zones = obj.zones as Record<string, unknown>[] | undefined;
-      if (Array.isArray(zones)) {
-        for (const zone of zones) {
-          if (typeof zone.purpose === "string" && zone.purpose.includes("|")) {
-            zone.purpose = zone.purpose.split("|")[0].trim();
-          }
-        }
-      }
-    }
-
-    return WorldDesign.parse(parsed);
+      temperature: 0.5,
+    });
   }
 }

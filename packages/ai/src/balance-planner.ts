@@ -1,6 +1,6 @@
 import { EconomySpec } from "@forgeai/schemas";
 import type { LLMAdapter } from "./adapter.js";
-import { parseJsonResponse } from "./parse-json.js";
+import { generateValidated, type RepairPolicy } from "./structured-output.js";
 import type { NormalizedBrief } from "./intent-extractor.js";
 import type { SystemsDesign } from "./systems-planner.js";
 
@@ -37,6 +37,23 @@ Rules:
 - Prestige cost should require ~15-25 min of optimal play
 - Balance for the specified session length`;
 
+const BALANCE_REPAIR_POLICY: RepairPolicy = {
+  enumAliases: {
+    "generators.*.rateUnit": {
+      per_log: "per_action", per_item: "per_action", per_hit: "per_action",
+      per_kill: "per_action", per_harvest: "per_action", per_click: "per_action",
+      per_tick: "per_second",
+    },
+    "sinks.*.type": {
+      item_purchase: "purchase", buy: "purchase",
+      zone_unlock: "unlock", area_unlock: "unlock",
+      rebirth: "prestige",
+    },
+  },
+  numberFields: ["sinks.*.cost", "generators.*.baseRate"],
+  maxRepairPasses: 3,
+};
+
 export class BalancePlanner {
   constructor(private llm: LLMAdapter) {}
 
@@ -56,16 +73,16 @@ Sinks: ${systemsDesign.economy.sinks.map((s) => `${s.name} ($${s.cost}, ${s.type
 
 Produce a balanced EconomySpec with proper targetCurves.`;
 
-    const response = await this.llm.chat(
-      [
+    return generateValidated({
+      llm: this.llm,
+      stage: "BalancePlanner",
+      schema: EconomySpec,
+      messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userMsg },
       ],
-      { temperature: 0.2, jsonMode: true },
-    );
-
-    const parsed = parseJsonResponse(response.content, "BalancePlanner");
-
-    return EconomySpec.parse(parsed);
+      temperature: 0.2,
+      repairPolicy: BALANCE_REPAIR_POLICY,
+    });
   }
 }

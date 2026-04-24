@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { LLMAdapter } from "./adapter.js";
 import { parseJsonResponse } from "./parse-json.js";
+import { generateValidated, applyNormalizers, type RepairPolicy } from "./structured-output.js";
 import type { NormalizedBrief } from "./intent-extractor.js";
 import type { WorldDesign } from "./world-planner.js";
 import type { TemplateDefinition } from "@forgeai/schemas";
@@ -62,6 +63,31 @@ export const SystemsDesign = z.object({
 });
 export type SystemsDesign = z.infer<typeof SystemsDesign>;
 
+const EconomyAndRules = z.object({
+  currencies: SystemsDesign.shape.economy.shape.currencies,
+  generators: SystemsDesign.shape.economy.shape.generators,
+  sinks: SystemsDesign.shape.economy.shape.sinks,
+  gameRules: SystemsDesign.shape.gameRules,
+});
+
+const ECONOMY_REPAIR_POLICY: RepairPolicy = {
+  enumAliases: {
+    "generators.*.rateUnit": {
+      per_log: "per_action", per_item: "per_action", per_hit: "per_action",
+      per_kill: "per_action", per_harvest: "per_action", per_click: "per_action",
+      per_second_per_level: "per_second", per_tick: "per_second",
+      per_prestige: "per_action",
+    },
+    "sinks.*.type": {
+      item_purchase: "purchase", buy: "purchase",
+      zone_unlock: "unlock", area_unlock: "unlock",
+      prestige_upgrade: "prestige", rebirth: "prestige",
+    },
+  },
+  numberFields: ["generators.*.baseRate", "sinks.*.cost"],
+  maxRepairPasses: 3,
+};
+
 const ECONOMY_PROMPT = `You are a UEFN economy designer. Design ONLY the economy and game rules.
 
 Return ONLY valid JSON:
@@ -117,20 +143,21 @@ Session: ${brief.sessionLengthMin} min
 Key Features: ${brief.keyFeatures.join(", ")}
 Zones:\n${zoneInfo}`;
 
-    // Call 1: Economy + Rules
-    const econResponse = await this.llm.chat(
-      [
+    // Call 1: Economy + Rules (with repair loop)
+    const econResult = await generateValidated({
+      llm: this.llm,
+      stage: "SystemsPlanner:Economy",
+      schema: EconomyAndRules,
+      messages: [
         { role: "system", content: ECONOMY_PROMPT },
         { role: "user", content: `Design economy and rules for:\n\n${sharedContext}\n\nTemplate systems: ${template.systemModules.required.join(", ")}` },
       ],
-      { temperature: 0.3, jsonMode: true },
-    );
+      temperature: 0.3,
+      repairPolicy: ECONOMY_REPAIR_POLICY,
+    });
 
-    const econParsed = parseJsonResponse(econResponse.content, "SystemsPlanner:Economy") as Record<string, unknown>;
-    this.coerceEnums(econParsed);
-
-    // Call 2: Devices
-    const currencyNames = ((econParsed.currencies ?? []) as Array<{ name: string }>).map((c) => c.name).join(", ");
+    // Call 2: Devices (manual handling for array unwrapping)
+    const currencyNames = econResult.currencies.map((c) => c.name).join(", ");
     const devResponse = await this.llm.chat(
       [
         { role: "system", content: DEVICES_PROMPT },
@@ -142,11 +169,9 @@ Zones:\n${zoneInfo}`;
     let devices = parseJsonResponse(devResponse.content, "SystemsPlanner:Devices");
     if (devices && typeof devices === "object" && !Array.isArray(devices)) {
       const obj = devices as Record<string, unknown>;
-      // Prefer a top-level "devices" key
       if (Array.isArray(obj.devices)) {
         devices = obj.devices;
       } else {
-        // Handle nested: { zones: [{ devices: [...] }] }
         const arrayKey = Object.keys(obj).find((k) => Array.isArray(obj[k]));
         if (arrayKey) {
           const arr = obj[arrayKey] as unknown[];
@@ -160,47 +185,16 @@ Zones:\n${zoneInfo}`;
         }
       }
     }
-
-    const gameRules = (econParsed.gameRules ?? []) as unknown[];
+    devices = applyNormalizers(devices);
 
     return SystemsDesign.parse({
       economy: {
-        currencies: econParsed.currencies,
-        generators: econParsed.generators,
-        sinks: econParsed.sinks,
+        currencies: econResult.currencies,
+        generators: econResult.generators,
+        sinks: econResult.sinks,
       },
       devices,
-      gameRules,
+      gameRules: econResult.gameRules,
     });
-  }
-
-  private coerceEnums(data: Record<string, unknown>): void {
-    const RATE_UNIT_MAP: Record<string, string> = {
-      per_action: "per_action", per_second: "per_second", per_minute: "per_minute",
-      per_log: "per_action", per_item: "per_action", per_hit: "per_action",
-      per_kill: "per_action", per_harvest: "per_action", per_click: "per_action",
-      per_second_per_level: "per_second", per_tick: "per_second",
-      per_prestige: "per_action",
-    };
-    const SINK_TYPE_MAP: Record<string, string> = {
-      purchase: "purchase", upgrade: "upgrade", unlock: "unlock", prestige: "prestige",
-      item_purchase: "purchase", buy: "purchase",
-      zone_unlock: "unlock", area_unlock: "unlock",
-      prestige_upgrade: "prestige", rebirth: "prestige",
-    };
-
-    for (const gen of ((data.generators ?? []) as Record<string, unknown>[])) {
-      const unit = String(gen.rateUnit ?? "");
-      gen.rateUnit = RATE_UNIT_MAP[unit] ?? "per_action";
-    }
-    for (const sink of ((data.sinks ?? []) as Record<string, unknown>[])) {
-      const type = String(sink.type ?? "");
-      sink.type = SINK_TYPE_MAP[type] ?? "purchase";
-      if (Array.isArray(sink.cost)) {
-        sink.cost = Number(sink.cost[0]) || 0;
-      } else if (typeof sink.cost !== "number") {
-        sink.cost = Number(sink.cost) || 0;
-      }
-    }
   }
 }

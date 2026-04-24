@@ -1,6 +1,6 @@
 import { VerseModule } from "@forgeai/schemas";
 import type { LLMAdapter } from "./adapter.js";
-import { parseJsonResponse } from "./parse-json.js";
+import { generateValidated } from "./structured-output.js";
 import type { ModulePlan } from "./verse-planner.js";
 
 const SYSTEM_PROMPT = `You are a UEFN Verse code generator. Given a module plan, generate a Verse AST as JSON.
@@ -64,16 +64,16 @@ Imports: ${modulePlan.imports.join(", ")}
 
 Generate complete method bodies with real Verse logic. Use proper failable patterns for player lookups and map access.`;
 
-    const response = await this.llm.chat(
-      [
+    return generateValidated({
+      llm: this.llm,
+      stage: "VerseGenerator",
+      schema: VerseModule,
+      messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userMsg },
       ],
-      { temperature: 0.2, maxTokens: 4096, jsonMode: true },
-    );
-
-    const parsed = parseJsonResponse(response.content, "VerseGenerator");
-
-    return VerseModule.parse(parsed);
+      temperature: 0.2,
+      maxTokens: 4096,
+    });
   }
 }
