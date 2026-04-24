@@ -30,7 +30,7 @@ uefn-ai create "A colorful lumber tycoon for 8 players. Chop trees, sell logs, u
 - **Verse Copilot** — Generate, fix, and explain Verse scripts
 - **Economy Balancer** — Deterministic simulator validates income/sink curves
 - **Prefab System** — 74 prefabs across 6 theme packs with variant zone randomization
-- **Validation + Repair** — Structural, schema, and cross-reference checks with auto-fix
+- **Validation + Repair** — Structural, schema, cross-reference checks with auto-fix + UEFN memory checker
 
 ## Commands
 
@@ -105,7 +105,7 @@ Falls back automatically: Groq → Google → Anthropic → OpenAI → Ollama (l
 
 - **Monorepo** — pnpm workspaces + Turborepo
 - **12 packages** — schemas, ai, core, templates, balance, validators, verse, packager, prefabs, knowledge, desktop, cli
-- **Pipeline** — Intent → Template → World → Layout → Systems → Balance → Devices → Verse
+- **Pipeline** — Intent → Template → World → Layout → Systems → Balance → Devices → Verse → Validate
 
 ## Development
 
@@ -116,7 +116,7 @@ pnpm install
 # Build all packages
 pnpm build
 
-# Run tests (148 tests)
+# Run tests (167 tests)
 pnpm test
 
 # Run eval suite

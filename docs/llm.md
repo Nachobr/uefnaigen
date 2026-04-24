@@ -20,7 +20,7 @@ ForgeAI is a **local-first CLI + desktop tool** that converts natural-language g
 | Runtime | Node.js 20+ |
 | Monorepo | pnpm workspaces + Turborepo |
 | Schemas | Zod (all data models) |
-| Testing | Vitest (148 tests across 12 packages) |
+| Testing | Vitest (167 tests across 12 packages) |
 | Desktop | Electron + React + Vite |
 | CLI | Commander.js |
 
@@ -36,7 +36,7 @@ packages/
 ├── templates/     — Genre template definitions + registry
 ├── balance/       — Deterministic economy simulators (tycoon + arena)
 ├── validators/    — Structural, schema, and cross-reference validators
-├── verse/         — Verse AST → .verse source code emitter
+├── verse/         — Verse AST → .verse source code emitter + memory checker
 ├── packager/      — Scaffold export (directory + tar.gz)
 ├── prefabs/       — Prefab catalog (74 prefabs across 6 theme packs)
 ├── knowledge/     — Cognee-inspired local knowledge store
@@ -61,6 +61,12 @@ The generation pipeline runs 8 sequential stages. Each stage is an LLM agent (ex
 [7] Device Mapper       — layout + systems → concrete DeviceInstance[] with transforms/channels
 [8] Verse Planner       — systems + devices + template → ModulePlan + LootTables
 ```
+
+Each LLM stage uses a shared `generateValidated()` wrapper that:
+1. Extracts JSON from the LLM response
+2. Applies deterministic normalizers (singleton array unwrap, type coercion, enum aliases)
+3. Validates with Zod `safeParse()`
+4. On failure: sends errors back to the LLM for repair (max 3 passes, temp 0.1)
 
 After the pipeline, the packager generates:
 - JSON manifests (world, layout, devices, economy, loot, progression)
@@ -115,13 +121,19 @@ All agents use a shared `parseJsonResponse()` helper that handles:
 - Ollama adapter prepends `/no_think` for thinking models (qwen3, deepseek-r1)
 - Auto-retry without `format: "json"` if model returns empty
 - SystemsPlanner split into 2 smaller LLM calls (economy + devices) for small models
-- Pipe-delimited enum coercion (`"starter_area|social_hub"` → `"starter_area"`)
-- Creative enum value coercion (`"per_log"` → `"per_action"`, `"item_purchase"` → `"purchase"`)
+- Validation & repair loop via `generateValidated()` — deterministic fixes first, LLM repair fallback
+- Per-stage repair policies with enum alias maps and number field coercion
 
 ### Schema Flexibility
 - `DeviceInstance.type` accepts any string (not strict enum) — LLMs invent device types
 - `channels.listens`/`transmits` default to `[]` when omitted
 - `WorldDesign.zones[].purpose` is a string (not enum) with runtime coercion
+
+### Verse Memory Checker
+- 7 rules based on UEFN memory management docs
+- Catches: non-player weak_map keys, >4 weak_maps per island, missing `<persistable>` specifiers, var in persistable classes, missing FitsInPlayerMap checks, unbounded arrays
+- Runs post-lint on every generated Verse file
+- Reports errors/warnings in pipeline output
 
 ### Pricing Tiers
 - Free: 2 generations/month, 10 copilot calls/day
@@ -216,6 +228,8 @@ tier: free
 | `packages/balance/src/tycoon-simulator.ts` | Deterministic economy simulator |
 | `packages/packager/src/scaffold-packager.ts` | Output generation + zip export |
 | `apps/cli/src/commands/create.ts` | CLI create command |
+| `packages/ai/src/structured-output.ts` | Validation + repair loop (generateValidated) |
+| `packages/verse/src/memory-checker.ts` | UEFN memory anti-pattern checker |
 | `scripts/run-eval.ts` | Eval runner (40 golden prompts) |
 
 ---
@@ -228,8 +242,9 @@ tier: free
 | Gemini 503 (high demand) | Retry or use `--provider groq` |
 | Local models return empty with `format: "json"` | Auto-retry without JSON mode |
 | Thinking models (qwen3, R1) output chain-of-thought | `/no_think` prepended to system prompt |
-| LLMs invent enum values | Coercion maps in SystemsPlanner + WorldPlanner |
-| LLMs use pipe-delimited purposes | Split on `\|`, take first value |
+| LLMs invent enum values | Repair policies in `generateValidated()` with enum alias maps |
+| LLMs use pipe-delimited purposes | Repair loop detects and fixes via LLM re-prompt |
+| Verse uses weak_map incorrectly | Memory checker flags non-player keys, missing specifiers, >4 maps |
 | Large prompts overwhelm small models | SystemsPlanner split into 2 calls |
 
 ---
@@ -239,7 +254,7 @@ tier: free
 ```bash
 pnpm install          # Install dependencies
 pnpm build            # Build all 12 packages
-pnpm test             # Run 148 tests
+pnpm test             # Run 167 tests
 npx tsx scripts/run-eval.ts  # Run 40-prompt eval (100% pass rate)
 ```
 
@@ -250,7 +265,7 @@ npx tsx scripts/run-eval.ts  # Run 40-prompt eval (100% pass rate)
 - **Tag:** `v0.2.0-beta`
 - **Milestone:** M1 Beta complete (Week 6)
 - **Packages:** 12 (10 packages + 2 apps)
-- **Tests:** 148 passing
+- **Tests:** 167 passing
 - **Prefabs:** 74 across 6 theme packs
 - **Golden prompts:** 40 (100% genre detection pass rate)
 - **Templates:** 6 across 4 genres

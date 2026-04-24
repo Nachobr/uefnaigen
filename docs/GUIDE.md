@@ -224,7 +224,7 @@ uefn-ai prefabs list --tag mining --json
 uefn-ai validate ./output
 ```
 
-Runs structural, schema, and cross-reference checks. Use `--json` for machine-readable output.
+Runs structural, schema, cross-reference, and memory checks. Use `--json` for machine-readable output.
 
 ---
 
