@@ -160,6 +160,22 @@ describe("StageCache", () => {
     cache.save("8-verseFiles", {});
     expect(cache.lastCompletedStage).toBe(8);
   });
+
+  it("getOrCompute computes once then returns cached value", async () => {
+    const cache = new StageCache("memory-only-getorcompute", { persist: false });
+    let calls = 0;
+    const fn = async () => {
+      calls++;
+      return { value: calls };
+    };
+
+    const first = await cache.getOrCompute("1-brief", fn);
+    const second = await cache.getOrCompute("1-brief", fn);
+
+    expect(first).toEqual({ value: 1 });
+    expect(second).toEqual({ value: 1 });
+    expect(calls).toBe(1);
+  });
 });
 
 describe("Pipeline", () => {
