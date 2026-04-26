@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { LLMAdapter } from "./adapter.js";
 import { parseJsonResponse } from "./parse-json.js";
 import { generateValidated, applyNormalizers, type RepairPolicy } from "./structured-output.js";
+import { withKnowledgeContext } from "./prompt-context.js";
 import type { NormalizedBrief } from "./intent-extractor.js";
 import type { WorldDesign } from "./world-planner.js";
 import type { TemplateDefinition } from "@forgeai/schemas";
@@ -126,7 +127,7 @@ Return ONLY a valid JSON array:
 Each zone should have at least 1 device. Use types like: trigger, button, item_granter, item_spawner, barrier, tracker, score_manager, hud_message, timer, spawn_pad, teleporter.`;
 
 export class SystemsPlanner {
-  constructor(private llm: LLMAdapter) {}
+  constructor(private llm: LLMAdapter, private knowledgeContext = "") {}
 
   async plan(
     brief: NormalizedBrief,
@@ -149,7 +150,7 @@ Zones:\n${zoneInfo}`;
       stage: "SystemsPlanner:Economy",
       schema: EconomyAndRules,
       messages: [
-        { role: "system", content: ECONOMY_PROMPT },
+        { role: "system", content: withKnowledgeContext(ECONOMY_PROMPT, this.knowledgeContext) },
         { role: "user", content: `Design economy and rules for:\n\n${sharedContext}\n\nTemplate systems: ${template.systemModules.required.join(", ")}` },
       ],
       temperature: 0.3,
@@ -160,7 +161,7 @@ Zones:\n${zoneInfo}`;
     const currencyNames = econResult.currencies.map((c) => c.name).join(", ");
     const devResponse = await this.llm.chat(
       [
-        { role: "system", content: DEVICES_PROMPT },
+        { role: "system", content: withKnowledgeContext(DEVICES_PROMPT, this.knowledgeContext) },
         { role: "user", content: `Place devices for:\n\n${sharedContext}\nCurrencies: ${currencyNames}\nAllowed types: ${template.devicePolicies.allowedDeviceTypes.join(", ")}\nRequired types: ${template.devicePolicies.requiredDeviceTypes.join(", ")}` },
       ],
       { temperature: 0.3, jsonMode: true },

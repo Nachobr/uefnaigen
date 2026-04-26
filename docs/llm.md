@@ -20,7 +20,7 @@ ForgeAI is a **local-first CLI + desktop tool** that converts natural-language g
 | Runtime | Node.js 20+ |
 | Monorepo | pnpm workspaces + Turborepo |
 | Schemas | Zod (all data models) |
-| Testing | Vitest (167 tests across 12 packages) |
+| Testing | Vitest (171 tests across 12 packages) |
 | Desktop | Electron + React + Vite |
 | CLI | Commander.js |
 
@@ -59,14 +59,16 @@ The generation pipeline runs 8 sequential stages. Each stage is an LLM agent (ex
 [5] Systems Planner     — brief + world + template → SystemsDesign (economy + devices, split into 2 LLM calls)
 [6] Balance Planner     — brief + systems → EconomySpec + simulator validation + auto-adjust
 [7] Device Mapper       — layout + systems → concrete DeviceInstance[] with transforms/channels
-[8] Verse Planner       — systems + devices + template → ModulePlan + LootTables
+[8] Verse Planner       — systems + devices + template → ModulePlan + LootTables + Verse source
 ```
 
 Each LLM stage uses a shared `generateValidated()` wrapper that:
 1. Extracts JSON from the LLM response
-2. Applies deterministic normalizers (singleton array unwrap, type coercion, enum aliases)
+2. Applies deterministic normalizers (numeric field coercion, enum aliases)
 3. Validates with Zod `safeParse()`
-4. On failure: sends errors back to the LLM for repair (max 3 passes, temp 0.1)
+4. On failure: sends the latest validation errors back to the LLM for repair (max 3 passes, temp 0.1)
+
+Pipeline stages are cached per job under `~/.forgeai/stage-cache/<jobId>/`, so interrupted jobs can resume without repeating completed LLM calls.
 
 After the pipeline, the packager generates:
 - JSON manifests (world, layout, devices, economy, loot, progression)
@@ -106,6 +108,8 @@ Genre detection uses keyword matching:
 
 **Default max output tokens:** 16384 (all adapters)
 
+**Reliability wrapper:** all pipeline LLM calls go through `RetryAdapter` (3 retries, exponential backoff, 120s timeout) before optional budget enforcement.
+
 ---
 
 ## Key Design Decisions
@@ -120,9 +124,18 @@ All agents use a shared `parseJsonResponse()` helper that handles:
 ### Local Model Compatibility
 - Ollama adapter prepends `/no_think` for thinking models (qwen3, deepseek-r1)
 - Auto-retry without `format: "json"` if model returns empty
+- Ollama connection errors preserve the original cause for better debugging
 - SystemsPlanner split into 2 smaller LLM calls (economy + devices) for small models
 - Validation & repair loop via `generateValidated()` — deterministic fixes first, LLM repair fallback
 - Per-stage repair policies with enum alias maps and number field coercion
+
+### Reliability & Resumability
+- `StageCache` persists successful stage artifacts per job and reports the last completed logical stage
+- `uefn-ai resume <jobId> --run` resumes the pipeline from cached artifacts and packages the result
+- `KnowledgeStore` injects token-budgeted Verse/device/economy context into relevant agent system prompts
+- Verse generation failures are surfaced as pipeline errors instead of silently shipping partial output
+- `dryRun` mode disables writes to job, tier, stage-cache, and knowledge stores for test-safe execution
+- Pino structured logs record pipeline stage events when `verbose` or `FORGEAI_LOG_LEVEL` is enabled
 
 ### Schema Flexibility
 - `DeviceInstance.type` accepts any string (not strict enum) — LLMs invent device types
@@ -162,6 +175,7 @@ uefn-ai prefabs list              # Browse prefab catalog
 uefn-ai validate <dir>            # Run validators on project
 uefn-ai doctor                    # Check environment setup
 uefn-ai resume <jobId>            # Check previous job status
+uefn-ai resume <jobId> --run      # Resume from cached stages and package output
 ```
 
 **Provider flags:** `--provider ollama --model qwen3.5:9b`
@@ -197,6 +211,7 @@ tier: free
 | `~/.forgeai/config.yaml` | User config |
 | `~/.forgeai/usage.json` | Tier usage tracking |
 | `~/.forgeai/jobs/` | Saved job records |
+| `~/.forgeai/stage-cache/` | Per-job pipeline stage artifacts for resume |
 | `~/.forgeai/knowledge/entries.json` | Knowledge store |
 | `./output/` | Default generated output |
 
@@ -212,6 +227,9 @@ tier: free
 | `packages/schemas/src/layout.ts` | LayoutSpec, ZoneSpec, ZonePurpose, WorldType |
 | `packages/schemas/src/templates.ts` | Genre enum, TemplateDefinition |
 | `packages/ai/src/parse-json.ts` | Shared robust JSON extractor |
+| `packages/ai/src/structured-output.ts` | Validation + repair loop (generateValidated) |
+| `packages/ai/src/retry-adapter.ts` | LLM retry/backoff/timeout wrapper |
+| `packages/ai/src/prompt-context.ts` | Knowledge context injection for system prompts |
 | `packages/ai/src/intent-extractor.ts` | Stage 1: prompt → NormalizedBrief |
 | `packages/ai/src/template-router.ts` | Stage 2: deterministic template selection |
 | `packages/ai/src/world-planner.ts` | Stage 3: WorldDesign with zones |
@@ -223,12 +241,15 @@ tier: free
 | `packages/ai/src/ollama-adapter.ts` | Local LLM adapter with thinking suppression |
 | `packages/ai/src/gemini-adapter.ts` | Google adapter with thinking disabled |
 | `packages/core/src/pipeline.ts` | Pipeline orchestrator (8 stages) |
+| `packages/core/src/stage-cache.ts` | Per-job stage cache for resume support |
+| `packages/core/src/logger.ts` | Pino structured logger factory |
 | `packages/core/src/tier-guard.ts` | Pricing tier enforcement |
 | `packages/templates/src/builtin/` | All 6 template definitions |
 | `packages/balance/src/tycoon-simulator.ts` | Deterministic economy simulator |
-| `packages/packager/src/scaffold-packager.ts` | Output generation + zip export |
+| `packages/balance/src/arena-simulator.ts` | Battle arena round pacing simulator |
+| `packages/packager/src/scaffold-packager.ts` | Output generation + tar.gz export via Node `tar` |
 | `apps/cli/src/commands/create.ts` | CLI create command |
-| `packages/ai/src/structured-output.ts` | Validation + repair loop (generateValidated) |
+| `apps/cli/src/commands/resume.ts` | Job status and cached-stage resume command |
 | `packages/verse/src/memory-checker.ts` | UEFN memory anti-pattern checker |
 | `scripts/run-eval.ts` | Eval runner (40 golden prompts) |
 
@@ -239,7 +260,7 @@ tier: free
 | Issue | Workaround |
 |---|---|
 | Gemini 2.5 Flash thinking eats output tokens | `thinkingBudget: 0` in adapter config |
-| Gemini 503 (high demand) | Retry or use `--provider groq` |
+| Gemini 503 (high demand) | `RetryAdapter` retries automatically; use `--provider groq` if persistent |
 | Local models return empty with `format: "json"` | Auto-retry without JSON mode |
 | Thinking models (qwen3, R1) output chain-of-thought | `/no_think` prepended to system prompt |
 | LLMs invent enum values | Repair policies in `generateValidated()` with enum alias maps |
@@ -254,7 +275,8 @@ tier: free
 ```bash
 pnpm install          # Install dependencies
 pnpm build            # Build all 12 packages
-pnpm test             # Run 167 tests
+pnpm lint             # Run ESLint across all packages/apps
+pnpm test             # Run 171 tests
 npx tsx scripts/run-eval.ts  # Run 40-prompt eval (100% pass rate)
 ```
 
@@ -263,9 +285,9 @@ npx tsx scripts/run-eval.ts  # Run 40-prompt eval (100% pass rate)
 ## Current Version
 
 - **Tag:** `v0.2.0-beta`
-- **Milestone:** M1 Beta complete (Week 6)
+- **Milestone:** M1 Beta complete + Day 15 reliability hardening
 - **Packages:** 12 (10 packages + 2 apps)
-- **Tests:** 167 passing
+- **Tests:** 171 passing
 - **Prefabs:** 74 across 6 theme packs
 - **Golden prompts:** 40 (100% genre detection pass rate)
 - **Templates:** 6 across 4 genres

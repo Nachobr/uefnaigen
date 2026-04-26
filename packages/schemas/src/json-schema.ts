@@ -1,5 +1,4 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
-import type { z } from "zod";
 
 import { WorldProject } from "./world-project.js";
 import { LayoutSpec, ZoneSpec, SpawnPoint } from "./layout.js";

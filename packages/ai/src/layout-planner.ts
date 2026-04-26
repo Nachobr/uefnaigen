@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { LayoutSpec } from "@forgeai/schemas";
 import type { LLMAdapter } from "./adapter.js";
 import { generateValidated } from "./structured-output.js";

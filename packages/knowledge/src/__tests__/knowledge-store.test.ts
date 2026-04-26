@@ -6,7 +6,7 @@ describe("KnowledgeStore", () => {
   let store: KnowledgeStore;
 
   beforeEach(() => {
-    store = new KnowledgeStore();
+    store = new KnowledgeStore({ persist: false });
     store.clear();
   });
 
@@ -73,14 +73,14 @@ describe("KnowledgeStore", () => {
 
 describe("seedDefaultKnowledge", () => {
   it("seeds 8 default entries", () => {
-    const store = new KnowledgeStore();
+    const store = new KnowledgeStore({ persist: false });
     store.clear();
     seedDefaultKnowledge(store);
     expect(store.size).toBeGreaterThanOrEqual(8);
   });
 
   it("does not re-seed if store already has entries", () => {
-    const store = new KnowledgeStore();
+    const store = new KnowledgeStore({ persist: false });
     store.clear();
     store.add({ id: "existing", type: "verse_pattern", title: "X", content: "x", tags: ["x"] });
     const sizeBefore = store.size;

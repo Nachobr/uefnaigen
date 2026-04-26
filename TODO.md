@@ -202,6 +202,21 @@
 
 ---
 
+## Day 15 — Reliability Fixes ($4 remaining)
+- [x] Fix stale error in `structured-output.ts` repair loop (re-uses initial parse error on every pass)
+- [x] Genre-aware simulator dispatch in pipeline (uses ArenaSimulator for battle_arena genre)
+- [x] Surface Verse generation failures instead of silent catch
+- [x] LLM retry/timeout wrapper (`RetryAdapter`: exponential backoff, 3 retries, 120s timeout)
+- [x] Wire `KnowledgeStore` context into agent system prompts
+- [x] Stage caching: `StageCache` persists each stage to `~/.forgeai/stage-cache/<jobId>/`
+- [x] `uefn-ai resume <jobId> --run` actually resumes pipeline from last cached stage
+- [x] Replace `tar` shell-out in packager with Node.js `tar` library (Windows compat)
+- [x] Wire Pino structured logging (installed but unused)
+- [x] Add ESLint + Prettier config
+- [x] Mock-LLM integration tests for pipeline wiring
+
+---
+
 ## Notes
 - Each day assumes ~1 focused session with $10 token budget
 - If a day's tasks overflow, carry remainder to next day

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { LLMAdapter } from "./adapter.js";
 import { generateValidated } from "./structured-output.js";
+import { withKnowledgeContext } from "./prompt-context.js";
 import type { SystemsDesign } from "./systems-planner.js";
 import type { DeviceInstance, TemplateDefinition } from "@forgeai/schemas";
 
@@ -78,7 +79,7 @@ Rules:
 - Method names use PascalCase (Verse convention)`;
 
 export class VersePlanner {
-  constructor(private llm: LLMAdapter) {}
+  constructor(private llm: LLMAdapter, private knowledgeContext = "") {}
 
   async plan(
     systemsDesign: SystemsDesign,
@@ -112,7 +113,7 @@ Plan ALL required modules and any relevant optional modules.`;
       stage: "VersePlanner",
       schema: ModulePlan,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: withKnowledgeContext(SYSTEM_PROMPT, this.knowledgeContext) },
         { role: "user", content: userMsg },
       ],
       temperature: 0.2,

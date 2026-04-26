@@ -47,12 +47,12 @@ export async function generateValidated<T>(
   let candidate = parseJsonResponse(response.content, stage);
   candidate = applyNormalizers(candidate, repairPolicy);
 
-  const first = schema.safeParse(candidate);
-  if (first.success) return first.data;
+  let parseResult = schema.safeParse(candidate);
+  if (parseResult.success) return parseResult.data;
 
   // Repair loop
   for (let pass = 1; pass <= maxPasses; pass++) {
-    const issues = formatZodIssues(first.error);
+    const issues = formatZodIssues(parseResult.error);
     const repairMessages: LLMMessage[] = [
       { role: "system", content: REPAIR_SYSTEM_PROMPT },
       {
@@ -70,12 +70,16 @@ export async function generateValidated<T>(
     candidate = parseJsonResponse(repairResponse.content, `${stage}:Repair`);
     candidate = applyNormalizers(candidate, repairPolicy);
 
-    const result = schema.safeParse(candidate);
-    if (result.success) return result.data;
+    parseResult = schema.safeParse(candidate);
+    if (parseResult.success) return parseResult.data;
   }
 
-  // Final attempt — throw with original parse for actionable error
-  return schema.parse(candidate);
+  // All repair passes exhausted — throw a stage-tagged error with the latest issues.
+  const issues = formatZodIssues(parseResult.error);
+  throw new Error(
+    `${stage} failed after ${maxPasses} repair passes. Validation errors:\n${issues}`,
+    { cause: parseResult.error },
+  );
 }
 
 function formatZodIssues(error: ZodError): string {
@@ -97,12 +101,7 @@ export function applyNormalizers(
 
   const obj = { ...(data as Record<string, unknown>) };
 
-  for (const [key, value] of Object.entries(obj)) {
-    // Unwrap singleton arrays to scalar (for number/string/boolean fields)
-    if (Array.isArray(value) && value.length === 1 && !Array.isArray(value[0]) && typeof value[0] !== "object") {
-      obj[key] = value[0];
-    }
-
+  for (const key of Object.keys(obj)) {
     // Coerce numeric strings to numbers
     if (typeof obj[key] === "string" && isNumericField(key, policy)) {
       const num = Number(obj[key]);

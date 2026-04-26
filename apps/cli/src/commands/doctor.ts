@@ -21,11 +21,14 @@ export const doctorCommand = new Command("doctor")
     console.log(`  Google:     ${hasGoogle ? "✓ key set" : "✗ GOOGLE_API_KEY not set"}`);
 
     // Ollama
-    let hasOllama = false;
-    try {
-      const res = await fetch("http://localhost:11434/api/tags");
-      hasOllama = res.ok;
-    } catch {}
+    const hasOllama = await (async () => {
+      try {
+        const res = await fetch("http://localhost:11434/api/tags");
+        return res.ok;
+      } catch {
+        return false;
+      }
+    })();
     console.log(`  Ollama:     ${hasOllama ? "✓ running" : "✗ not detected at localhost:11434"}`);
 
     // Summary

@@ -6,11 +6,19 @@ import { homedir } from "node:os";
 
 const JOBS_DIR = join(homedir(), ".forgeai", "jobs");
 
+export interface JobManagerOptions {
+  persist?: boolean;
+}
+
 export class JobManager {
   private jobs = new Map<string, JobRecord>();
+  private persist: boolean;
 
-  constructor() {
-    mkdirSync(JOBS_DIR, { recursive: true });
+  constructor(options: JobManagerOptions = {}) {
+    this.persist = options.persist ?? true;
+    if (this.persist) {
+      mkdirSync(JOBS_DIR, { recursive: true });
+    }
   }
 
   create(prompt: string, seed: number): JobRecord {
@@ -46,6 +54,7 @@ export class JobManager {
   }
 
   listAll(): JobRecord[] {
+    if (!this.persist) return Array.from(this.jobs.values());
     try {
       const files = readdirSync(JOBS_DIR).filter((f) => f.endsWith(".json"));
       return files.map((f) => {
@@ -58,10 +67,12 @@ export class JobManager {
   }
 
   private save(job: JobRecord): void {
+    if (!this.persist) return;
     writeFileSync(join(JOBS_DIR, `${job.jobId}.json`), JSON.stringify(job, null, 2), "utf-8");
   }
 
   private load(jobId: string): JobRecord | undefined {
+    if (!this.persist) return undefined;
     const path = join(JOBS_DIR, `${jobId}.json`);
     if (!existsSync(path)) return undefined;
     try {

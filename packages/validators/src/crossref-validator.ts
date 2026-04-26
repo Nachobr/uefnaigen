@@ -9,7 +9,6 @@ export class CrossRefValidator implements Validator {
     const warnings: string[] = [];
 
     const zoneIds = new Set(project.layout.zones.map((z) => z.zoneId));
-    const deviceIds = new Set(project.devices.map((d) => d.id));
     const currencyIds = new Set(project.economy.currencies.map((c) => c.currencyId));
 
     // Devices reference valid zones

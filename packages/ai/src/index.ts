@@ -7,6 +7,7 @@ export { OllamaAdapter } from "./ollama-adapter.js";
 export { GeminiAdapter } from "./gemini-adapter.js";
 export { FallbackAdapter } from "./fallback-adapter.js";
 export { BudgetAdapter, BudgetExceededError } from "./budget-adapter.js";
+export { RetryAdapter, type RetryOptions } from "./retry-adapter.js";
 export { IntentExtractor, type NormalizedBrief, detectGenreFromKeywords } from "./intent-extractor.js";
 export { TemplateRouter, type TemplateRouterResult, type TemplateSource } from "./template-router.js";
 export { WorldPlanner, type WorldDesign } from "./world-planner.js";

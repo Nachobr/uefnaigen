@@ -8,11 +8,13 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
+    "lint": "eslint .",
     "clean": "rm -rf dist"
   },
   "dependencies": {
     "@forgeai/ai": "workspace:*",
     "@forgeai/balance": "workspace:*",
+    "@forgeai/knowledge": "workspace:*",
     "@forgeai/packager": "workspace:*",
     "@forgeai/prefabs": "workspace:*",
     "@forgeai/schemas": "workspace:*",

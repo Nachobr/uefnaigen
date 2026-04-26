@@ -1,12 +1,9 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, dirname, basename } from "node:path";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-import type { WorldProject, EconomySpec, LayoutSpec, DeviceInstance } from "@forgeai/schemas";
+import { create } from "tar";
+import type { WorldProject, EconomySpec, DeviceInstance } from "@forgeai/schemas";
 import type { SimulationResult } from "@forgeai/balance";
 import type { LootTable, ModulePlan, WorldDesign } from "@forgeai/ai";
-
-const execFileAsync = promisify(execFile);
 
 export interface PackagerInput {
   project: WorldProject;
@@ -304,7 +301,7 @@ ${zoneChecks.join("\n")}
     const dirName = basename(outputDir);
     const archivePath = join(parent, `${dirName}.tar.gz`);
 
-    await execFileAsync("tar", ["-czf", archivePath, "-C", parent, dirName]);
+    await create({ cwd: parent, file: archivePath, gzip: true }, [dirName]);
 
     return archivePath;
   }

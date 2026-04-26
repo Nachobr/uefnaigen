@@ -6,10 +6,14 @@ import { homedir } from "node:os";
 
 export class TierGuard {
   private usagePath: string;
+  private persist: boolean;
 
-  constructor(private tier: PricingTier) {
+  constructor(private tier: PricingTier, options: { persist?: boolean } = {}) {
+    this.persist = options.persist ?? true;
     const dir = join(homedir(), ".forgeai");
-    mkdirSync(dir, { recursive: true });
+    if (this.persist) {
+      mkdirSync(dir, { recursive: true });
+    }
     this.usagePath = join(dir, "usage.json");
   }
 
@@ -56,6 +60,7 @@ export class TierGuard {
   }
 
   private loadUsage(): Record<string, Record<string, number>> {
+    if (!this.persist) return {};
     if (!existsSync(this.usagePath)) return {};
     try {
       return JSON.parse(readFileSync(this.usagePath, "utf-8"));
@@ -65,6 +70,7 @@ export class TierGuard {
   }
 
   private saveUsage(usage: Record<string, Record<string, number>>): void {
+    if (!this.persist) return;
     writeFileSync(this.usagePath, JSON.stringify(usage, null, 2), "utf-8");
   }
 }

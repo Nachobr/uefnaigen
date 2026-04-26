@@ -2,3 +2,5 @@ export { Pipeline, type PipelineOptions, type PipelineResult } from "./pipeline.
 export { JobManager } from "./job-manager.js";
 export { computeCacheKey, type CacheKeyInput } from "./cache-key.js";
 export { TierGuard } from "./tier-guard.js";
+export { StageCache } from "./stage-cache.js";
+export { createLogger, type LoggerOptions } from "./logger.js";

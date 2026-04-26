@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { LLMAdapter } from "./adapter.js";
 import { parseJsonResponse } from "./parse-json.js";
 import { applyNormalizers } from "./structured-output.js";
+import { withKnowledgeContext } from "./prompt-context.js";
 import type { SystemsDesign } from "./systems-planner.js";
 import type { LayoutSpec } from "@forgeai/schemas";
 
@@ -39,7 +40,7 @@ Rules:
 - Device IDs must be unique`;
 
 export class DeviceMapper {
-  constructor(private llm: LLMAdapter) {}
+  constructor(private llm: LLMAdapter, private knowledgeContext = "") {}
 
   async map(
     layout: LayoutSpec,
@@ -71,7 +72,7 @@ Produce a JSON array of DeviceInstance objects with exact coordinates within eac
 
     const response = await this.llm.chat(
       [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: withKnowledgeContext(SYSTEM_PROMPT, this.knowledgeContext) },
         { role: "user", content: userMsg },
       ],
       { temperature: 0.1, maxTokens: 8192, jsonMode: true },

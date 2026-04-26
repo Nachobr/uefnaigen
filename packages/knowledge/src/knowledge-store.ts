@@ -16,12 +16,20 @@ export interface KnowledgeEntry {
 const STORE_DIR = join(homedir(), ".forgeai", "knowledge");
 const STORE_FILE = join(STORE_DIR, "entries.json");
 
+export interface KnowledgeStoreOptions {
+  persist?: boolean;
+}
+
 export class KnowledgeStore {
   private entries = new Map<string, KnowledgeEntry>();
+  private persist: boolean;
 
-  constructor() {
-    mkdirSync(STORE_DIR, { recursive: true });
-    this.load();
+  constructor(options: KnowledgeStoreOptions = {}) {
+    this.persist = options.persist ?? true;
+    if (this.persist) {
+      mkdirSync(STORE_DIR, { recursive: true });
+      this.load();
+    }
   }
 
   add(entry: Omit<KnowledgeEntry, "createdAt" | "usageCount">): void {
@@ -95,6 +103,7 @@ export class KnowledgeStore {
   }
 
   private load(): void {
+    if (!this.persist) return;
     if (!existsSync(STORE_FILE)) return;
     try {
       const raw = readFileSync(STORE_FILE, "utf-8");
@@ -108,6 +117,7 @@ export class KnowledgeStore {
   }
 
   private save(): void {
+    if (!this.persist) return;
     writeFileSync(STORE_FILE, JSON.stringify(Array.from(this.entries.values()), null, 2), "utf-8");
   }
 }

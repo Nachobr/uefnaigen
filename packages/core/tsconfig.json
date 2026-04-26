@@ -13,6 +13,7 @@
     { "path": "../validators" },
     { "path": "../balance" },
     { "path": "../prefabs" },
+    { "path": "../knowledge" },
     { "path": "../packager" }
   ]
 }

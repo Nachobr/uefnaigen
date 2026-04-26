@@ -1,6 +1,7 @@
 import { VerseModule } from "@forgeai/schemas";
 import type { LLMAdapter } from "./adapter.js";
 import { generateValidated } from "./structured-output.js";
+import { withKnowledgeContext } from "./prompt-context.js";
 import type { ModulePlan } from "./verse-planner.js";
 
 const SYSTEM_PROMPT = `You are a UEFN Verse code generator. Given a module plan, generate a Verse AST as JSON.
@@ -44,7 +45,7 @@ Verse rules:
 - Common imports: /Fortnite.com/Devices, /Verse.org/Simulation, /UnrealEngine.com/Temporary/SpatialMath`;
 
 export class VerseGenerator {
-  constructor(private llm: LLMAdapter) {}
+  constructor(private llm: LLMAdapter, private knowledgeContext = "") { }
 
   async generate(modulePlan: ModulePlan["modules"][number]): Promise<VerseModule> {
     const userMsg = `Generate a Verse AST for this module:
@@ -69,7 +70,7 @@ Generate complete method bodies with real Verse logic. Use proper failable patte
       stage: "VerseGenerator",
       schema: VerseModule,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: withKnowledgeContext(SYSTEM_PROMPT, this.knowledgeContext) },
         { role: "user", content: userMsg },
       ],
       temperature: 0.2,

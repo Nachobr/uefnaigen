@@ -1,6 +1,7 @@
 import { EconomySpec } from "@forgeai/schemas";
 import type { LLMAdapter } from "./adapter.js";
 import { generateValidated, type RepairPolicy } from "./structured-output.js";
+import { withKnowledgeContext } from "./prompt-context.js";
 import type { NormalizedBrief } from "./intent-extractor.js";
 import type { SystemsDesign } from "./systems-planner.js";
 
@@ -55,7 +56,7 @@ const BALANCE_REPAIR_POLICY: RepairPolicy = {
 };
 
 export class BalancePlanner {
-  constructor(private llm: LLMAdapter) {}
+  constructor(private llm: LLMAdapter, private knowledgeContext = "") {}
 
   async plan(
     brief: NormalizedBrief,
@@ -78,7 +79,7 @@ Produce a balanced EconomySpec with proper targetCurves.`;
       stage: "BalancePlanner",
       schema: EconomySpec,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: withKnowledgeContext(SYSTEM_PROMPT, this.knowledgeContext) },
         { role: "user", content: userMsg },
       ],
       temperature: 0.2,

@@ -41,7 +41,10 @@ export class OllamaAdapter implements LLMAdapter {
         body: JSON.stringify(body),
       });
     } catch (err) {
-      throw new Error(`Ollama connection failed at ${this.baseUrl}. Is Ollama running? (${err instanceof Error ? err.message : err})`);
+      throw new Error(
+        `Ollama connection failed at ${this.baseUrl}. Is Ollama running? (${err instanceof Error ? err.message : err})`,
+        { cause: err },
+      );
     }
 
     if (!res.ok) {

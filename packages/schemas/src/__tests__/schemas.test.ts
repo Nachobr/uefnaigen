@@ -13,8 +13,6 @@ import {
   PrefabDefinition,
   VariantZone,
   VerseModule,
-  VerseClass,
-  VerseFunction,
   VerseField,
   JobRecord,
   ForgeAIConfig,
