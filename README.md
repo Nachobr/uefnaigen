@@ -125,4 +125,8 @@ npx tsx scripts/run-eval.ts
 
 ## License
 
-MIT
+MIT — see [LICENSE](./LICENSE).
+
+## Disclaimer
+
+Not affiliated with, endorsed by, or sponsored by Epic Games. **UEFN**, **Verse**, **Fortnite**, and related marks are trademarks of Epic Games, Inc. Generated Verse code, manifests, and assets are your responsibility under Epic's [Creator Rules](https://create.fortnite.com/) and the Fortnite EULA. Always review generated output before importing into UEFN or publishing an island.

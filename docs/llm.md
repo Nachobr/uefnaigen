@@ -20,7 +20,7 @@ ForgeAI is a **local-first CLI + desktop tool** that converts natural-language g
 | Runtime | Node.js 20+ |
 | Monorepo | pnpm workspaces + Turborepo |
 | Schemas | Zod (all data models) |
-| Testing | Vitest (171 tests across 12 packages) |
+| Testing | Vitest (173 tests across 12 packages) |
 | Desktop | Electron + React + Vite |
 | CLI | Commander.js |
 
@@ -67,8 +67,9 @@ Each LLM stage uses a shared `generateValidated()` wrapper that:
 2. Applies deterministic normalizers (numeric field coercion, enum aliases)
 3. Validates with Zod `safeParse()`
 4. On failure: sends the latest validation errors back to the LLM for repair (max 3 passes, temp 0.1)
+5. After all repair passes are exhausted, throws a stage-tagged error of the form `${stage} failed after ${maxPasses} repair passes` with the underlying `ZodError` preserved as `cause`
 
-Pipeline stages are cached per job under `~/.forgeai/stage-cache/<jobId>/`, so interrupted jobs can resume without repeating completed LLM calls.
+Pipeline stages are cached per job under `~/.forgeai/stage-cache/<jobId>/`, so interrupted jobs can resume without repeating completed LLM calls. Cache reads/writes go through `cache.getOrCompute(stageKey, fn)` so the load/save pairing cannot drift, and stage keys are typed against the canonical `STAGE_KEYS` array — the same source `lastCompletedStage` derives from.
 
 After the pipeline, the packager generates:
 - JSON manifests (world, layout, devices, economy, loot, progression)
@@ -130,10 +131,12 @@ All agents use a shared `parseJsonResponse()` helper that handles:
 - Per-stage repair policies with enum alias maps and number field coercion
 
 ### Reliability & Resumability
-- `StageCache` persists successful stage artifacts per job and reports the last completed logical stage
+- `StageCache` persists successful stage artifacts per job and reports the last completed logical stage. `STAGE_KEYS` is the single source of truth for both the cache filenames and the `lastCompletedStage` calculation
+- `cache.getOrCompute<T>(stage, fn)` centralizes load/save pairing so a typo in a stage key fails at compile time
 - `uefn-ai resume <jobId> --run` resumes the pipeline from cached artifacts and packages the result
 - `KnowledgeStore` injects token-budgeted Verse/device/economy context into relevant agent system prompts
 - Verse generation failures are surfaced as pipeline errors instead of silently shipping partial output
+- Repair-loop exhaustion errors include the stage name and latest Zod issues for diagnosable pipeline failures
 - `dryRun` mode disables writes to job, tier, stage-cache, and knowledge stores for test-safe execution
 - Pino structured logs record pipeline stage events when `verbose` or `FORGEAI_LOG_LEVEL` is enabled
 
@@ -227,7 +230,7 @@ tier: free
 | `packages/schemas/src/layout.ts` | LayoutSpec, ZoneSpec, ZonePurpose, WorldType |
 | `packages/schemas/src/templates.ts` | Genre enum, TemplateDefinition |
 | `packages/ai/src/parse-json.ts` | Shared robust JSON extractor |
-| `packages/ai/src/structured-output.ts` | Validation + repair loop (generateValidated) |
+| `packages/ai/src/structured-output.ts` | Validation + repair loop (generateValidated) with stage-tagged exhaustion errors |
 | `packages/ai/src/retry-adapter.ts` | LLM retry/backoff/timeout wrapper |
 | `packages/ai/src/prompt-context.ts` | Knowledge context injection for system prompts |
 | `packages/ai/src/intent-extractor.ts` | Stage 1: prompt → NormalizedBrief |
@@ -241,7 +244,7 @@ tier: free
 | `packages/ai/src/ollama-adapter.ts` | Local LLM adapter with thinking suppression |
 | `packages/ai/src/gemini-adapter.ts` | Google adapter with thinking disabled |
 | `packages/core/src/pipeline.ts` | Pipeline orchestrator (8 stages) |
-| `packages/core/src/stage-cache.ts` | Per-job stage cache for resume support |
+| `packages/core/src/stage-cache.ts` | Per-job stage cache + `STAGE_KEYS` source of truth + `getOrCompute` helper |
 | `packages/core/src/logger.ts` | Pino structured logger factory |
 | `packages/core/src/tier-guard.ts` | Pricing tier enforcement |
 | `packages/templates/src/builtin/` | All 6 template definitions |
@@ -276,7 +279,7 @@ tier: free
 pnpm install          # Install dependencies
 pnpm build            # Build all 12 packages
 pnpm lint             # Run ESLint across all packages/apps
-pnpm test             # Run 171 tests
+pnpm test             # Run 173 tests
 npx tsx scripts/run-eval.ts  # Run 40-prompt eval (100% pass rate)
 ```
 
@@ -285,9 +288,9 @@ npx tsx scripts/run-eval.ts  # Run 40-prompt eval (100% pass rate)
 ## Current Version
 
 - **Tag:** `v0.2.0-beta`
-- **Milestone:** M1 Beta complete + Day 15 reliability hardening
+- **Milestone:** M1 Beta complete + Day 15 reliability hardening + post-review cleanup (`getOrCompute`, `STAGE_KEYS`, stage-tagged repair errors)
 - **Packages:** 12 (10 packages + 2 apps)
-- **Tests:** 171 passing
+- **Tests:** 173 passing
 - **Prefabs:** 74 across 6 theme packs
 - **Golden prompts:** 40 (100% genre detection pass rate)
 - **Templates:** 6 across 4 genres

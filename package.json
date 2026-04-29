@@ -1,5 +1,13 @@
 {
   "name": "forgeai",
+  "version": "0.2.0-beta",
+  "description": "AI-powered UEFN world generator: turn natural-language prompts into UEFN project scaffolds (Verse code, device manifests, layouts, economy configs).",
+  "license": "MIT",
+  "author": "Nacho Britos <ignbritos@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nachobr/uefnaigen.git"
+  },
   "private": true,
   "packageManager": "pnpm@10.33.0",
   "engines": {
