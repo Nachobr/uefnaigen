@@ -6,6 +6,16 @@ export interface CacheKeyInput {
   model: string;
   seed: number;
   schemaVersion?: string;
+  /** LLM provider id (anthropic, openai, groq, google, ollama) — keys outputs by provider so model-specific quirks don't cross over. */
+  provider?: string;
+  /** Resolved template version. Bumping a template's version invalidates downstream stage memoization. */
+  templateVersion?: string;
+  /** Version tag for the knowledge-context bundle injected into agent prompts. Bump when seed knowledge changes meaningfully. */
+  knowledgeVersion?: string;
+  /** Optional genre override (CLI flag) — affects intent extraction output. */
+  genreOverride?: string;
+  /** Optional template id override (CLI flag) — affects routing output. */
+  templateOverride?: string;
 }
 
 export function computeCacheKey(input: CacheKeyInput): string {
@@ -15,6 +25,11 @@ export function computeCacheKey(input: CacheKeyInput): string {
     model: input.model,
     seed: input.seed,
     schemaVersion: input.schemaVersion ?? "wg/1.0",
+    provider: input.provider ?? "",
+    templateVersion: input.templateVersion ?? "",
+    knowledgeVersion: input.knowledgeVersion ?? "",
+    genreOverride: input.genreOverride ?? "",
+    templateOverride: input.templateOverride ?? "",
   });
   return createHash("sha256").update(payload).digest("hex").slice(0, 16);
 }

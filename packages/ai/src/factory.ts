@@ -5,7 +5,7 @@ import { OpenAIAdapter } from "./openai-adapter.js";
 import { GroqAdapter } from "./groq-adapter.js";
 import { OllamaAdapter } from "./ollama-adapter.js";
 import { GeminiAdapter } from "./gemini-adapter.js";
-import { FallbackAdapter } from "./fallback-adapter.js";
+import { FallbackAdapter, type FallbackLogger } from "./fallback-adapter.js";
 
 export function createAdapter(config: ForgeAIConfig): LLMAdapter {
   switch (config.provider) {
@@ -37,31 +37,61 @@ export function createAdapter(config: ForgeAIConfig): LLMAdapter {
   }
 }
 
+export interface FallbackFactoryOptions {
+  /** Allow auto-pulling the local fallback model on last-resort path. Default false. */
+  autoPullLocalModel?: boolean;
+  logger?: FallbackLogger;
+}
+
 /**
  * Create an adapter with automatic fallback chain.
- * Tries configured providers in order, falls back to local qwen3.5:9b via Ollama.
+ * Leads with the configured provider/model, then appends every other provider
+ * with a configured key, and finally the local Ollama qwen3.5:9b as last resort.
  */
-export function createAdapterWithFallback(config: ForgeAIConfig): LLMAdapter {
+export function createAdapterWithFallback(
+  config: ForgeAIConfig,
+  options: FallbackFactoryOptions = {},
+): LLMAdapter {
   const adapters: Array<{ name: string; adapter: LLMAdapter }> = [];
+  const seen = new Set<string>();
 
-  // Build chain from available keys
-  if (config.apiKeys.groq) {
-    adapters.push({ name: "groq", adapter: new GroqAdapter(config.apiKeys.groq, "llama-3.3-70b-versatile") });
+  const pushIf = (name: string, factory: () => LLMAdapter | undefined) => {
+    if (seen.has(name)) return;
+    const adapter = factory();
+    if (!adapter) return;
+    adapters.push({ name, adapter });
+    seen.add(name);
+  };
+
+  // Lead with the user-configured provider so --provider/--model is honored.
+  try {
+    const lead = createAdapter(config);
+    adapters.push({ name: config.provider, adapter: lead });
+    seen.add(config.provider);
+  } catch {
+    // Configured provider missing key — silently skip; cascade will try others.
   }
-  if (config.apiKeys.google) {
-    adapters.push({ name: "google", adapter: new GeminiAdapter(config.apiKeys.google, "gemini-2.5-flash") });
-  }
-  if (config.apiKeys.anthropic) {
-    adapters.push({ name: "anthropic", adapter: new AnthropicAdapter(config.apiKeys.anthropic, config.model) });
-  }
-  if (config.apiKeys.openai) {
-    adapters.push({ name: "openai", adapter: new OpenAIAdapter(config.apiKeys.openai, config.model) });
-  }
+
+  pushIf("groq", () =>
+    config.apiKeys.groq ? new GroqAdapter(config.apiKeys.groq, "llama-3.3-70b-versatile") : undefined,
+  );
+  pushIf("google", () =>
+    config.apiKeys.google ? new GeminiAdapter(config.apiKeys.google, "gemini-2.5-flash") : undefined,
+  );
+  pushIf("anthropic", () =>
+    config.apiKeys.anthropic ? new AnthropicAdapter(config.apiKeys.anthropic, config.model) : undefined,
+  );
+  pushIf("openai", () =>
+    config.apiKeys.openai ? new OpenAIAdapter(config.apiKeys.openai, config.model) : undefined,
+  );
 
   if (adapters.length === 0) {
-    // No API keys — go straight to Ollama
     return new OllamaAdapter("qwen3.5:9b", config.ollamaBaseUrl);
   }
 
-  return new FallbackAdapter(adapters, config.ollamaBaseUrl);
+  return new FallbackAdapter(adapters, {
+    ollamaBaseUrl: config.ollamaBaseUrl,
+    autoPullLocalModel: options.autoPullLocalModel,
+    logger: options.logger,
+  });
 }

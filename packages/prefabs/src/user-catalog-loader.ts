@@ -3,16 +3,36 @@ import { join } from "node:path";
 import { PrefabDefinition } from "@forgeai/schemas";
 import { PrefabCatalog } from "./catalog.js";
 
-export function loadUserCatalog(dir: string): PrefabCatalog {
-  const catalog = new PrefabCatalog();
+export interface UserCatalogLoadReport {
+  loaded: string[];
+  skipped: Array<{ file: string; reason: string }>;
+}
 
-  if (!existsSync(dir)) return catalog;
+export interface UserCatalogLoadResult {
+  catalog: PrefabCatalog;
+  report: UserCatalogLoadReport;
+}
+
+/**
+ * Backwards-compatible loader: returns just the catalog. Existing callers keep working.
+ * Use {@link loadUserCatalogWithReport} when you need to surface skip reasons.
+ */
+export function loadUserCatalog(dir: string): PrefabCatalog {
+  return loadUserCatalogWithReport(dir).catalog;
+}
+
+export function loadUserCatalogWithReport(dir: string): UserCatalogLoadResult {
+  const catalog = new PrefabCatalog();
+  const report: UserCatalogLoadReport = { loaded: [], skipped: [] };
+
+  if (!existsSync(dir)) return { catalog, report };
 
   const files = readdirSync(dir).filter((f) => f.endsWith(".json"));
 
   for (const file of files) {
+    const path = join(dir, file);
     try {
-      const raw = readFileSync(join(dir, file), "utf-8");
+      const raw = readFileSync(path, "utf-8");
       const parsed = JSON.parse(raw);
 
       if (Array.isArray(parsed)) {
@@ -24,10 +44,12 @@ export function loadUserCatalog(dir: string): PrefabCatalog {
         const prefab = PrefabDefinition.parse(parsed);
         catalog.add(prefab);
       }
-    } catch {
-      // Skip invalid files silently
+      report.loaded.push(file);
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err);
+      report.skipped.push({ file, reason });
     }
   }
 
-  return catalog;
+  return { catalog, report };
 }

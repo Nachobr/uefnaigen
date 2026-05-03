@@ -1,6 +1,6 @@
 {
   "name": "uefn-ai",
-  "version": "0.1.0-mvp",
+  "version": "0.2.0-beta",
   "description": "ForgeAI — AI-powered UEFN world generator. Turn natural language into UEFN project scaffolds.",
   "type": "module",
   "license": "MIT",

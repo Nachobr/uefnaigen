@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import type { ForgeAIConfig } from "@forgeai/schemas";
 import type { LLMAdapter, LLMMessage, LLMResponse } from "@forgeai/ai";
 import { Pipeline } from "../pipeline.js";
@@ -199,5 +202,37 @@ describe("Pipeline", () => {
     expect(llm.calls).toHaveLength(10);
     expect(llm.calls[3].messages[0].content).toContain("Tycoon Economy Template");
     expect(llm.calls[9].messages[0].content).toContain("Verse Failable Pattern");
+  });
+
+  it("memo cache reuses expensive stages across separate jobs with same inputs", async () => {
+    // Redirect HOME so MemoCache persists into a clean temp dir.
+    const tmpHome = mkdtempSync(join(tmpdir(), "forgeai-memo-"));
+    const prevHome = process.env.HOME;
+    process.env.HOME = tmpHome;
+    try {
+      const uniquePrompt = `MEMO TEST ${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const seed = 777;
+      const baseOpts = {
+        prompt: uniquePrompt,
+        seed,
+        outputDir: join(tmpHome, "out"),
+        config,
+        dryRun: false as const,
+      };
+
+      const llm1 = new QueueLLM(pipelineResponses());
+      await new Pipeline({ ...baseOpts, llm: llm1 }).run();
+      const firstCallCount = llm1.calls.length;
+      expect(firstCallCount).toBeGreaterThan(1);
+
+      // Same inputs, fresh job ⇒ all 8 memoized stages should be served from disk.
+      // Only 1-brief (not memoized) hits the LLM.
+      const llm2 = new QueueLLM(pipelineResponses());
+      await new Pipeline({ ...baseOpts, llm: llm2 }).run();
+      expect(llm2.calls).toHaveLength(1);
+    } finally {
+      if (prevHome === undefined) delete process.env.HOME;
+      else process.env.HOME = prevHome;
+    }
   });
 });

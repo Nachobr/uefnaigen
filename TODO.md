@@ -217,6 +217,116 @@
 
 ---
 
+## Backlog — Oracle-Reviewed Improvements (ordered by importance)
+
+Token cost legend (estimated ForgeAI token spend to design + implement + verify; excludes runtime LLM cost of evals):
+- **XS** ≈ <20k tokens (1 short focused session)
+- **S** ≈ 20–60k tokens
+- **M** ≈ 60–150k tokens
+- **L** ≈ 150–400k tokens
+- **XL** ≈ 400k+ tokens (multi-day)
+
+### P0 — Architectural truth & cost honesty
+
+- [x] **P0.1 — Make `WorldProject` the canonical pipeline artifact; move validate + package into core** *(Cost: L)* ✅
+  - `assembleProject()` in `packages/core/src/project-assembler.ts` builds canonical `WorldProject` from stage outputs (now populates `scripts`, `validation`, `prefabs`)
+  - `Pipeline.run()` now: generate → assemble → validate → (optional repair) → package → transition job to `complete`
+  - New `PipelineOptions`: `archive`, `repair`, `strict`; new `PipelineResult` fields: `project`, `validation`, `repairResult`, `verseModules`, `archivePath`
+  - CLI `create.ts`/`resume.ts` reduced to thin renderers (no ad-hoc project assembly, no packager calls)
+  - Packager now writes the actual resolved template to `templates/resolved-template.json` (was `{}`)
+  - Verified end-to-end: `status: complete`, `scripts.length: 1`, validation passed (3 validators), `resolved-template.json templateId: tycoon/lumber-mill`
+  - All 23 turbo tasks pass (build + tests, 148+ tests)
+
+- [x] **P0.2 — Split resume cache from reuse cache; add content-addressed stage memoization** *(Cost: L)* ✅
+  - `StageCache` (job-scoped) kept as-is for `resume`; new `MemoCache` in `packages/core/src/memo-cache.ts` provides content-addressed reuse
+  - Memo key extended in `cache-key.ts`: `prompt + templateId + templateVersion + provider + model + seed + schemaVersion + knowledgeVersion + genreOverride + templateOverride`
+  - Wired into pipeline via `memoOrCompute()` helper for the 8 expensive stages: `3-world`, `4a-layout`, `4b-systems`, `4c-economy`, `6-devices`, `7-modulePlan`, `7-lootTables`, `8-verseFiles`
+  - Cheap/deterministic stages excluded: `1-brief`, `2-template`, `5-balance`
+  - Guardrail: provider, model, and templateVersion all in the key, so outputs never cross models or template revisions
+  - Storage at `~/.forgeai/memo-cache/<keyHash>/<stage>.json`; logged via Pino on hit
+  - Tests: 6 memo-cache tests + new pipeline integration test verifying second run with same inputs makes 1 LLM call instead of 10 — 17 core tests passing, 23 turbo tasks pass
+
+- [x] **P0.3 — Fix advertised fallback / budget / observability path** *(Cost: M; L if persistent ledger)* ✅
+  - `Pipeline` now uses `createAdapterWithFallback()` (cascade re-enabled); `createAdapterWithFallback` leads with the user's configured provider/model, then appends every other available key, then local Ollama as last resort
+  - New per-provider/per-model pricing table in `packages/ai/src/pricing.ts` (anthropic/openai/groq/google/ollama; prefix-matches dated model variants); `BudgetAdapter` now uses `provider` + `model` for accurate cost estimates and emits a `UsageEvent` per call
+  - `FallbackAdapter` accepts a Pino-shaped `FallbackLogger` (replaces `console.error`); `Pipeline` injects its Pino logger
+  - `ensureOllamaModel()` now uses the configured Ollama base URL and gates the 6.6 GB auto-pull behind `autoPullLocalModel` (default OFF — errors with install instructions instead)
+  - New `UsageLedger` (`packages/core/src/usage-ledger.ts`) persists per-day, per-provider call counts + token totals + USD spend at `~/.forgeai/usage-ledger.json` (separate file from TierGuard's `usage.json` to avoid schema collision)
+  - `Pipeline` always wraps with `BudgetAdapter` (budget=∞ when unset) so usage events flow into ledger + Pino logs even without `--budget`; logs `pipeline complete` with `costUsd` and `spentTodayUsd`
+  - New `Pipeline.totalSpentUsd` getter exposes per-run spend
+  - Tests: 7 new pricing/budget tests (`packages/ai/src/__tests__/pricing-budget.test.ts`) + 4 ledger tests (`packages/core/src/__tests__/usage-ledger.test.ts`); 33 ai tests + 21 core tests pass; 23/23 turbo tasks ✓ (191 total tests)
+
+- [ ] **P0.4 — Replace eval story with a budget-aware E2E harness** *(Cost: M; L for full reporting)*
+  - `scripts/run-eval.ts` only checks keyword genre + template existence; advertises `--full` but doesn't implement it
+  - "100% pass on 40 prompts" claim doesn't measure schema validity, repair effectiveness, Verse quality, package completeness, cost, or determinism
+  - Three tiers:
+    1. Unit tests (deterministic logic) — keep current
+    2. Contract tests with recorded adapter responses (orchestration + schema handling, not LLM quality)
+    3. Live evals outside PR CI — 5 cheap smoke prompts daily, full 40 weekly; record first-pass success, repaired success, warnings, duration, spend, output diffs
+  - Files: `scripts/run-eval.ts`, `evals/golden-prompts/`, `evals/expected-artifacts/`, `packages/core/src/__tests__/pipeline.test.ts`
+
+### P1 — Schemas, packaging, DX
+
+- [ ] **P1.1 — Strengthen schema/validator contracts** *(Cost: M)*
+  - `DeviceInstance.type` is `z.string()` — should reference `DeviceType` (transition via `z.union([DeviceType, z.string().regex(...)])` if needed)
+  - Add validators to runner: Verse lint + memory checks, template conformance (required zone purposes, required device types, allowed device types, required Verse modules), package completeness (manifests present, docs present, template metadata persisted)
+  - Files: `packages/schemas/src/devices.ts`, `packages/validators/src/runner.ts`, `packages/verse/src/memory-checker.ts`, `packages/verse/src/linter.ts`
+
+- [ ] **P1.2 — Fix packaging/distribution gaps (Windows-first)** *(Cost: M)*
+  - `--zip` actually emits `.tar.gz` — rename `--archive` or implement real zip
+  - Replace `rm -rf` in `apps/desktop/package.json`, `apps/cli/package.json`, `packages/core/package.json`, `packages/ai/package.json` with cross-platform cleaner
+  - Sync versions: root `0.2.0-beta` vs `apps/cli/package.json` `0.1.0-mvp`
+  - Packager must actually emit: `variant_zones.json`, `prefab_manifest.json`, `worldgen.lock.json`, `.ai/job.json`, `.ai/validation/*.json`
+  - `templates/resolved-template.json` currently `{}` — write the real resolved template
+
+- [ ] **P1.3 — DX: thin CLI, init command, better doctor, no silent skips** *(Cost: S–M)*
+  - Add `uefn-ai init` (or `config init`) that calls existing `initConfig()` in `packages/schemas/src/config-loader.ts`
+  - Expand `doctor`: config file presence, output dir writability, cache dir writability, UEFN path/tooling; add `--json`
+  - `loadUserCatalog()` silently swallows invalid files — add loaded/skipped/failed report
+  - Deduplicate assembly/packaging logic between `create.ts` and `resume.ts` (resolved by P0.1)
+  - `--json` output includes a `Map` (`verseFiles`) that doesn't serialize cleanly — normalize to plain JSON-safe object
+  - Add root `pnpm check` = build + test + lint + eval smoke
+
+- [ ] **P1.4 — Desktop: thin client over the same core pipeline** *(Cost: L)*
+  - `ProjectBrowser.tsx` uses `MOCK_PROJECTS`, `LayoutPreview.tsx` uses `MOCK_ZONES`, `PromptWizard.tsx` has no execution wiring
+  - Wire desktop UI → Electron IPC → same core pipeline/packager
+  - Milestones: launch generation, show stage progress, show cost + warnings, browse real projects, inspect manifests + Verse outputs
+
+### P2 — Product focus & quick wins
+
+- [ ] **P2.1 — Rebalance roadmap: importable tycoon scaffolds over more genre surface area** *(Cost: L–XL)*
+  - Strongest wedge is reliable UEFN-ready output, not more templates
+  - Ship 2–3 polished reference projects, strong import docs/screenshots/video, one known-good tycoon scaffold end-to-end, better prefab/device mapping coverage for that vertical
+  - Defer broader genre expansion and speculative marketplace features
+
+- [x] **P2.2 — Quick wins** *(Cost: S total)* ✅
+  - [x] Fill `resolved-template.json` with the real resolved template — done in P0.1
+  - [x] Implement `--full` in `scripts/run-eval.ts` — runs full pipeline against each prompt, records cost/duration/validation status, writes `eval-report-full.json`; supports `--limit N`
+  - [x] Fix README/package drift: synced `apps/cli/package.json` from `0.1.0-mvp` → `0.2.0-beta`, updated test count `167` → `191`
+  - [x] Make `--json` machine-readable — already done (`Object.fromEntries(result.verseFiles)` in `create.ts`/`resume.ts`)
+  - [x] Confirm before auto-pulling Ollama fallback model — done in P0.3 (gated behind `autoPullLocalModel`, default OFF)
+  - [x] Stop silently swallowing invalid prefab catalog files — `loadUserCatalogWithReport()` returns `{ catalog, report: { loaded, skipped } }`; `loadUserCatalog()` kept for back-compat
+  - [x] Use `worldDesign.mapName` for project naming — `assembleProject()` accepts optional `mapName` and prefers it over the truncated `brief.fantasy` fallback; pipeline passes it on both initial and post-repair assemble calls
+  - 23/23 turbo tasks pass; smoke eval `40/40 (100%)`
+
+### Recommended execution order
+1. P0.1 (canonical project assembly in core) — unblocks P1.2, P1.3, P1.4
+2. P0.2 (content-addressed stage reuse) — biggest cost-savings lever
+3. P0.4 (real eval + per-stage cost telemetry) — gives honest quality signal
+4. P0.3 (fallback/budget/observability) — can interleave with P0.2
+5. P2.2 quick wins — cheap and improve trust
+6. P1.1 → P1.2 → P1.3 → P1.4 in order
+7. Revisit P2.1 once P0/P1 land
+
+### Future: SQLite consolidation (only if triggered)
+Move metadata-only into SQLite (jobs, stage-cache index, usage/cost ledger, eval results, project index) when:
+- Multi-job history/search/reporting is needed
+- Desktop needs rich project state, filtering, diffing
+- Flat-file state becomes hard to reason about
+Keep `packages/core` as the only writer; CLI/Desktop stay thin clients.
+
+---
+
 ## Notes
 - Each day assumes ~1 focused session with $10 token budget
 - If a day's tasks overflow, carry remainder to next day

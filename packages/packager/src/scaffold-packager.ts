@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, dirname, basename } from "node:path";
 import { create } from "tar";
-import type { WorldProject, EconomySpec, DeviceInstance } from "@forgeai/schemas";
+import type { WorldProject, EconomySpec, DeviceInstance, TemplateDefinition } from "@forgeai/schemas";
 import type { SimulationResult } from "@forgeai/balance";
 import type { LootTable, ModulePlan, WorldDesign } from "@forgeai/ai";
 
@@ -12,11 +12,13 @@ export interface PackagerInput {
   lootTables: LootTable[];
   balanceReport: SimulationResult;
   verseFiles: Map<string, string>;
+  resolvedTemplate?: TemplateDefinition;
+  templateId?: string;
 }
 
 export class ScaffoldPackager {
   async package(input: PackagerInput, outputDir: string): Promise<string> {
-    const { project, worldDesign, modulePlan, lootTables, balanceReport, verseFiles } = input;
+    const { project, worldDesign, modulePlan, lootTables, balanceReport, verseFiles, resolvedTemplate, templateId } = input;
 
     const dirs = [
       "",
@@ -54,7 +56,11 @@ export class ScaffoldPackager {
     this.writeJson(outputDir, ".ai/planner/balance.json", project.economy);
 
     // Templates
-    this.writeJson(outputDir, "templates/resolved-template.json", {});
+    this.writeJson(
+      outputDir,
+      "templates/resolved-template.json",
+      resolvedTemplate ?? { templateId: templateId ?? "(unknown)", note: "Resolved template not provided to packager." },
+    );
 
     // Docs
     writeFileSync(join(outputDir, "README.md"), this.genReadme(project, worldDesign), "utf-8");

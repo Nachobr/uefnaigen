@@ -1,6 +1,6 @@
-import type { JobRecord, ForgeAIConfig, LayoutSpec, EconomySpec, DeviceInstance } from "@forgeai/schemas";
+import type { JobRecord, ForgeAIConfig, LayoutSpec, EconomySpec, DeviceInstance, VerseModule, WorldProject } from "@forgeai/schemas";
 import {
-  createAdapter,
+  createAdapterWithFallback,
   IntentExtractor,
   TemplateRouter,
   WorldPlanner,
@@ -25,11 +25,16 @@ import { createDefaultRegistry } from "@forgeai/templates";
 import { KnowledgeStore, seedDefaultKnowledge, type KnowledgeEntry } from "@forgeai/knowledge";
 import { TycoonSimulator, ArenaSimulator, type SimulationResult } from "@forgeai/balance";
 import { VerseEmitter, lintVerseCode, checkVerseMemory } from "@forgeai/verse";
+import { runAllValidators, RepairLoop, type ValidationResult, type RepairResult } from "@forgeai/validators";
+import { ScaffoldPackager } from "@forgeai/packager";
 import type { Logger } from "pino";
 import { JobManager } from "./job-manager.js";
 import { TierGuard } from "./tier-guard.js";
-import { StageCache } from "./stage-cache.js";
+import { StageCache, type StageKey } from "./stage-cache.js";
+import { MemoCache, KNOWLEDGE_VERSION, type MemoizedStage } from "./memo-cache.js";
 import { createLogger } from "./logger.js";
+import { assembleProject } from "./project-assembler.js";
+import { UsageLedger } from "./usage-ledger.js";
 
 export interface PipelineOptions {
   prompt: string;
@@ -42,6 +47,12 @@ export interface PipelineOptions {
   resumeJobId?: string;
   llm?: LLMAdapter;
   logger?: Logger;
+  /** Emit a .tar.gz archive instead of an unpacked directory. */
+  archive?: boolean;
+  /** Run the LLM-based RepairLoop when validation fails. Off by default to avoid surprise cost. */
+  repair?: boolean;
+  /** Treat validation warnings as errors (fail the run). */
+  strict?: boolean;
   onStage?: (stage: number, name: string, detail: string) => void;
 }
 
@@ -58,23 +69,59 @@ export interface PipelineResult {
   modulePlan: ModulePlan;
   lootTables: LootTable[];
   verseFiles: Map<string, string>;
+  verseModules: VerseModule[];
+  project: WorldProject;
+  validation: ValidationResult[];
+  repairResult?: RepairResult;
   outputPath: string;
+  archivePath?: string;
 }
 
 export class Pipeline {
   private llm: LLMAdapter;
   private jobManager: JobManager;
   private logger: Logger;
+  private ledger: UsageLedger;
+  private budgetAdapter?: BudgetAdapter;
 
   constructor(private options: PipelineOptions) {
     this.jobManager = new JobManager({ persist: !options.dryRun });
     this.logger = options.logger ?? createLogger({ enabled: options.config.verbose });
-    let adapter: LLMAdapter = options.llm ?? createAdapter(options.config);
+    this.ledger = new UsageLedger({ persist: !options.dryRun });
+    const fallbackLogger = {
+      warn: (obj: object, msg?: string) => this.logger.warn(obj, msg),
+      error: (obj: object, msg?: string) => this.logger.error(obj, msg),
+      info: (obj: object, msg?: string) => this.logger.info(obj, msg),
+    };
+    let adapter: LLMAdapter =
+      options.llm ?? createAdapterWithFallback(options.config, { logger: fallbackLogger });
     adapter = new RetryAdapter(adapter);
-    if (options.config.budgetUsd) {
-      adapter = new BudgetAdapter(adapter, options.config.budgetUsd);
-    }
-    this.llm = adapter;
+    // Always wrap with BudgetAdapter so we capture per-call usage events even when no budget is set.
+    const budget = options.config.budgetUsd ?? Number.POSITIVE_INFINITY;
+    this.budgetAdapter = new BudgetAdapter(adapter, budget, {
+      provider: options.config.provider,
+      model: options.config.model,
+      onUsage: (event) => {
+        this.ledger.recordCall(event.provider, event.inputTokens, event.outputTokens, event.costUsd);
+        this.logger.info(
+          {
+            provider: event.provider,
+            model: event.model,
+            inputTokens: event.inputTokens,
+            outputTokens: event.outputTokens,
+            costUsd: event.costUsd,
+            estimated: event.estimated,
+          },
+          "llm usage",
+        );
+      },
+    });
+    this.llm = this.budgetAdapter;
+  }
+
+  /** Total USD spent during this pipeline run (best-effort estimate from BudgetAdapter). */
+  get totalSpentUsd(): number {
+    return this.budgetAdapter?.totalSpentUsd ?? 0;
   }
 
   private emit(stage: number, name: string, detail: string): void {
@@ -116,6 +163,27 @@ export class Pipeline {
     }
 
     const cache = new StageCache(job.jobId, { persist: !this.options.dryRun });
+    let memo: MemoCache | undefined;
+
+    const memoOrCompute = async <T>(
+      stage: MemoizedStage & StageKey,
+      fn: () => T | Promise<T>,
+    ): Promise<T> => {
+      const fromStage = cache.load<T>(stage);
+      if (fromStage !== undefined) return fromStage;
+      if (memo) {
+        const fromMemo = memo.load<T>(stage);
+        if (fromMemo !== undefined) {
+          this.logger.info({ stage, key: memo.key }, "memo cache hit");
+          cache.save(stage, fromMemo);
+          return fromMemo;
+        }
+      }
+      const value = await fn();
+      cache.save(stage, value);
+      memo?.save(stage, value);
+      return value;
+    };
 
     // ── Stage 1: Intent Extraction ──
     this.emit(1, "Parsing prompt", "Extracting genre, constraints, style...");
@@ -142,10 +210,27 @@ export class Pipeline {
     });
     this.emit(2, "Selecting template", `Using: ${templateResult.templateId}`);
 
+    // Now that we know the resolved template, build the content-addressed memo cache.
+    // Cheap/deterministic stages (1-brief, 2-template, 5-balance) are intentionally not memoized.
+    memo = new MemoCache(
+      {
+        prompt: this.options.prompt,
+        templateId: templateResult.templateId,
+        templateVersion: templateResult.resolvedTemplate.version,
+        provider: this.options.config.provider,
+        model: this.options.config.model,
+        seed: this.options.seed,
+        knowledgeVersion: KNOWLEDGE_VERSION,
+        genreOverride: this.options.genre,
+        templateOverride: this.options.templateId,
+      },
+      { persist: !this.options.dryRun },
+    );
+
     // ── Stage 3: World Planning ──
     this.emit(3, "Planning world", "Generating zones, progression, pacing...");
 
-    const worldDesign = await cache.getOrCompute<WorldDesign>("3-world", () => {
+    const worldDesign = await memoOrCompute<WorldDesign>("3-world", () => {
       const worldPlanner = new WorldPlanner(this.llm);
       return worldPlanner.plan(brief, templateResult.resolvedTemplate);
     });
@@ -154,7 +239,7 @@ export class Pipeline {
     // ── Stage 4a: Layout Planning ──
     this.emit(4, "Planning layout", "Generating spatial coordinates...");
 
-    const layout = await cache.getOrCompute<LayoutSpec>("4a-layout", () => {
+    const layout = await memoOrCompute<LayoutSpec>("4a-layout", () => {
       const layoutPlanner = new LayoutPlanner(this.llm);
       return layoutPlanner.plan(
         worldDesign,
@@ -166,7 +251,7 @@ export class Pipeline {
     // ── Stage 4b: Systems Planning ──
     this.emit(5, "Planning systems", "Designing economy, devices, rules...");
 
-    const systemsDesign = await cache.getOrCompute<SystemsDesign>("4b-systems", () => {
+    const systemsDesign = await memoOrCompute<SystemsDesign>("4b-systems", () => {
       const systemsPlanner = new SystemsPlanner(
         this.llm,
         this.buildKnowledgeContext(knowledgeStore, brief.genre, {
@@ -180,7 +265,7 @@ export class Pipeline {
     // ── Stage 4c: Balance Planning ──
     this.emit(6, "Balancing economy", "Tuning income/sink curves...");
 
-    const economy = await cache.getOrCompute<EconomySpec>("4c-economy", () => {
+    const economy = await memoOrCompute<EconomySpec>("4c-economy", () => {
       const balancePlanner = new BalancePlanner(
         this.llm,
         this.buildKnowledgeContext(knowledgeStore, brief.genre, {
@@ -238,7 +323,7 @@ export class Pipeline {
     // ── Stage 6: Device Mapping ──
     this.emit(7, "Building devices", "Mapping devices to concrete instances...");
 
-    const devices = await cache.getOrCompute<DeviceInstance[]>("6-devices", () => {
+    const devices = await memoOrCompute<DeviceInstance[]>("6-devices", () => {
       const deviceMapper = new DeviceMapper(
         this.llm,
         this.buildKnowledgeContext(knowledgeStore, brief.genre, {
@@ -253,7 +338,7 @@ export class Pipeline {
     // ── Stage 7: Verse Planning + Loot Tables ──
     this.emit(8, "Planning Verse", "Designing module structure...");
 
-    const modulePlan = await cache.getOrCompute<ModulePlan>("7-modulePlan", () => {
+    const modulePlan = await memoOrCompute<ModulePlan>("7-modulePlan", () => {
       const versePlanner = new VersePlanner(
         this.llm,
         this.buildKnowledgeContext(knowledgeStore, brief.genre, {
@@ -264,7 +349,7 @@ export class Pipeline {
     });
     this.emit(8, "Planning Verse", `${modulePlan.modules.length} modules planned`);
 
-    const lootTables = await cache.getOrCompute<LootTable[]>("7-lootTables", () => {
+    const lootTables = await memoOrCompute<LootTable[]>("7-lootTables", () => {
       const lootGenerator = new LootGenerator(this.llm);
       return lootGenerator.generate(brief, worldDesign);
     });
@@ -279,43 +364,183 @@ export class Pipeline {
       }),
     );
     const emitter = new VerseEmitter();
-    const verseFiles = new Map<string, string>();
 
-    const cachedVerse = cache.load<Record<string, string>>("8-verseFiles");
-    if (cachedVerse) {
-      for (const [k, v] of Object.entries(cachedVerse)) {
-        verseFiles.set(k, v);
-      }
-      this.emit(8, "Planning Verse", `${verseFiles.size}/${modulePlan.modules.length} Verse files (cached)`);
-    } else {
-      let memoryWarnings = 0;
-      const verseFailures: string[] = [];
-      for (const mod of modulePlan.modules) {
-        try {
-          const ast = await verseGenerator.generate(mod);
-          const rawCode = emitter.emit(ast);
-          const { code } = lintVerseCode(rawCode);
-          const memCheck = checkVerseMemory(code);
-          memoryWarnings += memCheck.issues.length;
-          if (memCheck.issues.some((i) => i.severity === "error")) {
-            this.emit(8, "Planning Verse", `⚠ ${mod.className}: ${memCheck.issues.filter((i) => i.severity === "error").map((i) => i.message).join("; ")}`);
+    const verseOutput = await memoOrCompute<{ files: Record<string, string>; modules: VerseModule[] }>(
+      "8-verseFiles",
+      async () => {
+        const files: Record<string, string> = {};
+        const modules: VerseModule[] = [];
+        let memoryWarnings = 0;
+        const verseFailures: string[] = [];
+
+        for (const mod of modulePlan.modules) {
+          try {
+            const ast = await verseGenerator.generate(mod);
+            const rawCode = emitter.emit(ast);
+            const { code } = lintVerseCode(rawCode);
+            const memCheck = checkVerseMemory(code);
+            memoryWarnings += memCheck.issues.length;
+            if (memCheck.issues.some((i) => i.severity === "error")) {
+              this.emit(
+                8,
+                "Planning Verse",
+                `⚠ ${mod.className}: ${memCheck.issues
+                  .filter((i) => i.severity === "error")
+                  .map((i) => i.message)
+                  .join("; ")}`,
+              );
+            }
+            files[`${mod.className}.verse`] = code;
+            modules.push(ast);
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            verseFailures.push(`${mod.className}: ${msg}`);
+            this.emit(8, "Planning Verse", `✗ ${mod.className} failed: ${msg}`);
           }
-          verseFiles.set(`${mod.className}.verse`, code);
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          verseFailures.push(`${mod.className}: ${msg}`);
-          this.emit(8, "Planning Verse", `✗ ${mod.className} failed: ${msg}`);
         }
-      }
-      if (verseFailures.length > 0) {
-        throw new Error(`Verse generation failed for ${verseFailures.join(", ")}`);
-      }
-      cache.save("8-verseFiles", Object.fromEntries(verseFiles));
-      this.emit(8, "Planning Verse", `${verseFiles.size}/${modulePlan.modules.length} Verse files generated${memoryWarnings > 0 ? ` (${memoryWarnings} memory warnings)` : ""}`);
-    }
+
+        if (verseFailures.length > 0) {
+          throw new Error(`Verse generation failed for ${verseFailures.join(", ")}`);
+        }
+
+        this.emit(
+          8,
+          "Planning Verse",
+          `${modules.length}/${modulePlan.modules.length} Verse files generated${memoryWarnings > 0 ? ` (${memoryWarnings} memory warnings)` : ""}`,
+        );
+
+        return { files, modules };
+      },
+    );
+
+    const verseFiles = new Map<string, string>(Object.entries(verseOutput.files));
+    const verseModules = verseOutput.modules;
 
     this.jobManager.transition(job.jobId, "generated", 8);
+
+    // ── Assemble canonical WorldProject ──
+    let project = assembleProject({
+      job,
+      prompt: this.options.prompt,
+      seed: this.options.seed,
+      brief,
+      layout,
+      economy: finalEconomy,
+      devices,
+      scripts: verseModules,
+      mapName: worldDesign.mapName,
+    });
+
+    // Dry-run: skip validation, repair, packaging.
+    if (this.options.dryRun) {
+      tierGuard.recordGeneration();
+      return {
+        job,
+        brief,
+        templateResult,
+        worldDesign,
+        layout,
+        systemsDesign,
+        economy: finalEconomy,
+        balanceReport,
+        devices,
+        modulePlan,
+        lootTables,
+        verseFiles,
+        verseModules,
+        project,
+        validation: [],
+        outputPath: this.options.outputDir,
+      };
+    }
+
+    // ── Validation ──
+    this.jobManager.transition(job.jobId, "validating", 8);
+    let validation = runAllValidators(project);
+    let repairResult: RepairResult | undefined;
+
+    const allPassed = () => validation.every((v) => v.passed);
+    const hasWarnings = () => validation.some((v) => v.warnings.length > 0);
+
+    if (!allPassed() && this.options.repair) {
+      const passes = this.options.config.maxRepairPasses ?? 3;
+      this.emit(8, "Validating", `⚠ Validation failed; running repair loop (max ${passes} passes)...`);
+      const repairLoop = new RepairLoop(this.llm, passes);
+      repairResult = await repairLoop.run(project);
+      validation = repairResult.finalResults;
+      project = assembleProject({
+        job,
+        prompt: this.options.prompt,
+        seed: this.options.seed,
+        brief,
+        layout: project.layout,
+        economy: project.economy,
+        devices: project.devices,
+        scripts: project.scripts,
+        prefabs: project.prefabs,
+        variantZones: project.variantZones,
+        validation,
+        mapName: worldDesign.mapName,
+      });
+    } else {
+      project = { ...project, validation: validation.map((v) => ({
+        validator: v.validator,
+        passed: v.passed,
+        errors: v.errors.length > 0 ? v.errors : undefined,
+        warnings: v.warnings.length > 0 ? v.warnings : undefined,
+      })) };
+    }
+
+    if (!allPassed()) {
+      this.jobManager.transition(job.jobId, "failed_validation", 8);
+      const errs = validation
+        .filter((v) => !v.passed)
+        .flatMap((v) => v.errors.map((e) => `[${v.validator}] ${e}`))
+        .join("; ");
+      throw new Error(`Validation failed: ${errs}`);
+    }
+
+    if (this.options.strict && hasWarnings()) {
+      this.jobManager.transition(job.jobId, "failed_validation", 8);
+      const warns = validation
+        .flatMap((v) => v.warnings.map((w) => `[${v.validator}] ${w}`))
+        .join("; ");
+      throw new Error(`Strict mode: validation warnings: ${warns}`);
+    }
+
+    this.emit(8, "Validating", `✓ ${validation.length} validators passed${hasWarnings() ? ` (${validation.reduce((n, v) => n + v.warnings.length, 0)} warnings)` : ""}`);
+
+    // ── Packaging ──
+    this.emit(8, "Packaging", `Writing scaffold to ${this.options.outputDir}...`);
+    const packager = new ScaffoldPackager();
+    const packagerInput = {
+      project,
+      worldDesign,
+      modulePlan,
+      lootTables,
+      balanceReport,
+      verseFiles,
+      resolvedTemplate: templateResult.resolvedTemplate,
+      templateId: templateResult.templateId,
+    };
+
+    let archivePath: string | undefined;
+    if (this.options.archive) {
+      archivePath = await packager.packageZip(packagerInput, this.options.outputDir);
+      this.emit(8, "Packaging", `✓ Archive: ${archivePath}`);
+    } else {
+      await packager.package(packagerInput, this.options.outputDir);
+      this.emit(8, "Packaging", `✓ Output: ${this.options.outputDir}`);
+    }
+
+    this.jobManager.transition(job.jobId, "packaged", 8);
+    this.jobManager.transition(job.jobId, "complete", 8);
     tierGuard.recordGeneration();
+    this.ledger.recordJob();
+    this.logger.info(
+      { jobId: job.jobId, costUsd: this.totalSpentUsd, spentTodayUsd: this.ledger.spentToday() },
+      "pipeline complete",
+    );
 
     return {
       job,
@@ -330,7 +555,12 @@ export class Pipeline {
       modulePlan,
       lootTables,
       verseFiles,
+      verseModules,
+      project,
+      validation,
+      repairResult,
       outputPath: this.options.outputDir,
+      archivePath,
     };
   }
 }

@@ -116,7 +116,7 @@ pnpm install
 # Build all packages
 pnpm build
 
-# Run tests (167 tests)
+# Run tests (191 tests across 9 packages)
 pnpm test
 
 # Run eval suite

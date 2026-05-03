@@ -2,17 +2,24 @@
 /**
  * ForgeAI Eval Runner
  *
- * Runs golden prompts through deterministic pipeline stages (intent detection,
- * template routing) and reports pass rates. Full E2E runs require API keys.
+ * Modes:
+ *   (default)  Smoke: deterministic intent detection + template routing.
+ *              No LLM calls, milliseconds per prompt.
+ *   --full     End-to-end: runs the full Pipeline against each golden prompt
+ *              using the configured provider/model. Records per-prompt cost,
+ *              duration, validation status, and writes outputs to a temp dir.
+ *              Requires API keys (or Ollama running).
  *
- * Usage: npx tsx scripts/run-eval.ts [--full]
+ * Usage: npx tsx scripts/run-eval.ts [--full] [--limit N]
  */
-import { readdirSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync, mkdirSync, mkdtempSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { tmpdir } from "node:os";
 import { detectGenreFromKeywords } from "@forgeai/ai";
 import { createDefaultRegistry } from "@forgeai/templates";
-import { computeCacheKey } from "@forgeai/core";
+import { computeCacheKey, Pipeline } from "@forgeai/core";
+import { loadConfig } from "@forgeai/schemas";
 
 const __dirname = import.meta.dirname ?? dirname(fileURLToPath(import.meta.url));
 
@@ -27,6 +34,14 @@ interface EvalResult {
   durationMs: number;
 }
 
+interface FullEvalResult extends EvalResult {
+  pipelineCompleted: boolean;
+  validationPassed?: boolean;
+  validationWarnings?: number;
+  costUsd?: number;
+  error?: string;
+}
+
 const PROMPTS_DIR = join(__dirname, "..", "evals", "golden-prompts");
 const RESULTS_DIR = join(__dirname, "..", "evals", "benchmarks");
 
@@ -38,12 +53,139 @@ function inferExpectedGenre(filename: string): string {
   return "unknown";
 }
 
-function run(): void {
+function parseArgs(argv: string[]): { full: boolean; limit?: number } {
+  const out: { full: boolean; limit?: number } = { full: false };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--full") out.full = true;
+    else if (a === "--limit" && argv[i + 1]) {
+      out.limit = parseInt(argv[++i], 10);
+    } else if (a.startsWith("--limit=")) {
+      out.limit = parseInt(a.slice("--limit=".length), 10);
+    }
+  }
+  return out;
+}
+
+async function runFull(files: string[]): Promise<void> {
+  const config = loadConfig();
+  console.log(`ForgeAI Eval Runner [FULL] — ${files.length} prompts | provider=${config.provider} model=${config.model}\n`);
+
+  const tmpRoot = mkdtempSync(join(tmpdir(), "forgeai-eval-"));
+  const results: FullEvalResult[] = [];
+  let totalCostUsd = 0;
+
+  for (const file of files) {
+    const prompt = readFileSync(join(PROMPTS_DIR, file), "utf-8").trim();
+    const expectedGenre = inferExpectedGenre(file);
+    const start = performance.now();
+    const detectedGenre = detectGenreFromKeywords(prompt);
+
+    const outDir = join(tmpRoot, file.replace(/\.txt$/, ""));
+    let pipelineCompleted = false;
+    let validationPassed: boolean | undefined;
+    let validationWarnings: number | undefined;
+    let templateId: string | null = null;
+    let costUsd = 0;
+    let error: string | undefined;
+
+    try {
+      const pipeline = new Pipeline({
+        prompt,
+        seed: 42,
+        outputDir: outDir,
+        config,
+        repair: true,
+      });
+      const result = await pipeline.run();
+      pipelineCompleted = true;
+      templateId = result.templateResult.templateId;
+      validationPassed = result.validation.every((v) => v.passed);
+      validationWarnings = result.validation.reduce((n, v) => n + v.warnings.length, 0);
+      costUsd = pipeline.totalSpentUsd;
+      totalCostUsd += costUsd;
+    } catch (err) {
+      error = err instanceof Error ? err.message : String(err);
+    }
+
+    const durationMs = performance.now() - start;
+    const genreMatch = detectedGenre === expectedGenre;
+    const cacheKey = computeCacheKey({
+      prompt,
+      templateId: templateId ?? "unknown",
+      model: config.model,
+      seed: 42,
+      provider: config.provider,
+    });
+
+    results.push({
+      prompt: prompt.slice(0, 80),
+      file,
+      detectedGenre,
+      expectedGenre,
+      genreMatch,
+      templateId,
+      cacheKey,
+      durationMs,
+      pipelineCompleted,
+      validationPassed,
+      validationWarnings,
+      costUsd,
+      error,
+    });
+
+    const status = !pipelineCompleted
+      ? "✗ PIPELINE"
+      : validationPassed
+        ? "✓"
+        : "⚠ VALIDATION";
+    console.log(
+      `  ${status.padEnd(13)} ${file.padEnd(20)} ${(durationMs / 1000).toFixed(1)}s  $${costUsd.toFixed(4)}  ${error ?? ""}`,
+    );
+  }
+
+  const completed = results.filter((r) => r.pipelineCompleted).length;
+  const passed = results.filter((r) => r.pipelineCompleted && r.validationPassed).length;
+  const total = results.length;
+  console.log(`\n─── Summary [FULL] ───`);
+  console.log(`  Pipeline OK:   ${completed}/${total}`);
+  console.log(`  Validation OK: ${passed}/${total}`);
+  console.log(`  Total cost:    $${totalCostUsd.toFixed(4)}`);
+  console.log(`  Output dir:    ${tmpRoot}`);
+
+  mkdirSync(RESULTS_DIR, { recursive: true });
+  const report = {
+    mode: "full",
+    timestamp: new Date().toISOString(),
+    provider: config.provider,
+    model: config.model,
+    total,
+    completed,
+    passed,
+    totalCostUsd,
+    outputDir: tmpRoot,
+    results,
+  };
+  const outPath = join(RESULTS_DIR, "eval-report-full.json");
+  writeFileSync(outPath, JSON.stringify(report, null, 2), "utf-8");
+  console.log(`\n  Report: ${outPath}`);
+}
+
+async function run(): Promise<void> {
+  const { full, limit } = parseArgs(process.argv.slice(2));
   mkdirSync(RESULTS_DIR, { recursive: true });
 
-  const files = readdirSync(PROMPTS_DIR)
+  let files = readdirSync(PROMPTS_DIR)
     .filter((f) => f.endsWith(".txt"))
     .sort();
+  if (limit !== undefined && Number.isFinite(limit) && limit > 0) {
+    files = files.slice(0, limit);
+  }
+
+  if (full) {
+    await runFull(files);
+    return;
+  }
 
   console.log(`ForgeAI Eval Runner — ${files.length} prompts\n`);
 
@@ -122,4 +264,7 @@ function run(): void {
   console.log(`\n  Report: ${outPath}`);
 }
 
-run();
+run().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

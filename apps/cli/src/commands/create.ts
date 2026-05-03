@@ -1,7 +1,6 @@
 import { Command } from "commander";
 import { loadConfig, type CLIFlags } from "@forgeai/schemas";
-import { Pipeline } from "@forgeai/core";
-import { ScaffoldPackager } from "@forgeai/packager";
+import { Pipeline, type PipelineResult } from "@forgeai/core";
 
 export const createCommand = new Command("create")
   .description("Generate a full UEFN project scaffold from a prompt")
@@ -16,7 +15,8 @@ export const createCommand = new Command("create")
   .option("--budget <usd>", "Stop if inference cost exceeds threshold", parseFloat)
   .option("--verbose", "Detailed logs")
   .option("--json", "Machine-readable output")
-  .option("--strict", "Fail on warnings")
+  .option("--strict", "Fail on validation warnings")
+  .option("--repair", "Run LLM repair loop on validation failures")
   .option("--zip", "Export output as a .tar.gz archive")
   .action(async (prompt, options) => {
     const config = loadConfig(options as CLIFlags);
@@ -30,6 +30,9 @@ export const createCommand = new Command("create")
       outputDir: options.out,
       config,
       dryRun: options.dryRun,
+      archive: options.zip,
+      strict: options.strict,
+      repair: options.repair,
       onStage: (stage, name, detail) => {
         if (options.json) return;
         console.log(`[${stage}/8] ${name}...`);
@@ -41,12 +44,13 @@ export const createCommand = new Command("create")
       const result = await pipeline.run();
 
       if (options.json) {
-        console.log(JSON.stringify(result, null, 2));
+        console.log(JSON.stringify(toSerializable(result), null, 2));
         return;
       }
 
       console.log(`\n✓ Generation complete`);
       console.log(`  Job ID:    ${result.job.jobId}`);
+      console.log(`  Status:    ${result.job.status}`);
       console.log(`  Genre:     ${result.brief.genre}`);
       console.log(`  Template:  ${result.templateResult.templateId}`);
       console.log(`  Zones:     ${result.layout.zones.length}`);
@@ -55,62 +59,20 @@ export const createCommand = new Command("create")
       console.log(`  Loot:      ${result.lootTables.length} tables`);
       console.log(`  Seed:      ${seed}`);
 
-      const now = new Date().toISOString();
-      const project = {
-        specVersion: "wg/1.0" as const,
-        projectId: result.job.projectId,
-        name: result.brief.fantasy.slice(0, 60),
-        slug: result.job.jobId,
-        createdAt: now,
-        updatedAt: now,
-        source: {
-          mode: "map-studio" as const,
-          prompt,
-          seed,
-        },
-        target: {
-          genre: result.brief.genre,
-          uefnVersion: "32.00",
-          outputMode: "scaffold" as const,
-        },
-        design: {
-          fantasy: result.brief.fantasy,
-          coreLoop: result.brief.coreLoop,
-          sessionLengthMin: result.brief.sessionLengthMin,
-          progressionStyle: result.brief.progressionStyle,
-        },
-        layout: result.layout,
-        economy: result.economy,
-        devices: result.devices,
-        prefabs: [],
-        scripts: [],
-        validation: [],
-      };
-
-      const packagerInput = {
-        project,
-        worldDesign: result.worldDesign,
-        modulePlan: result.modulePlan,
-        lootTables: result.lootTables,
-        balanceReport: result.balanceReport,
-        verseFiles: result.verseFiles,
-      };
+      if (result.validation.length > 0) {
+        const passed = result.validation.filter((v) => v.passed).length;
+        const warnings = result.validation.reduce((n, v) => n + v.warnings.length, 0);
+        console.log(`  Validate:  ${passed}/${result.validation.length} passed${warnings > 0 ? ` (${warnings} warnings)` : ""}`);
+      }
+      if (result.repairResult) {
+        console.log(`  Repair:    ${result.repairResult.passesUsed} pass(es), ${result.repairResult.repairs.length} fixes applied`);
+      }
 
       if (options.dryRun) {
         console.log(`\n  --dry-run: No files written.`);
-      } else if (options.zip) {
-        const packager = new ScaffoldPackager();
-        const archivePath = await packager.packageZip(
-          packagerInput,
-          result.outputPath,
-        );
-        console.log(`\n  Archive:   ${archivePath}`);
+      } else if (result.archivePath) {
+        console.log(`\n  Archive:   ${result.archivePath}`);
       } else {
-        const packager = new ScaffoldPackager();
-        await packager.package(
-          packagerInput,
-          result.outputPath,
-        );
         console.log(`\n  Output:    ${result.outputPath}`);
         console.log(`\nNext steps:`);
         console.log(`  1. Open README-UEFN-IMPORT.md`);
@@ -120,10 +82,17 @@ export const createCommand = new Command("create")
       }
     } catch (err) {
       if (options.json) {
-        console.log(JSON.stringify({ error: String(err) }));
+        console.log(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }));
       } else {
         console.error(`\n✗ Generation failed: ${err instanceof Error ? err.message : err}`);
       }
       process.exit(1);
     }
   });
+
+function toSerializable(result: PipelineResult): Record<string, unknown> {
+  return {
+    ...result,
+    verseFiles: Object.fromEntries(result.verseFiles),
+  };
+}

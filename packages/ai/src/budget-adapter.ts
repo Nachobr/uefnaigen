@@ -1,4 +1,5 @@
 import type { LLMAdapter, LLMMessage, LLMResponse } from "./adapter.js";
+import { estimateCostUsd, type ProviderId } from "./pricing.js";
 
 export class BudgetExceededError extends Error {
   constructor(public spentUsd: number, public budgetUsd: number) {
@@ -7,13 +8,40 @@ export class BudgetExceededError extends Error {
   }
 }
 
+export interface UsageEvent {
+  provider: ProviderId;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  costUsd: number;
+  estimated: boolean;
+  timestamp: string;
+}
+
+export interface BudgetAdapterOptions {
+  provider?: ProviderId;
+  model?: string;
+  /** Persisted cumulative spend already consumed before this process started (for cross-process budgets). */
+  initialSpentUsd?: number;
+  onUsage?: (event: UsageEvent) => void;
+}
+
 export class BudgetAdapter implements LLMAdapter {
-  private spentUsd = 0;
+  private spentUsd: number;
+  private provider: ProviderId;
+  private model: string;
+  private onUsage?: (event: UsageEvent) => void;
 
   constructor(
     private inner: LLMAdapter,
     private budgetUsd: number,
-  ) {}
+    options: BudgetAdapterOptions = {},
+  ) {
+    this.provider = options.provider ?? "anthropic";
+    this.model = options.model ?? "";
+    this.spentUsd = options.initialSpentUsd ?? 0;
+    this.onUsage = options.onUsage;
+  }
 
   get totalSpentUsd(): number {
     return this.spentUsd;
@@ -29,12 +57,22 @@ export class BudgetAdapter implements LLMAdapter {
 
     const response = await this.inner.chat(messages, options);
 
-    if (response.usage?.costUsd) {
-      this.spentUsd += response.usage.costUsd;
-    } else if (response.usage) {
-      // Estimate cost if not provided (rough Claude/GPT pricing: $3/M input, $15/M output)
-      const estimated = (response.usage.inputTokens * 3 + response.usage.outputTokens * 15) / 1_000_000;
-      this.spentUsd += estimated;
+    if (response.usage) {
+      const reportedCost = response.usage.costUsd;
+      const estimated = reportedCost === undefined;
+      const cost = estimated
+        ? estimateCostUsd(this.provider, this.model, response.usage.inputTokens, response.usage.outputTokens)
+        : reportedCost;
+      this.spentUsd += cost;
+      this.onUsage?.({
+        provider: this.provider,
+        model: this.model,
+        inputTokens: response.usage.inputTokens,
+        outputTokens: response.usage.outputTokens,
+        costUsd: cost,
+        estimated,
+        timestamp: new Date().toISOString(),
+      });
     }
 
     if (this.spentUsd > this.budgetUsd) {

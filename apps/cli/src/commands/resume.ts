@@ -1,7 +1,6 @@
 import { Command } from "commander";
-import { JobManager, Pipeline, StageCache } from "@forgeai/core";
+import { JobManager, Pipeline, StageCache, type PipelineResult } from "@forgeai/core";
 import { loadConfig, type CLIFlags } from "@forgeai/schemas";
-import { ScaffoldPackager } from "@forgeai/packager";
 
 export const resumeCommand = new Command("resume")
   .description("Resume or inspect a previous job")
@@ -12,6 +11,9 @@ export const resumeCommand = new Command("resume")
   .option("--provider <id>", "Choose AI provider")
   .option("--model <id>", "Override default model")
   .option("--budget <usd>", "Stop if inference cost exceeds threshold", parseFloat)
+  .option("--strict", "Fail on validation warnings")
+  .option("--repair", "Run LLM repair loop on validation failures")
+  .option("--zip", "Export output as a .tar.gz archive")
   .action(async (jobId, options) => {
     const jobManager = new JobManager();
     const job = jobManager.get(jobId);
@@ -50,7 +52,6 @@ export const resumeCommand = new Command("resume")
       return;
     }
 
-    // Resume the pipeline
     console.log(`Resuming job ${jobId} from stage ${lastStage + 1}...`);
     const config = loadConfig(options as CLIFlags);
 
@@ -60,6 +61,9 @@ export const resumeCommand = new Command("resume")
       outputDir: options.out,
       config,
       resumeJobId: jobId,
+      archive: options.zip,
+      strict: options.strict,
+      repair: options.repair,
       onStage: (stage, name, detail) => {
         if (options.json) return;
         console.log(`[${stage}/8] ${name}...`);
@@ -71,55 +75,34 @@ export const resumeCommand = new Command("resume")
       const result = await pipeline.run();
 
       if (options.json) {
-        console.log(JSON.stringify(result, null, 2));
+        console.log(JSON.stringify(toSerializable(result), null, 2));
         return;
       }
 
       console.log(`\n✓ Resume complete`);
       console.log(`  Job ID:    ${result.job.jobId}`);
+      console.log(`  Status:    ${result.job.status}`);
       console.log(`  Zones:     ${result.layout.zones.length}`);
       console.log(`  Devices:   ${result.devices.length}`);
       console.log(`  Modules:   ${result.modulePlan.modules.length}`);
-
-      const now = new Date().toISOString();
-      const project = {
-        specVersion: "wg/1.0" as const,
-        projectId: result.job.projectId,
-        name: result.brief.fantasy.slice(0, 60),
-        slug: result.job.jobId,
-        createdAt: now,
-        updatedAt: now,
-        source: { mode: "map-studio" as const, prompt: job.prompt, seed: job.seed },
-        target: { genre: result.brief.genre, uefnVersion: "32.00", outputMode: "scaffold" as const },
-        design: {
-          fantasy: result.brief.fantasy,
-          coreLoop: result.brief.coreLoop,
-          sessionLengthMin: result.brief.sessionLengthMin,
-          progressionStyle: result.brief.progressionStyle,
-        },
-        layout: result.layout,
-        economy: result.economy,
-        devices: result.devices,
-        prefabs: [],
-        scripts: [],
-        validation: [],
-      };
-
-      const packager = new ScaffoldPackager();
-      await packager.package(
-        {
-          project,
-          worldDesign: result.worldDesign,
-          modulePlan: result.modulePlan,
-          lootTables: result.lootTables,
-          balanceReport: result.balanceReport,
-          verseFiles: result.verseFiles,
-        },
-        result.outputPath,
-      );
-      console.log(`  Output:    ${result.outputPath}`);
+      if (result.archivePath) {
+        console.log(`  Archive:   ${result.archivePath}`);
+      } else {
+        console.log(`  Output:    ${result.outputPath}`);
+      }
     } catch (err) {
-      console.error(`\n✗ Resume failed: ${err instanceof Error ? err.message : err}`);
+      if (options.json) {
+        console.log(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }));
+      } else {
+        console.error(`\n✗ Resume failed: ${err instanceof Error ? err.message : err}`);
+      }
       process.exit(1);
     }
   });
+
+function toSerializable(result: PipelineResult): Record<string, unknown> {
+  return {
+    ...result,
+    verseFiles: Object.fromEntries(result.verseFiles),
+  };
+}
