@@ -11,6 +11,9 @@ importers:
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.2.1)
+      '@types/node':
+        specifier: ^25.6.0
+        version: 25.6.0
       eslint:
         specifier: ^10.2.1
         version: 10.2.1
@@ -323,6 +326,28 @@ importers:
       vitest:
         specifier: ^3.2.0
         version: 3.2.4(@types/node@25.6.0)(tsx@4.21.0)(yaml@2.8.3)
+
+  scripts:
+    dependencies:
+      '@forgeai/ai':
+        specifier: workspace:*
+        version: link:../packages/ai
+      '@forgeai/core':
+        specifier: workspace:*
+        version: link:../packages/core
+      '@forgeai/schemas':
+        specifier: workspace:*
+        version: link:../packages/schemas
+      '@forgeai/templates':
+        specifier: workspace:*
+        version: link:../packages/templates
+    devDependencies:
+      '@types/node':
+        specifier: ^25.6.0
+        version: 25.6.0
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
 
 packages:
 

@@ -256,14 +256,17 @@ Token cost legend (estimated ForgeAI token spend to design + implement + verify;
   - New `Pipeline.totalSpentUsd` getter exposes per-run spend
   - Tests: 7 new pricing/budget tests (`packages/ai/src/__tests__/pricing-budget.test.ts`) + 4 ledger tests (`packages/core/src/__tests__/usage-ledger.test.ts`); 33 ai tests + 21 core tests pass; 23/23 turbo tasks ✓ (191 total tests)
 
-- [ ] **P0.4 — Replace eval story with a budget-aware E2E harness** *(Cost: M; L for full reporting)*
-  - `scripts/run-eval.ts` only checks keyword genre + template existence; advertises `--full` but doesn't implement it
-  - "100% pass on 40 prompts" claim doesn't measure schema validity, repair effectiveness, Verse quality, package completeness, cost, or determinism
-  - Three tiers:
-    1. Unit tests (deterministic logic) — keep current
-    2. Contract tests with recorded adapter responses (orchestration + schema handling, not LLM quality)
-    3. Live evals outside PR CI — 5 cheap smoke prompts daily, full 40 weekly; record first-pass success, repaired success, warnings, duration, spend, output diffs
-  - Files: `scripts/run-eval.ts`, `evals/golden-prompts/`, `evals/expected-artifacts/`, `packages/core/src/__tests__/pipeline.test.ts`
+- [x] **P0.4 — Replace eval story with a budget-aware E2E harness** *(Cost: M; L for full reporting)* ✅
+  - **`--full` mode in `scripts/run-eval.ts`** implements the live tier — runs the full Pipeline against each prompt, supports `--limit N`, writes `eval-report-full.json`
+  - **Per-prompt telemetry** now captured: `firstPassPassed`, `validationPassed`, `validationWarnings`, `repairTriggered`, `repairPasses`, `packageFileCount`, `costUsd`, `durationMs`, `error`
+  - **Summary report** reports first-pass valid count, repair-triggered count + repair-success count, validation OK count, and total spend
+  - **Pipeline now exposes `firstPassValidation`** alongside `validation` so callers can measure repair effectiveness without re-running validators
+  - **Contract test tier** (`packages/core/src/__tests__/pipeline.test.ts`):
+    - "packages a real project on disk with all expected artifacts" — runs full pipeline (`dryRun:false`), validates `worldgen.config.yaml`, all 4 manifests, resolved-template, Verse files, README, README-UEFN-IMPORT, and 5 doc files
+    - "produces deterministic project artifacts" — same prompt+seed+model produces functionally identical layout, economy, devices, scripts across runs
+    - Existing memo + mock-LLM tests retained
+  - 23 core tests pass, 23/23 turbo tasks ✓; smoke eval still 40/40 (100%)
+  - Out of scope (deferred): live eval CI scheduler, expected-artifacts golden snapshots per genre, output diff reporting
 
 ### P1 — Schemas, packaging, DX
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mkdtempSync } from "node:fs";
+import { mkdtempSync, existsSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ForgeAIConfig } from "@forgeai/schemas";
@@ -202,6 +202,97 @@ describe("Pipeline", () => {
     expect(llm.calls).toHaveLength(10);
     expect(llm.calls[3].messages[0].content).toContain("Tycoon Economy Template");
     expect(llm.calls[9].messages[0].content).toContain("Verse Failable Pattern");
+  });
+
+  it("packages a real project on disk with all expected artifacts (contract)", async () => {
+    const tmpHome = mkdtempSync(join(tmpdir(), "forgeai-pkg-"));
+    const prevHome = process.env.HOME;
+    process.env.HOME = tmpHome;
+    try {
+      const llm = new QueueLLM(pipelineResponses());
+      const outDir = join(tmpHome, "scaffold");
+      const result = await new Pipeline({
+        prompt: `PACKAGE CONTRACT ${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        seed: 555,
+        outputDir: outDir,
+        config,
+        dryRun: false,
+        llm,
+      }).run();
+
+      // Pipeline reached the terminal happy path.
+      expect(result.job.status).toBe("complete");
+      expect(result.outputPath).toBe(outDir);
+      expect(result.firstPassValidation).toBeDefined();
+      expect(result.firstPassValidation!.every((v) => v.passed)).toBe(true);
+      expect(result.repairResult).toBeUndefined();
+
+      // Canonical project artifact has every field the packager + downstream consumers depend on.
+      const project = result.project;
+      expect(project.specVersion).toBe("wg/1.0");
+      expect(project.scripts.length).toBeGreaterThan(0);
+      expect(project.devices.length).toBeGreaterThan(0);
+      expect(project.layout.zones.length).toBeGreaterThan(0);
+      expect(project.economy.currencies.length).toBeGreaterThan(0);
+      expect(project.validation?.length).toBeGreaterThan(0);
+
+      // Package wrote the manifests + Verse files + docs we promise UEFN users.
+      const expected = [
+        "worldgen.config.yaml",
+        "manifests/world.project.json",
+        "manifests/layout.grid.json",
+        "manifests/device_manifest.json",
+        "manifests/economy.json",
+        "templates/resolved-template.json",
+        "Verse/tycoon_game_manager.verse",
+        "README.md",
+        "README-UEFN-IMPORT.md",
+        "docs/DESIGN-SUMMARY.md",
+        "docs/SYSTEMS-OVERVIEW.md",
+        "docs/DEVICE-WIRING.md",
+        "docs/QA-CHECKLIST.md",
+        "docs/BALANCE-REPORT.md",
+      ];
+      for (const rel of expected) {
+        expect(existsSync(join(outDir, rel)), `missing packaged artifact: ${rel}`).toBe(true);
+      }
+
+      // Resolved template carries real metadata, not the old `{}` placeholder.
+      const tmpl = JSON.parse(readFileSync(join(outDir, "templates/resolved-template.json"), "utf-8"));
+      expect(tmpl.templateId).toBe("tycoon/lumber-mill");
+    } finally {
+      if (prevHome === undefined) delete process.env.HOME;
+      else process.env.HOME = prevHome;
+    }
+  });
+
+  it("produces deterministic project artifacts when prompt + seed + model are identical (contract)", async () => {
+    const tmpHome = mkdtempSync(join(tmpdir(), "forgeai-det-"));
+    const prevHome = process.env.HOME;
+    process.env.HOME = tmpHome;
+    try {
+      const prompt = `DET ${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const seed = 4242;
+      const baseOpts = { prompt, seed, outputDir: join(tmpHome, "out"), config, dryRun: true };
+
+      const a = await new Pipeline({ ...baseOpts, llm: new QueueLLM(pipelineResponses()) }).run();
+      const b = await new Pipeline({ ...baseOpts, llm: new QueueLLM(pipelineResponses()) }).run();
+
+      // Same inputs ⇒ same key downstream artifacts. We compare the parts of WorldProject that
+      // should be functionally equal across runs (excluding timestamps/jobId/projectId/slug).
+      const stripVolatile = (p: typeof a.project) => ({
+        layout: p.layout,
+        economy: p.economy,
+        devices: p.devices,
+        scripts: p.scripts,
+      });
+      expect(stripVolatile(a.project)).toEqual(stripVolatile(b.project));
+      expect(a.templateResult.templateId).toBe(b.templateResult.templateId);
+      expect(a.devices).toEqual(b.devices);
+    } finally {
+      if (prevHome === undefined) delete process.env.HOME;
+      else process.env.HOME = prevHome;
+    }
   });
 
   it("memo cache reuses expensive stages across separate jobs with same inputs", async () => {

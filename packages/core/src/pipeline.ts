@@ -72,6 +72,8 @@ export interface PipelineResult {
   verseModules: VerseModule[];
   project: WorldProject;
   validation: ValidationResult[];
+  /** Validation results from the very first run, before the repair loop (if any). Useful for measuring repair effectiveness. */
+  firstPassValidation?: ValidationResult[];
   repairResult?: RepairResult;
   outputPath: string;
   archivePath?: string;
@@ -457,6 +459,7 @@ export class Pipeline {
     // ── Validation ──
     this.jobManager.transition(job.jobId, "validating", 8);
     let validation = runAllValidators(project);
+    const firstPassValidation: ValidationResult[] = validation.map((v) => ({ ...v }));
     let repairResult: RepairResult | undefined;
 
     const allPassed = () => validation.every((v) => v.passed);
@@ -558,6 +561,7 @@ export class Pipeline {
       verseModules,
       project,
       validation,
+      firstPassValidation,
       repairResult,
       outputPath: this.options.outputDir,
       archivePath,

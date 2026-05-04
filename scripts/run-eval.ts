@@ -12,7 +12,7 @@
  *
  * Usage: npx tsx scripts/run-eval.ts [--full] [--limit N]
  */
-import { readdirSync, readFileSync, writeFileSync, mkdirSync, mkdtempSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync, mkdirSync, mkdtempSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
@@ -36,8 +36,14 @@ interface EvalResult {
 
 interface FullEvalResult extends EvalResult {
   pipelineCompleted: boolean;
+  /** True iff the very first validation pass succeeded (no repair needed). */
+  firstPassPassed?: boolean;
+  /** True iff the project ultimately validated, possibly after repair. */
   validationPassed?: boolean;
   validationWarnings?: number;
+  repairTriggered?: boolean;
+  repairPasses?: number;
+  packageFileCount?: number;
   costUsd?: number;
   error?: string;
 }
@@ -51,6 +57,18 @@ function inferExpectedGenre(filename: string): string {
   if (filename.startsWith("adventure")) return "adventure";
   if (filename.startsWith("roleplay")) return "roleplay";
   return "unknown";
+}
+
+/** Recursively counts files in `dir`. Returns 0 if dir doesn't exist. */
+function countPackageFiles(dir: string): number {
+  if (!existsSync(dir)) return 0;
+  let count = 0;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) count += countPackageFiles(path);
+    else count += 1;
+  }
+  return count;
 }
 
 function parseArgs(argv: string[]): { full: boolean; limit?: number } {
@@ -83,8 +101,12 @@ async function runFull(files: string[]): Promise<void> {
 
     const outDir = join(tmpRoot, file.replace(/\.txt$/, ""));
     let pipelineCompleted = false;
+    let firstPassPassed: boolean | undefined;
     let validationPassed: boolean | undefined;
     let validationWarnings: number | undefined;
+    let repairTriggered = false;
+    let repairPasses: number | undefined;
+    let packageFileCount: number | undefined;
     let templateId: string | null = null;
     let costUsd = 0;
     let error: string | undefined;
@@ -100,8 +122,12 @@ async function runFull(files: string[]): Promise<void> {
       const result = await pipeline.run();
       pipelineCompleted = true;
       templateId = result.templateResult.templateId;
+      firstPassPassed = result.firstPassValidation?.every((v) => v.passed);
       validationPassed = result.validation.every((v) => v.passed);
       validationWarnings = result.validation.reduce((n, v) => n + v.warnings.length, 0);
+      repairTriggered = Boolean(result.repairResult);
+      repairPasses = result.repairResult?.passesUsed;
+      packageFileCount = countPackageFiles(outDir);
       costUsd = pipeline.totalSpentUsd;
       totalCostUsd += costUsd;
     } catch (err) {
@@ -128,8 +154,12 @@ async function runFull(files: string[]): Promise<void> {
       cacheKey,
       durationMs,
       pipelineCompleted,
+      firstPassPassed,
       validationPassed,
       validationWarnings,
+      repairTriggered,
+      repairPasses,
+      packageFileCount,
       costUsd,
       error,
     });
@@ -137,21 +167,28 @@ async function runFull(files: string[]): Promise<void> {
     const status = !pipelineCompleted
       ? "✗ PIPELINE"
       : validationPassed
-        ? "✓"
+        ? firstPassPassed
+          ? "✓ FIRST"
+          : "✓ REPAIRED"
         : "⚠ VALIDATION";
     console.log(
-      `  ${status.padEnd(13)} ${file.padEnd(20)} ${(durationMs / 1000).toFixed(1)}s  $${costUsd.toFixed(4)}  ${error ?? ""}`,
+      `  ${status.padEnd(13)} ${file.padEnd(20)} ${(durationMs / 1000).toFixed(1)}s  $${costUsd.toFixed(4)}  files=${packageFileCount ?? "?"}  ${error ?? ""}`,
     );
   }
 
   const completed = results.filter((r) => r.pipelineCompleted).length;
+  const firstPass = results.filter((r) => r.firstPassPassed).length;
   const passed = results.filter((r) => r.pipelineCompleted && r.validationPassed).length;
+  const repaired = results.filter((r) => r.repairTriggered).length;
+  const repairedSuccess = results.filter((r) => r.repairTriggered && r.validationPassed).length;
   const total = results.length;
   console.log(`\n─── Summary [FULL] ───`);
-  console.log(`  Pipeline OK:   ${completed}/${total}`);
-  console.log(`  Validation OK: ${passed}/${total}`);
-  console.log(`  Total cost:    $${totalCostUsd.toFixed(4)}`);
-  console.log(`  Output dir:    ${tmpRoot}`);
+  console.log(`  Pipeline OK:        ${completed}/${total}`);
+  console.log(`  First-pass valid:   ${firstPass}/${total}`);
+  console.log(`  Repair triggered:   ${repaired}/${total}  (succeeded: ${repairedSuccess}/${repaired})`);
+  console.log(`  Validation OK:      ${passed}/${total}`);
+  console.log(`  Total cost:         $${totalCostUsd.toFixed(4)}`);
+  console.log(`  Output dir:         ${tmpRoot}`);
 
   mkdirSync(RESULTS_DIR, { recursive: true });
   const report = {

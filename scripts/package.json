@@ -1,0 +1,16 @@
+{
+  "name": "@forgeai/scripts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@forgeai/ai": "workspace:*",
+    "@forgeai/core": "workspace:*",
+    "@forgeai/schemas": "workspace:*",
+    "@forgeai/templates": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^5.8.0"
+  }
+}
