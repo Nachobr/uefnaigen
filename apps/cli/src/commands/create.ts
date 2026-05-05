@@ -17,7 +17,7 @@ export const createCommand = new Command("create")
   .option("--json", "Machine-readable output")
   .option("--strict", "Fail on validation warnings")
   .option("--repair", "Run LLM repair loop on validation failures")
-  .option("--zip", "Export output as a .tar.gz archive")
+  .option("--zip", "Export output as a .zip archive")
   .action(async (prompt, options) => {
     const config = loadConfig(options as CLIFlags);
     const seed = options.seed ?? Math.floor(Math.random() * 1_000_000);

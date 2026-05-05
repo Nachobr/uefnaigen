@@ -1,7 +1,6 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, dirname, basename } from "node:path";
-import { create } from "tar";
-import type { WorldProject, EconomySpec, DeviceInstance, TemplateDefinition } from "@forgeai/schemas";
+import type { WorldProject, EconomySpec, DeviceInstance, TemplateDefinition, JobRecord } from "@forgeai/schemas";
 import type { SimulationResult } from "@forgeai/balance";
 import type { LootTable, ModulePlan, WorldDesign } from "@forgeai/ai";
 
@@ -14,11 +13,12 @@ export interface PackagerInput {
   verseFiles: Map<string, string>;
   resolvedTemplate?: TemplateDefinition;
   templateId?: string;
+  job?: JobRecord;
 }
 
 export class ScaffoldPackager {
   async package(input: PackagerInput, outputDir: string): Promise<string> {
-    const { project, worldDesign, modulePlan, lootTables, balanceReport, verseFiles, resolvedTemplate, templateId } = input;
+    const { project, worldDesign, modulePlan, lootTables, balanceReport, verseFiles, resolvedTemplate, templateId, job } = input;
 
     const dirs = [
       "",
@@ -40,6 +40,8 @@ export class ScaffoldPackager {
     this.writeJson(outputDir, "manifests/device_manifest.json", project.devices);
     this.writeJson(outputDir, "manifests/economy.json", project.economy);
     this.writeJson(outputDir, "manifests/loot_tables.json", lootTables);
+    this.writeJson(outputDir, "manifests/variant_zones.json", project.variantZones ?? []);
+    this.writeJson(outputDir, "manifests/prefab_manifest.json", project.prefabs);
     this.writeJson(outputDir, "manifests/progression.json", {
       progressionBeats: worldDesign.progressionBeats,
       sessionPacing: worldDesign.sessionPacing,
@@ -54,6 +56,16 @@ export class ScaffoldPackager {
     this.writeJson(outputDir, ".ai/planner/world-design.json", worldDesign);
     this.writeJson(outputDir, ".ai/planner/module-plan.json", modulePlan);
     this.writeJson(outputDir, ".ai/planner/balance.json", project.economy);
+    this.writeJson(outputDir, ".ai/job.json", job ?? {
+      jobId: project.slug,
+      projectId: project.projectId,
+      prompt: project.source.prompt,
+      seed: project.source.seed,
+    });
+    this.writeJson(outputDir, ".ai/validation/summary.json", project.validation);
+    for (const result of project.validation) {
+      this.writeJson(outputDir, `.ai/validation/${this.safeFileName(result.validator)}.json`, result);
+    }
 
     // Templates
     this.writeJson(
@@ -74,12 +86,33 @@ export class ScaffoldPackager {
 
     // Config
     writeFileSync(join(outputDir, "worldgen.config.yaml"), `specVersion: "wg/1.0"\nprojectId: ${project.projectId}\nname: ${project.name}\nseed: ${project.source.seed}\ngenre: ${project.target.genre}\n`, "utf-8");
+    this.writeJson(outputDir, "worldgen.lock.json", {
+      specVersion: project.specVersion,
+      projectId: project.projectId,
+      projectName: project.name,
+      seed: project.source.seed,
+      genre: project.target.genre,
+      templateId: resolvedTemplate?.templateId ?? templateId ?? null,
+      templateVersion: resolvedTemplate?.version ?? null,
+      artifacts: {
+        zones: project.layout.zones.length,
+        devices: project.devices.length,
+        prefabs: project.prefabs.length,
+        variantZones: project.variantZones?.length ?? 0,
+        scripts: project.scripts.length,
+        validators: project.validation.length,
+      },
+    });
 
     return outputDir;
   }
 
   private writeJson(base: string, path: string, data: unknown): void {
     writeFileSync(join(base, path), JSON.stringify(data, null, 2), "utf-8");
+  }
+
+  private safeFileName(value: string): string {
+    return value.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-|-$/g, "") || "validator";
   }
 
   private genReadme(project: WorldProject, design: WorldDesign): string {
@@ -305,10 +338,107 @@ ${zoneChecks.join("\n")}
 
     const parent = dirname(outputDir);
     const dirName = basename(outputDir);
-    const archivePath = join(parent, `${dirName}.tar.gz`);
+    const archivePath = join(parent, `${dirName}.zip`);
 
-    await create({ cwd: parent, file: archivePath, gzip: true }, [dirName]);
+    this.writeZipArchive(outputDir, archivePath);
 
     return archivePath;
   }
+
+  private writeZipArchive(sourceDir: string, archivePath: string): void {
+    const files = this.collectFiles(sourceDir).sort();
+    const dataParts: Buffer[] = [];
+    const centralParts: Buffer[] = [];
+    let offset = 0;
+
+    for (const file of files) {
+      const data = readFileSync(join(sourceDir, file));
+      const name = file.split(/[\\/]/).join("/");
+      const nameBuffer = Buffer.from(name, "utf-8");
+      const crc = crc32(data);
+
+      const local = Buffer.alloc(30);
+      local.writeUInt32LE(0x04034b50, 0);
+      local.writeUInt16LE(20, 4);
+      local.writeUInt16LE(0, 6);
+      local.writeUInt16LE(0, 8);
+      local.writeUInt16LE(0, 10);
+      local.writeUInt16LE(0, 12);
+      local.writeUInt32LE(crc, 14);
+      local.writeUInt32LE(data.length, 18);
+      local.writeUInt32LE(data.length, 22);
+      local.writeUInt16LE(nameBuffer.length, 26);
+      local.writeUInt16LE(0, 28);
+
+      dataParts.push(local, nameBuffer, data);
+
+      const central = Buffer.alloc(46);
+      central.writeUInt32LE(0x02014b50, 0);
+      central.writeUInt16LE(20, 4);
+      central.writeUInt16LE(20, 6);
+      central.writeUInt16LE(0, 8);
+      central.writeUInt16LE(0, 10);
+      central.writeUInt16LE(0, 12);
+      central.writeUInt16LE(0, 14);
+      central.writeUInt32LE(crc, 16);
+      central.writeUInt32LE(data.length, 20);
+      central.writeUInt32LE(data.length, 24);
+      central.writeUInt16LE(nameBuffer.length, 28);
+      central.writeUInt16LE(0, 30);
+      central.writeUInt16LE(0, 32);
+      central.writeUInt16LE(0, 34);
+      central.writeUInt16LE(0, 36);
+      central.writeUInt32LE(0, 38);
+      central.writeUInt32LE(offset, 42);
+      centralParts.push(central, nameBuffer);
+
+      offset += local.length + nameBuffer.length + data.length;
+    }
+
+    const centralOffset = offset;
+    const centralSize = centralParts.reduce((size, part) => size + part.length, 0);
+    const end = Buffer.alloc(22);
+    end.writeUInt32LE(0x06054b50, 0);
+    end.writeUInt16LE(0, 4);
+    end.writeUInt16LE(0, 6);
+    end.writeUInt16LE(files.length, 8);
+    end.writeUInt16LE(files.length, 10);
+    end.writeUInt32LE(centralSize, 12);
+    end.writeUInt32LE(centralOffset, 16);
+    end.writeUInt16LE(0, 20);
+
+    writeFileSync(archivePath, Buffer.concat([...dataParts, ...centralParts, end]));
+  }
+
+  private collectFiles(dir: string, prefix = ""): string[] {
+    if (!existsSync(dir)) return [];
+    const files: string[] = [];
+    for (const entry of readdirSync(join(dir, prefix), { withFileTypes: true })) {
+      const rel = prefix ? join(prefix, entry.name) : entry.name;
+      const fullPath = join(dir, rel);
+      if (entry.isDirectory()) {
+        files.push(...this.collectFiles(dir, rel));
+      } else if (statSync(fullPath).isFile()) {
+        files.push(rel);
+      }
+    }
+    return files;
+  }
+}
+
+const crcTable = new Uint32Array(256);
+for (let i = 0; i < crcTable.length; i++) {
+  let c = i;
+  for (let k = 0; k < 8; k++) {
+    c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+  }
+  crcTable[i] = c >>> 0;
+}
+
+function crc32(data: Uint8Array): number {
+  let crc = 0xffffffff;
+  for (const byte of data) {
+    crc = crcTable[(crc ^ byte) & 0xff] ^ (crc >>> 8);
+  }
+  return (crc ^ 0xffffffff) >>> 0;
 }

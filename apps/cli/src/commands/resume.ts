@@ -13,7 +13,7 @@ export const resumeCommand = new Command("resume")
   .option("--budget <usd>", "Stop if inference cost exceeds threshold", parseFloat)
   .option("--strict", "Fail on validation warnings")
   .option("--repair", "Run LLM repair loop on validation failures")
-  .option("--zip", "Export output as a .tar.gz archive")
+  .option("--zip", "Export output as a .zip archive")
   .action(async (jobId, options) => {
     const jobManager = new JobManager();
     const job = jobManager.get(jobId);

@@ -9,7 +9,7 @@
     "build": "tsc",
     "test": "vitest run",
     "lint": "eslint .",
-    "clean": "rm -rf dist"
+    "clean": "node -e \"import('node:fs').then(({rmSync})=>rmSync('dist',{recursive:true,force:true}))\""
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.52.0",

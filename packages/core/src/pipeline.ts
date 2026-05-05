@@ -47,7 +47,7 @@ export interface PipelineOptions {
   resumeJobId?: string;
   llm?: LLMAdapter;
   logger?: Logger;
-  /** Emit a .tar.gz archive instead of an unpacked directory. */
+  /** Emit a .zip archive instead of an unpacked directory. */
   archive?: boolean;
   /** Run the LLM-based RepairLoop when validation fails. Off by default to avoid surprise cost. */
   repair?: boolean;
@@ -517,7 +517,17 @@ export class Pipeline {
     // ── Packaging ──
     this.emit(8, "Packaging", `Writing scaffold to ${this.options.outputDir}...`);
     const packager = new ScaffoldPackager();
+    const packagedAt = new Date().toISOString();
+    const packagedJob: JobRecord = {
+      ...job,
+      status: "complete",
+      currentStage: 8,
+      templateId: templateResult.templateId,
+      updatedAt: packagedAt,
+      completedAt: packagedAt,
+    };
     const packagerInput = {
+      job: packagedJob,
       project,
       worldDesign,
       modulePlan,

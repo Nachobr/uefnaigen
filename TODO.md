@@ -281,12 +281,13 @@ Token cost legend (estimated ForgeAI token spend to design + implement + verify;
   - Pipeline injects `templateResult.resolvedTemplate` so all 7 validators run end-to-end
   - Tests: 17 validator tests (was 12; +5 covering new validators + runner options); 23/23 turbo tasks pass; smoke eval still 40/40
 
-- [ ] **P1.2 — Fix packaging/distribution gaps (Windows-first)** *(Cost: M)*
-  - `--zip` actually emits `.tar.gz` — rename `--archive` or implement real zip
-  - Replace `rm -rf` in `apps/desktop/package.json`, `apps/cli/package.json`, `packages/core/package.json`, `packages/ai/package.json` with cross-platform cleaner
-  - Sync versions: root `0.2.0-beta` vs `apps/cli/package.json` `0.1.0-mvp`
-  - Packager must actually emit: `variant_zones.json`, `prefab_manifest.json`, `worldgen.lock.json`, `.ai/job.json`, `.ai/validation/*.json`
-  - `templates/resolved-template.json` currently `{}` — write the real resolved template
+- [x] **P1.2 — Fix packaging/distribution gaps (Windows-first)** *(Cost: M)* ✅
+  - `--zip` now emits a real `.zip` archive (native ZIP writer) instead of a `.tar.gz`; CLI help updated
+  - Replaced `rm -rf` clean scripts with Node `fs.rmSync` cleaners across CLI/Desktop and packages so `pnpm clean` works on Windows
+  - Confirmed CLI version is synced with root at `0.2.0-beta`
+  - Packager now emits `variant_zones.json`, `prefab_manifest.json`, `worldgen.lock.json`, `.ai/job.json`, and `.ai/validation/*.json`
+  - `templates/resolved-template.json` remains the real resolved template; pipeline contract test now covers the new artifacts and `.zip` magic header
+  - Verification: `pnpm build` ✓, `pnpm test` ✓ (198 tests; 23/23 turbo tasks), smoke eval `40/40 (100%)` ✓
 
 - [ ] **P1.3 — DX: thin CLI, init command, better doctor, no silent skips** *(Cost: S–M)*
   - Add `uefn-ai init` (or `config init`) that calls existing `initConfig()` in `packages/schemas/src/config-loader.ts`

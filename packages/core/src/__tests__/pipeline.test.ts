@@ -217,12 +217,16 @@ describe("Pipeline", () => {
         outputDir: outDir,
         config,
         dryRun: false,
+        archive: true,
         llm,
       }).run();
 
       // Pipeline reached the terminal happy path.
       expect(result.job.status).toBe("complete");
       expect(result.outputPath).toBe(outDir);
+      expect(result.archivePath).toBe(`${outDir}.zip`);
+      expect(existsSync(result.archivePath!)).toBe(true);
+      expect(readFileSync(result.archivePath!).subarray(0, 4).toString("hex")).toBe("504b0304");
       expect(result.firstPassValidation).toBeDefined();
       expect(result.firstPassValidation!.every((v) => v.passed)).toBe(true);
       expect(result.repairResult).toBeUndefined();
@@ -243,6 +247,12 @@ describe("Pipeline", () => {
         "manifests/layout.grid.json",
         "manifests/device_manifest.json",
         "manifests/economy.json",
+        "manifests/variant_zones.json",
+        "manifests/prefab_manifest.json",
+        "worldgen.lock.json",
+        ".ai/job.json",
+        ".ai/validation/summary.json",
+        ".ai/validation/structural.json",
         "templates/resolved-template.json",
         "Verse/tycoon_game_manager.verse",
         "README.md",
@@ -260,6 +270,9 @@ describe("Pipeline", () => {
       // Resolved template carries real metadata, not the old `{}` placeholder.
       const tmpl = JSON.parse(readFileSync(join(outDir, "templates/resolved-template.json"), "utf-8"));
       expect(tmpl.templateId).toBe("tycoon/lumber-mill");
+      const packagedJob = JSON.parse(readFileSync(join(outDir, ".ai/job.json"), "utf-8"));
+      expect(packagedJob.status).toBe("complete");
+      expect(packagedJob.templateId).toBe("tycoon/lumber-mill");
     } finally {
       if (prevHome === undefined) delete process.env.HOME;
       else process.env.HOME = prevHome;

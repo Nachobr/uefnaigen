@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "electron": "electron dist-electron/main.js",
-    "clean": "rm -rf dist dist-electron"
+    "clean": "node -e \"import('node:fs').then(({rmSync})=>{for (const dir of ['dist','dist-electron']) rmSync(dir,{recursive:true,force:true})})\""
   },
   "dependencies": {
     "@forgeai/core": "workspace:*",
