@@ -303,6 +303,9 @@ importers:
       '@forgeai/schemas':
         specifier: workspace:*
         version: link:../schemas
+      '@forgeai/verse':
+        specifier: workspace:*
+        version: link:../verse
     devDependencies:
       '@types/node':
         specifier: ^25.6.0

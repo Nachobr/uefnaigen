@@ -30,9 +30,21 @@ export const DeviceEventBinding = z.object({
 });
 export type DeviceEventBinding = z.infer<typeof DeviceEventBinding>;
 
+/**
+ * Device type accepts a built-in `DeviceType` enum value or a custom string
+ * identifier (snake_case). Custom types are tolerated so LLM output for
+ * domain-specific devices doesn't fail the schema, but the format is policed
+ * to catch garbage like "Item Granter!" or "Trigger 1".
+ */
+export const DeviceTypeRef = z.union([
+  DeviceType,
+  z.string().regex(/^[a-z][a-z0-9_]*$/, "Device type must be snake_case"),
+]);
+export type DeviceTypeRef = z.infer<typeof DeviceTypeRef>;
+
 export const DeviceInstance = z.object({
   id: z.string(),
-  type: z.string(),
+  type: DeviceTypeRef,
   label: z.string(),
   transform: Transform,
   properties: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.array(z.string())])),

@@ -13,7 +13,8 @@
   },
   "dependencies": {
     "@forgeai/ai": "workspace:*",
-    "@forgeai/schemas": "workspace:*"
+    "@forgeai/schemas": "workspace:*",
+    "@forgeai/verse": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

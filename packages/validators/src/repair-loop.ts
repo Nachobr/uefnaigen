@@ -1,6 +1,6 @@
 import type { WorldProject } from "@forgeai/schemas";
 import type { LLMAdapter } from "@forgeai/ai";
-import { runAllValidators } from "./runner.js";
+import { runAllValidators, type RunValidatorsOptions } from "./runner.js";
 import type { ValidationResult } from "./types.js";
 
 export interface RepairResult {
@@ -43,6 +43,7 @@ export class RepairLoop {
   constructor(
     private llm: LLMAdapter,
     private maxPasses: number = 3,
+    private validatorOptions: RunValidatorsOptions = {},
   ) {}
 
   async run(project: WorldProject): Promise<RepairResult> {
@@ -51,7 +52,7 @@ export class RepairLoop {
 
     for (let i = 0; i < this.maxPasses; i++) {
       passesUsed++;
-      const results = runAllValidators(project);
+      const results = runAllValidators(project, this.validatorOptions);
       const allPassed = results.every((r) => r.passed);
 
       if (allPassed) {
@@ -65,7 +66,7 @@ export class RepairLoop {
       const deterministicRepairs = this.applyDeterministicFixes(project, errors);
       if (deterministicRepairs.length > 0) {
         repairs.push(...deterministicRepairs.map((r) => `[pass ${passesUsed}][deterministic] ${r}`));
-        const postFixResults = runAllValidators(project);
+        const postFixResults = runAllValidators(project, this.validatorOptions);
         if (postFixResults.every((r) => r.passed)) {
           return { passed: true, passesUsed, finalResults: postFixResults, repairs };
         }
@@ -105,7 +106,7 @@ export class RepairLoop {
       }
     }
 
-    const finalResults = runAllValidators(project);
+    const finalResults = runAllValidators(project, this.validatorOptions);
     return {
       passed: finalResults.every((r) => r.passed),
       passesUsed,

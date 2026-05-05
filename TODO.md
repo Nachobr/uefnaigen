@@ -270,10 +270,16 @@ Token cost legend (estimated ForgeAI token spend to design + implement + verify;
 
 ### P1 — Schemas, packaging, DX
 
-- [ ] **P1.1 — Strengthen schema/validator contracts** *(Cost: M)*
-  - `DeviceInstance.type` is `z.string()` — should reference `DeviceType` (transition via `z.union([DeviceType, z.string().regex(...)])` if needed)
-  - Add validators to runner: Verse lint + memory checks, template conformance (required zone purposes, required device types, allowed device types, required Verse modules), package completeness (manifests present, docs present, template metadata persisted)
-  - Files: `packages/schemas/src/devices.ts`, `packages/validators/src/runner.ts`, `packages/verse/src/memory-checker.ts`, `packages/verse/src/linter.ts`
+- [x] **P1.1 — Strengthen schema/validator contracts** *(Cost: M)* ✅
+  - `DeviceInstance.type` is now `DeviceTypeRef = union(DeviceType, snake_case string)` — back-compat, but garbage like `"Item Granter!"` now fails schema validation
+  - 4 new validators wired into `runAllValidators()`:
+    - `VerseLintValidator` — re-emits each script and reports any lint fixes that would apply (warnings)
+    - `VerseMemoryValidator` — runs `checkVerseMemory` per script + project-wide weak_map ≤4 enforcement
+    - `TemplateConformanceValidator` — required zone purposes, zone count bounds, required/allowed device types, required Verse modules (warnings; surfaced as failures via `--strict`); only runs when `resolvedTemplate` is provided via new `RunValidatorsOptions`
+    - `PackageReadinessValidator` — errors on empty zones/devices/currencies/name; warns on missing design fields and missing template metadata
+  - `runAllValidators(project, options?)` and `RepairLoop(llm, passes, validatorOptions?)` now accept resolvedTemplate so repair passes use the same validator set
+  - Pipeline injects `templateResult.resolvedTemplate` so all 7 validators run end-to-end
+  - Tests: 17 validator tests (was 12; +5 covering new validators + runner options); 23/23 turbo tasks pass; smoke eval still 40/40
 
 - [ ] **P1.2 — Fix packaging/distribution gaps (Windows-first)** *(Cost: M)*
   - `--zip` actually emits `.tar.gz` — rename `--archive` or implement real zip

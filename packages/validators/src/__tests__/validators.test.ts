@@ -2,6 +2,10 @@ import { describe, it, expect } from "vitest";
 import { StructuralValidator } from "../structural-validator.js";
 import { CrossRefValidator } from "../crossref-validator.js";
 import { SchemaValidator } from "../schema-validator.js";
+import { VerseLintValidator } from "../verse-lint-validator.js";
+import { VerseMemoryValidator } from "../verse-memory-validator.js";
+import { TemplateConformanceValidator } from "../template-conformance-validator.js";
+import { PackageReadinessValidator } from "../package-readiness-validator.js";
 import { runAllValidators } from "../runner.js";
 import type { WorldProject } from "@forgeai/schemas";
 
@@ -158,10 +162,42 @@ describe("SchemaValidator", () => {
 });
 
 describe("runAllValidators", () => {
-  it("runs all 3 validators", () => {
+  it("runs the 6 default validators", () => {
     const results = runAllValidators(makeProject());
-    expect(results).toHaveLength(3);
+    expect(results).toHaveLength(6);
+    expect(results.map((r) => r.validator)).toEqual([
+      "structural",
+      "schema",
+      "crossref",
+      "verse-lint",
+      "verse-memory",
+      "package-readiness",
+    ]);
     expect(results.every((r) => r.passed)).toBe(true);
+  });
+
+  it("includes template-conformance when resolvedTemplate is provided", () => {
+    const results = runAllValidators(makeProject(), {
+      resolvedTemplate: {
+        templateId: "tycoon/test",
+        version: "1.0.0",
+        genre: "tycoon",
+        summary: "test",
+        layoutRules: {
+          minZones: 1,
+          maxZones: 10,
+          requiredZonePurposes: ["starter_area"],
+          layoutStyle: "grid2d",
+        },
+        systemModules: { required: [], optional: [] },
+        devicePolicies: { allowedDeviceTypes: [], requiredDeviceTypes: ["trigger"] },
+        verseModules: { required: ["EconomyManager"], optional: [] },
+        prefabTags: [],
+        validationProfiles: [],
+      },
+    });
+    expect(results).toHaveLength(7);
+    expect(results.find((r) => r.validator === "template-conformance")?.passed).toBe(true);
   });
 
   it("reports failures from multiple validators", () => {
@@ -170,5 +206,107 @@ describe("runAllValidators", () => {
     const results = runAllValidators(project);
     const failed = results.filter((r) => !r.passed);
     expect(failed.length).toBeGreaterThan(0);
+  });
+});
+
+describe("VerseLintValidator", () => {
+  it("warns when emitted Verse contains lintable patterns", () => {
+    const project = makeProject({
+      scripts: [
+        {
+          kind: "module",
+          name: "Bad",
+          imports: [],
+          declarations: [
+            {
+              kind: "function",
+              name: "Update",
+              params: [],
+              returnType: "void",
+              attributes: [],
+              body: [{ kind: "statement", code: "Counter += 1" }],
+            },
+          ],
+        },
+      ],
+    });
+    const result = new VerseLintValidator().validate(project);
+    expect(result.passed).toBe(true);
+    expect(result.warnings.length).toBeGreaterThan(0);
+  });
+});
+
+describe("VerseMemoryValidator", () => {
+  it("flags weak_map declared with non-player key", () => {
+    const project = makeProject({
+      scripts: [
+        {
+          kind: "module",
+          name: "Bad",
+          imports: [],
+          declarations: [
+            {
+              kind: "class",
+              name: "bad_store",
+              extends: "creative_device",
+              fields: [
+                {
+                  kind: "field",
+                  name: "Scores",
+                  type: "weak_map(int, int)",
+                  editable: false,
+                  defaultValue: { kind: "expression", code: "map{}" },
+                },
+              ],
+              methods: [],
+            },
+          ],
+        },
+      ],
+    });
+    const result = new VerseMemoryValidator().validate(project);
+    expect(result.errors.some((e) => e.includes("weak-map-non-player-key"))).toBe(true);
+  });
+});
+
+describe("TemplateConformanceValidator", () => {
+  it("warns when required zone purposes / device types / modules are missing", () => {
+    const v = new TemplateConformanceValidator({
+      templateId: "tycoon/test",
+      version: "1.0.0",
+      genre: "tycoon",
+      summary: "test",
+      layoutRules: {
+        minZones: 5,
+        maxZones: 10,
+        requiredZonePurposes: ["boss_area"],
+        layoutStyle: "grid2d",
+      },
+      systemModules: { required: [], optional: [] },
+      devicePolicies: { allowedDeviceTypes: ["trigger"], requiredDeviceTypes: ["save_point"] },
+      verseModules: { required: ["MissingModule"], optional: [] },
+      prefabTags: [],
+      validationProfiles: [],
+    });
+    const result = v.validate(makeProject());
+    expect(result.passed).toBe(true);
+    expect(result.warnings.some((w) => w.includes('purpose "boss_area"'))).toBe(true);
+    expect(result.warnings.some((w) => w.includes("at least 5 zones"))).toBe(true);
+    expect(result.warnings.some((w) => w.includes('type "save_point"'))).toBe(true);
+    expect(result.warnings.some((w) => w.includes("MissingModule"))).toBe(true);
+    expect(result.warnings.some((w) => w.includes('"button"'))).toBe(true);
+  });
+});
+
+describe("PackageReadinessValidator", () => {
+  it("errors on empty zones / devices / currencies", () => {
+    const project = makeProject({ devices: [] });
+    project.layout.zones = [];
+    project.economy.currencies = [];
+    const result = new PackageReadinessValidator().validate(project);
+    expect(result.passed).toBe(false);
+    expect(result.errors.some((e) => e.includes("no zones"))).toBe(true);
+    expect(result.errors.some((e) => e.includes("no devices"))).toBe(true);
+    expect(result.errors.some((e) => e.includes("no currencies"))).toBe(true);
   });
 });

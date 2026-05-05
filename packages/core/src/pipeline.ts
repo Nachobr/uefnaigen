@@ -458,7 +458,8 @@ export class Pipeline {
 
     // ── Validation ──
     this.jobManager.transition(job.jobId, "validating", 8);
-    let validation = runAllValidators(project);
+    const validatorOptions = { resolvedTemplate: templateResult.resolvedTemplate };
+    let validation = runAllValidators(project, validatorOptions);
     const firstPassValidation: ValidationResult[] = validation.map((v) => ({ ...v }));
     let repairResult: RepairResult | undefined;
 
@@ -468,7 +469,7 @@ export class Pipeline {
     if (!allPassed() && this.options.repair) {
       const passes = this.options.config.maxRepairPasses ?? 3;
       this.emit(8, "Validating", `⚠ Validation failed; running repair loop (max ${passes} passes)...`);
-      const repairLoop = new RepairLoop(this.llm, passes);
+      const repairLoop = new RepairLoop(this.llm, passes, validatorOptions);
       repairResult = await repairLoop.run(project);
       validation = repairResult.finalResults;
       project = assembleProject({
