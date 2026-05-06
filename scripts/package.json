@@ -3,6 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint .",
+    "eval:smoke": "tsx run-eval.ts"
+  },
   "dependencies": {
     "@forgeai/ai": "workspace:*",
     "@forgeai/core": "workspace:*",

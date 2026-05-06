@@ -289,13 +289,14 @@ Token cost legend (estimated ForgeAI token spend to design + implement + verify;
   - `templates/resolved-template.json` remains the real resolved template; pipeline contract test now covers the new artifacts and `.zip` magic header
   - Verification: `pnpm build` ✓, `pnpm test` ✓ (198 tests; 23/23 turbo tasks), smoke eval `40/40 (100%)` ✓
 
-- [ ] **P1.3 — DX: thin CLI, init command, better doctor, no silent skips** *(Cost: S–M)*
-  - Add `uefn-ai init` (or `config init`) that calls existing `initConfig()` in `packages/schemas/src/config-loader.ts`
-  - Expand `doctor`: config file presence, output dir writability, cache dir writability, UEFN path/tooling; add `--json`
-  - `loadUserCatalog()` silently swallows invalid files — add loaded/skipped/failed report
-  - Deduplicate assembly/packaging logic between `create.ts` and `resume.ts` (resolved by P0.1)
-  - `--json` output includes a `Map` (`verseFiles`) that doesn't serialize cleanly — normalize to plain JSON-safe object
-  - Add root `pnpm check` = build + test + lint + eval smoke
+- [x] **P1.3 — DX: thin CLI, init command, better doctor, no silent skips** *(Cost: S–M)* ✅
+  - [x] Added `uefn-ai init` calling existing `initConfig()` in `packages/schemas/src/config-loader.ts`
+  - [x] Expanded `doctor`: config file presence/parse, output dir writability, cache dir writability, provider status, Ollama base URL, UEFN path/tooling, and `--json`
+  - [x] `loadUserCatalog()` silently swallows invalid files — `loadUserCatalogWithReport()` already reports loaded/skipped files (P2.2)
+  - [x] Deduplicate assembly/packaging logic between `create.ts` and `resume.ts` — resolved by P0.1
+  - [x] `--json` output includes a `Map` (`verseFiles`) that doesn't serialize cleanly — normalized with `Object.fromEntries()` in `create.ts`/`resume.ts`
+  - [x] Added root `pnpm check` = build + test + lint + eval smoke via Turbo `eval:smoke`
+  - Verification: `pnpm check` ✓ (38/38 turbo tasks; smoke eval 40/40)
 
 - [ ] **P1.4 — Desktop: thin client over the same core pipeline** *(Cost: L)*
   - `ProjectBrowser.tsx` uses `MOCK_PROJECTS`, `LayoutPreview.tsx` uses `MOCK_ZONES`, `PromptWizard.tsx` has no execution wiring

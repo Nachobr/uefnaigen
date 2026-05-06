@@ -17,6 +17,7 @@
     "build": "turbo run build",
     "test": "turbo run test",
     "lint": "turbo run lint",
+    "check": "turbo run build test lint eval:smoke",
     "dev": "turbo run dev",
     "clean": "turbo run clean"
   },

@@ -1,37 +1,144 @@
 import { Command } from "commander";
+import { accessSync, constants, existsSync, mkdirSync } from "node:fs";
+import { homedir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { loadConfig } from "@forgeai/schemas";
+
+type CheckStatus = "pass" | "warn" | "fail";
+
+interface DoctorCheck {
+  name: string;
+  status: CheckStatus;
+  message: string;
+}
 
 export const doctorCommand = new Command("doctor")
   .description("Check local environment for ForgeAI requirements")
-  .action(async () => {
+  .option("--json", "Machine-readable output")
+  .action(async (options: { json?: boolean }) => {
+    const checks = await runDoctorChecks();
+    const ok = checks.every((check) => check.status !== "fail");
+
+    if (options.json) {
+      console.log(JSON.stringify({ ok, checks }, null, 2));
+      if (!ok) process.exitCode = 1;
+      return;
+    }
+
     console.log("ForgeAI Doctor\n");
-
-    // Node version
-    const nodeVersion = process.version;
-    const nodeMajor = parseInt(nodeVersion.slice(1));
-    console.log(`  Node.js:    ${nodeVersion} ${nodeMajor >= 20 ? "✓" : "✗ (need ≥20)"}`);
-
-    // API keys
-    const hasAnthropic = !!process.env.ANTHROPIC_API_KEY;
-    const hasOpenAI = !!process.env.OPENAI_API_KEY;
-    const hasGroq = !!process.env.GROQ_API_KEY;
-    const hasGoogle = !!process.env.GOOGLE_API_KEY;
-    console.log(`  Anthropic:  ${hasAnthropic ? "✓ key set" : "✗ ANTHROPIC_API_KEY not set"}`);
-    console.log(`  OpenAI:     ${hasOpenAI ? "✓ key set" : "✗ OPENAI_API_KEY not set"}`);
-    console.log(`  Groq:       ${hasGroq ? "✓ key set" : "✗ GROQ_API_KEY not set"}`);
-    console.log(`  Google:     ${hasGoogle ? "✓ key set" : "✗ GOOGLE_API_KEY not set"}`);
-
-    // Ollama
-    const hasOllama = await (async () => {
-      try {
-        const res = await fetch("http://localhost:11434/api/tags");
-        return res.ok;
-      } catch {
-        return false;
-      }
-    })();
-    console.log(`  Ollama:     ${hasOllama ? "✓ running" : "✗ not detected at localhost:11434"}`);
-
-    // Summary
-    const ok = nodeMajor >= 20 && (hasAnthropic || hasOpenAI || hasGroq || hasGoogle || hasOllama);
-    console.log(`\n${ok ? "✓ Ready to go!" : "✗ Fix issues above before running."}`);
+    for (const check of checks) {
+      console.log(`  ${check.name.padEnd(14)} ${statusIcon(check.status)} ${check.message}`);
+    }
+    console.log(`\n${ok ? "✓ Ready to go!" : "✗ Fix failed checks above before running."}`);
+    if (!ok) process.exitCode = 1;
   });
+
+async function runDoctorChecks(): Promise<DoctorCheck[]> {
+  const checks: DoctorCheck[] = [];
+  const nodeVersion = process.version;
+  const nodeMajor = parseInt(nodeVersion.slice(1), 10);
+  checks.push({
+    name: "Node.js",
+    status: nodeMajor >= 20 ? "pass" : "fail",
+    message: nodeMajor >= 20 ? `${nodeVersion}` : `${nodeVersion} (need >=20)`,
+  });
+
+  const configPath = join(homedir(), ".forgeai", "config.yaml");
+  checks.push({
+    name: "Config",
+    status: existsSync(configPath) ? "pass" : "warn",
+    message: existsSync(configPath) ? configPath : `not found; run "uefn-ai init" to create ${configPath}`,
+  });
+
+  let outputDir = "./output";
+  let ollamaBaseUrl = "http://localhost:11434";
+  try {
+    const config = loadConfig();
+    outputDir = config.outputDir;
+    ollamaBaseUrl = config.ollamaBaseUrl;
+    checks.push({ name: "Config parse", status: "pass", message: "valid" });
+  } catch (err) {
+    checks.push({
+      name: "Config parse",
+      status: "fail",
+      message: err instanceof Error ? err.message : String(err),
+    });
+  }
+
+  checks.push(checkWritablePath("Output dir", resolve(outputDir), false));
+  checks.push(checkWritablePath("Stage cache", join(homedir(), ".forgeai", "stage-cache"), true));
+  checks.push(checkWritablePath("Memo cache", join(homedir(), ".forgeai", "memo-cache"), true));
+
+  const providers = [
+    ["Anthropic", "ANTHROPIC_API_KEY"],
+    ["OpenAI", "OPENAI_API_KEY"],
+    ["Groq", "GROQ_API_KEY"],
+    ["Google", "GOOGLE_API_KEY"],
+  ] as const;
+  let hasProvider = false;
+  for (const [name, envVar] of providers) {
+    const present = Boolean(process.env[envVar]);
+    hasProvider ||= present;
+    checks.push({
+      name,
+      status: present ? "pass" : "warn",
+      message: present ? "key set" : `${envVar} not set`,
+    });
+  }
+
+  const hasOllama = await isOllamaRunning(ollamaBaseUrl);
+  hasProvider ||= hasOllama;
+  checks.push({
+    name: "Ollama",
+    status: hasOllama ? "pass" : "warn",
+    message: hasOllama ? `running at ${ollamaBaseUrl}` : `not detected at ${ollamaBaseUrl}`,
+  });
+  checks.push({
+    name: "LLM provider",
+    status: hasProvider ? "pass" : "fail",
+    message: hasProvider ? "at least one provider is available" : "set an API key or start Ollama",
+  });
+
+  const uefnPath = process.env.UEFN_PATH ?? process.env.FORTNITE_UEFN_PATH;
+  checks.push({
+    name: "UEFN path",
+    status: uefnPath && existsSync(uefnPath) ? "pass" : "warn",
+    message: uefnPath
+      ? existsSync(uefnPath)
+        ? uefnPath
+        : `${uefnPath} does not exist`
+      : "UEFN_PATH not set; import must be done manually",
+  });
+
+  return checks;
+}
+
+function checkWritablePath(name: string, path: string, create: boolean): DoctorCheck {
+  try {
+    if (create) mkdirSync(path, { recursive: true });
+    const target = existsSync(path) ? path : dirname(path);
+    accessSync(target, constants.W_OK);
+    return { name, status: "pass", message: existsSync(path) ? path : `${path} can be created` };
+  } catch (err) {
+    return {
+      name,
+      status: "fail",
+      message: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
+async function isOllamaRunning(baseUrl: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${baseUrl.replace(/\/$/, "")}/api/tags`);
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+function statusIcon(status: CheckStatus): string {
+  if (status === "pass") return "✓";
+  if (status === "warn") return "!";
+  return "✗";
+}

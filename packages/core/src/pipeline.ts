@@ -165,27 +165,6 @@ export class Pipeline {
     }
 
     const cache = new StageCache(job.jobId, { persist: !this.options.dryRun });
-    let memo: MemoCache | undefined;
-
-    const memoOrCompute = async <T>(
-      stage: MemoizedStage & StageKey,
-      fn: () => T | Promise<T>,
-    ): Promise<T> => {
-      const fromStage = cache.load<T>(stage);
-      if (fromStage !== undefined) return fromStage;
-      if (memo) {
-        const fromMemo = memo.load<T>(stage);
-        if (fromMemo !== undefined) {
-          this.logger.info({ stage, key: memo.key }, "memo cache hit");
-          cache.save(stage, fromMemo);
-          return fromMemo;
-        }
-      }
-      const value = await fn();
-      cache.save(stage, value);
-      memo?.save(stage, value);
-      return value;
-    };
 
     // ── Stage 1: Intent Extraction ──
     this.emit(1, "Parsing prompt", "Extracting genre, constraints, style...");
@@ -214,7 +193,7 @@ export class Pipeline {
 
     // Now that we know the resolved template, build the content-addressed memo cache.
     // Cheap/deterministic stages (1-brief, 2-template, 5-balance) are intentionally not memoized.
-    memo = new MemoCache(
+    const memo = new MemoCache(
       {
         prompt: this.options.prompt,
         templateId: templateResult.templateId,
@@ -228,6 +207,24 @@ export class Pipeline {
       },
       { persist: !this.options.dryRun },
     );
+
+    const memoOrCompute = async <T>(
+      stage: MemoizedStage & StageKey,
+      fn: () => T | Promise<T>,
+    ): Promise<T> => {
+      const fromStage = cache.load<T>(stage);
+      if (fromStage !== undefined) return fromStage;
+      const fromMemo = memo.load<T>(stage);
+      if (fromMemo !== undefined) {
+        this.logger.info({ stage, key: memo.key }, "memo cache hit");
+        cache.save(stage, fromMemo);
+        return fromMemo;
+      }
+      const value = await fn();
+      cache.save(stage, value);
+      memo.save(stage, value);
+      return value;
+    };
 
     // ── Stage 3: World Planning ──
     this.emit(3, "Planning world", "Generating zones, progression, pacing...");

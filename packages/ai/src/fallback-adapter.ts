@@ -65,6 +65,7 @@ export class FallbackAdapter implements LLMAdapter {
       throw new Error(
         `All LLM providers failed and local fallback (${LOCAL_FALLBACK_MODEL}) is unavailable: ${detail}. ` +
           `Install Ollama and run: ollama pull ${LOCAL_FALLBACK_MODEL}`,
+        { cause: err },
       );
     }
 
