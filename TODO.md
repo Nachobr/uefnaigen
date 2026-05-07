@@ -149,7 +149,7 @@
 - [x] Templates `list` + `inspect` commands wired to real registry
 - [x] Final README with install + quickstart + full command reference
 - [x] 117 tests passing across 10 packages
-- [ ] Tag `v0.1.0-mvp` (awaiting manual git tag)
+- [x] Tag `v0.1.0-mvp` — present at `2a98d4f`
 
 ---
 
@@ -298,10 +298,12 @@ Token cost legend (estimated ForgeAI token spend to design + implement + verify;
   - [x] Added root `pnpm check` = build + test + lint + eval smoke via Turbo `eval:smoke`
   - Verification: `pnpm check` ✓ (38/38 turbo tasks; smoke eval 40/40)
 
-- [ ] **P1.4 — Desktop: thin client over the same core pipeline** *(Cost: L)*
-  - `ProjectBrowser.tsx` uses `MOCK_PROJECTS`, `LayoutPreview.tsx` uses `MOCK_ZONES`, `PromptWizard.tsx` has no execution wiring
-  - Wire desktop UI → Electron IPC → same core pipeline/packager
-  - Milestones: launch generation, show stage progress, show cost + warnings, browse real projects, inspect manifests + Verse outputs
+- [x] **P1.4 — Desktop: thin client over the same core pipeline** *(Cost: L)* ✅
+  - [x] Added Electron preload + IPC handlers for `Pipeline`, generated project browsing, project details, and job listing
+  - [x] Replaced `MOCK_PROJECTS`/`MOCK_ZONES` with real `world.project.json`, layout, variant zones, manifest list, and Verse output inspection
+  - [x] Wired `PromptWizard` to launch generation through the same core pipeline/packager with provider/model/output/budget options
+  - [x] Desktop now shows stage progress plus post-run cost, warnings, job ID, and output path
+  - Verification: `pnpm --filter @forgeai/desktop build` ✓, `pnpm --filter @forgeai/desktop lint` ✓, `pnpm build && pnpm test` ✓
 
 ### P2 — Product focus & quick wins
 
@@ -309,6 +311,13 @@ Token cost legend (estimated ForgeAI token spend to design + implement + verify;
   - Strongest wedge is reliable UEFN-ready output, not more templates
   - Ship 2–3 polished reference projects, strong import docs/screenshots/video, one known-good tycoon scaffold end-to-end, better prefab/device mapping coverage for that vertical
   - Defer broader genre expansion and speculative marketplace features
+  - [x] Added `docs/TYCOON-REFERENCE-SCAFFOLDS.md` with 3 tycoon reference commands, import acceptance criteria, and explicit deferred non-tycoon scope
+  - [x] README/GUIDE now point contributors to the tycoon-first reference path before broadening genre work
+  - [x] Packager now adds a tycoon-specific import pass to generated `README-UEFN-IMPORT.md` (resource zones, progression zones, economy data, known-good checks)
+  - [x] Added packager test coverage for tycoon import guidance and recorded UEFN-only handoff steps in `docs/PATCHNOTES-REVIEW.md`
+  - Verification: `pnpm --filter @forgeai/packager test` ✓, `pnpm --filter @forgeai/packager build` ✓, `pnpm --filter @forgeai/packager lint` ✓, `pnpm build && pnpm test` ✓
+  - [ ] Generate the 3 reference scaffolds under `./references/` with budget caps and archive their eval/package reports
+  - [ ] Import at least `tycoon-lumber-starter` into UEFN and record manual fixes/screenshots/video
 
 - [x] **P2.2 — Quick wins** *(Cost: S total)* ✅
   - [x] Fill `resolved-template.json` with the real resolved template — done in P0.1

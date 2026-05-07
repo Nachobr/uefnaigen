@@ -26,3 +26,23 @@ Clear, grouped sensibly, and they avoid the common trap of listing files instead
 ## Net Assessment
 
 This is a high-quality reliability sweep — exactly the kind of work that earns the `v0.2.0-beta` tag. The main risk going forward is `pipeline.ts` becoming the place where every future feature lands; extract the stage-runner abstraction before it doubles again.
+
+---
+
+## Tycoon Reference Handoff
+
+Repo-side work now points ForgeAI toward importable tycoon scaffolds before additional genre expansion:
+
+- `docs/TYCOON-REFERENCE-SCAFFOLDS.md` defines the three reference scaffolds to generate and the UEFN acceptance criteria.
+- `README.md` and `docs/GUIDE.md` direct contributors to the tycoon-first reference path.
+- Generated tycoon `README-UEFN-IMPORT.md` files now include a focused import pass for resource zones, progression zones, economy data, and known-good loop checks.
+- `packages/packager/src/__tests__/scaffold-packager.test.ts` locks that tycoon import guidance into deterministic test coverage.
+
+Remaining UEFN-only validation:
+
+1. Generate the three references under `./references/` with budget caps.
+2. Import `tycoon-lumber-starter` into UEFN.
+3. Compile generated Verse in UEFN.
+4. Place and wire devices from `manifests/device_manifest.json` and `docs/DEVICE-WIRING.md`.
+5. Playtest spawn, first currency earn, first upgrade timing, zone unlock, HUD/tracker updates, save/rejoin, and prestige/rebirth behavior.
+6. Record screenshots/video and any manual fixes here before turning repeated fixes into code.

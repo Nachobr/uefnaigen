@@ -26,6 +26,7 @@ uefn-ai create "A colorful lumber tycoon for 8 players. Chop trees, sell logs, u
 ## Features
 
 - **Prompt → Scaffold** — Full UEFN project from a single sentence
+- **Tycoon-first reference path** — Lumber, mining, and compact tycoon scaffolds are the priority for importability hardening
 - **6 Genre Templates** — Tycoon (base, lumber-mill, mining-empire), Battle Arena, Adventure, Roleplay
 - **Verse Copilot** — Generate, fix, and explain Verse scripts
 - **Economy Balancer** — Deterministic simulator validates income/sink curves
@@ -88,6 +89,22 @@ output/
 ├── README-UEFN-IMPORT.md
 └── worldgen.config.yaml
 ```
+
+## Tycoon Reference Scaffolds
+
+For importability work, start with tycoon references before broadening genre surface area:
+
+```bash
+# Canonical lumber tycoon reference
+uefn-ai create "A colorful lumber tycoon for 8 players. Chop trees, sell logs, unlock sawmills, buy workers, and prestige every 20 minutes." \
+  --genre tycoon --template tycoon/lumber-mill --seed 101 --out ./references/tycoon-lumber-starter
+
+# Mining tycoon reference
+uefn-ai create "A mining empire tycoon for 8 players. Mine ore, smelt bars, upgrade pickaxes and drills, unlock deeper caves, hire miners, and prestige for gem multipliers." \
+  --genre tycoon --template tycoon/mining-empire --seed 202 --out ./references/tycoon-mining-starter
+```
+
+See [`docs/TYCOON-REFERENCE-SCAFFOLDS.md`](./docs/TYCOON-REFERENCE-SCAFFOLDS.md) for acceptance criteria and the deferred non-tycoon scope.
 
 ## Supported Providers
 

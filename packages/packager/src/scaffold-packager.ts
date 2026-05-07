@@ -161,9 +161,61 @@ See \`README-UEFN-IMPORT.md\` for setup instructions.
 1. Wire device channels as described in \`docs/DEVICE-WIRING.md\`
 2. Set editable properties on Verse devices to reference placed devices
 
+${this.genGenreImportNotes(project)}
+
 ## Step 5: Test
 1. Follow \`docs/QA-CHECKLIST.md\`
 2. Playtest the full session loop
+`;
+  }
+
+  private genGenreImportNotes(project: WorldProject): string {
+    if (project.target.genre !== "tycoon") return "";
+
+    const currencies = project.economy.currencies.map((currency) => `- ${currency.name} (\`${currency.currencyId}\`)`).join("\n");
+    const generators = project.economy.generators
+      .map((generator) => `- ${generator.name}: ${generator.baseRate}/${generator.rateUnit}${generator.zoneId ? ` in \`${generator.zoneId}\`` : ""}`)
+      .join("\n");
+    const sinks = project.economy.sinks
+      .map((sink) => `- ${sink.name}: ${sink.cost} ${sink.currencyId} (${sink.type})`)
+      .join("\n");
+    const resourceZones = project.layout.zones
+      .filter((zone) => zone.purpose === "resource_area")
+      .map((zone) => `- ${zone.name} (\`${zone.zoneId}\`)`)
+      .join("\n");
+    const upgradeZones = project.layout.zones
+      .filter((zone) => zone.purpose === "shop" || zone.purpose === "upgrade_lane" || zone.purpose === "unlock_gate")
+      .map((zone) => `- ${zone.name} (\`${zone.zoneId}\`, ${zone.purpose})`)
+      .join("\n");
+
+    return `## Tycoon Import Pass
+
+Use this pass before general QA so the core resource → sell → upgrade loop works in UEFN before visual polish.
+
+### 1. Place the playable loop first
+1. Place spawn and HUD devices in the starter area.
+2. Place resource generators/spawners in resource zones:
+${resourceZones || "- No dedicated resource zones found — use the starter area as the first resource loop."}
+3. Place shop, upgrade, and gate devices in progression zones:
+${upgradeZones || "- No shop or upgrade zones found — verify the layout manifest before import."}
+
+### 2. Verify economy data
+Currencies:
+${currencies || "- No currencies defined."}
+
+Income sources:
+${generators || "- No income sources defined."}
+
+Purchases/upgrades:
+${sinks || "- No purchases or upgrades defined."}
+
+### 3. Known-good tycoon acceptance checks
+- [ ] Player can earn the primary currency from the first resource zone without admin intervention.
+- [ ] First upgrade purchase is reachable in the target 45–90 second band.
+- [ ] A locked zone visibly blocks access before purchase and opens after purchase.
+- [ ] HUD/tracker reflects currency changes after resource collection and purchase.
+- [ ] Save/rejoin preserves currency and purchased upgrades.
+- [ ] Prestige/rebirth path is either functional or clearly disabled in the imported island.
 `;
   }
 

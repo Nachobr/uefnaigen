@@ -228,6 +228,22 @@ Runs structural, schema, cross-reference, and memory checks. Use `--json` for ma
 
 ---
 
+## 9.1 Tycoon Reference Scaffolds
+
+When improving importability, use the tycoon reference path before adding new genre surface area:
+
+```bash
+uefn-ai create "A colorful lumber tycoon for 8 players. Chop trees, sell logs, unlock sawmills, buy workers, and prestige every 20 minutes." \
+  --genre tycoon --template tycoon/lumber-mill --seed 101 --out ./references/tycoon-lumber-starter
+
+uefn-ai create "A mining empire tycoon for 8 players. Mine ore, smelt bars, upgrade pickaxes and drills, unlock deeper caves, hire miners, and prestige for gem multipliers." \
+  --genre tycoon --template tycoon/mining-empire --seed 202 --out ./references/tycoon-mining-starter
+```
+
+Import checklist and acceptance criteria live in [`docs/TYCOON-REFERENCE-SCAFFOLDS.md`](./TYCOON-REFERENCE-SCAFFOLDS.md).
+
+---
+
 ## 10. File Locations
 
 | Path | What it is |
