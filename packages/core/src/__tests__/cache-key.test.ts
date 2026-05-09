@@ -39,4 +39,16 @@ describe("computeCacheKey", () => {
     };
     expect(computeCacheKey({ ...base, prompt: "a" })).not.toBe(computeCacheKey({ ...base, prompt: "b" }));
   });
+
+  it("different modifier parent project hash produces different key", () => {
+    const base = {
+      prompt: "make first upgrade cheaper",
+      templateId: "modify",
+      model: "claude-sonnet-4-20250514",
+      seed: 1,
+    };
+    expect(computeCacheKey({ ...base, parentProjectHash: "parent-a" })).not.toBe(
+      computeCacheKey({ ...base, parentProjectHash: "parent-b" }),
+    );
+  });
 });

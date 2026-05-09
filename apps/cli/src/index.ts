@@ -8,6 +8,7 @@ import { prefabsCommand } from "./commands/prefabs.js";
 import { doctorCommand } from "./commands/doctor.js";
 import { resumeCommand } from "./commands/resume.js";
 import { initCommand } from "./commands/init.js";
+import { modifyCommand } from "./commands/modify.js";
 
 const program = new Command();
 
@@ -24,5 +25,6 @@ program.addCommand(prefabsCommand);
 program.addCommand(doctorCommand);
 program.addCommand(resumeCommand);
 program.addCommand(initCommand);
+program.addCommand(modifyCommand);
 
 program.parse();

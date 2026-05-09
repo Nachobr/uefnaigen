@@ -22,5 +22,6 @@ export { LootGenerator, type LootTable } from "./loot-generator.js";
 export { VerseGenerator } from "./verse-generator.js";
 export { VerseCopilot } from "./verse-copilot.js";
 export { VariantZoneGenerator } from "./variant-zone-generator.js";
+export { ModifierAgent, ModifierPatch, ModifierPatchOperation, type ModifierPatch as ModifierPatchType } from "./modifier-agent.js";
 export { parseJsonResponse } from "./parse-json.js";
 export { generateValidated, applyNormalizers, type RepairPolicy } from "./structured-output.js";

@@ -3,8 +3,6 @@ import { join } from "node:path";
 import { homedir } from "node:os";
 import { computeCacheKey, type CacheKeyInput } from "./cache-key.js";
 
-const MEMO_DIR = join(homedir(), ".forgeai", "memo-cache");
-
 /**
  * Current bundled-knowledge fingerprint. Bump this when seed knowledge entries
  * change in a way that should invalidate downstream stage memoization.
@@ -24,6 +22,7 @@ export const MEMOIZED_STAGES = [
   "7-modulePlan",
   "7-lootTables",
   "8-verseFiles",
+  "modify-patch",
 ] as const;
 
 export type MemoizedStage = (typeof MEMOIZED_STAGES)[number];
@@ -48,7 +47,7 @@ export class MemoCache {
   constructor(input: CacheKeyInput, options: MemoCacheOptions = {}) {
     this.persist = options.persist ?? true;
     this.key = computeCacheKey(input);
-    this.dir = join(MEMO_DIR, this.key);
+    this.dir = join(homedir(), ".forgeai", "memo-cache", this.key);
     if (this.persist) mkdirSync(this.dir, { recursive: true });
   }
 

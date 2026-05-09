@@ -21,6 +21,23 @@ describe("ScaffoldPackager", () => {
       rmSync(outputDir, { recursive: true, force: true });
     }
   });
+
+  it("writes file hashes to worldgen.lock.json for human-edit detection", async () => {
+    const outputDir = mkdtempSync(join(tmpdir(), "forgeai-packager-lock-"));
+    try {
+      await new ScaffoldPackager().package(tycoonInput(), outputDir);
+
+      const lock = JSON.parse(readFileSync(join(outputDir, "worldgen.lock.json"), "utf-8")) as {
+        fileHashes: Record<string, string>;
+      };
+
+      expect(lock.fileHashes["Verse/GameManager.verse"]).toMatch(/^[a-f0-9]{64}$/);
+      expect(lock.fileHashes["manifests/world.project.json"]).toMatch(/^[a-f0-9]{64}$/);
+      expect(lock.fileHashes["worldgen.lock.json"]).toBeUndefined();
+    } finally {
+      rmSync(outputDir, { recursive: true, force: true });
+    }
+  });
 });
 
 function tycoonInput(): PackagerInput {

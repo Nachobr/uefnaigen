@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { join, dirname, basename } from "node:path";
 import type { WorldProject, EconomySpec, DeviceInstance, TemplateDefinition, JobRecord } from "@forgeai/schemas";
 import type { SimulationResult } from "@forgeai/balance";
@@ -102,6 +103,7 @@ export class ScaffoldPackager {
         scripts: project.scripts.length,
         validators: project.validation.length,
       },
+      fileHashes: this.collectFileHashes(outputDir),
     });
 
     return outputDir;
@@ -475,6 +477,16 @@ ${zoneChecks.join("\n")}
       }
     }
     return files;
+  }
+
+  private collectFileHashes(outputDir: string): Record<string, string> {
+    const hashes: Record<string, string> = {};
+    for (const file of this.collectFiles(outputDir).sort()) {
+      const normalized = file.split(/[\\/]/).join("/");
+      if (normalized === "worldgen.lock.json") continue;
+      hashes[normalized] = createHash("sha256").update(readFileSync(join(outputDir, file))).digest("hex");
+    }
+    return hashes;
   }
 }
 

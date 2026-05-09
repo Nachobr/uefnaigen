@@ -16,6 +16,8 @@ export interface CacheKeyInput {
   genreOverride?: string;
   /** Optional template id override (CLI flag) — affects routing output. */
   templateOverride?: string;
+  /** Hash of an existing generated project when memoizing modification patches. */
+  parentProjectHash?: string;
 }
 
 export function computeCacheKey(input: CacheKeyInput): string {
@@ -30,6 +32,7 @@ export function computeCacheKey(input: CacheKeyInput): string {
     knowledgeVersion: input.knowledgeVersion ?? "",
     genreOverride: input.genreOverride ?? "",
     templateOverride: input.templateOverride ?? "",
+    parentProjectHash: input.parentProjectHash ?? "",
   });
   return createHash("sha256").update(payload).digest("hex").slice(0, 16);
 }

@@ -4,8 +4,6 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from 
 import { join } from "node:path";
 import { homedir } from "node:os";
 
-const JOBS_DIR = join(homedir(), ".forgeai", "jobs");
-
 export interface JobManagerOptions {
   persist?: boolean;
 }
@@ -13,11 +11,13 @@ export interface JobManagerOptions {
 export class JobManager {
   private jobs = new Map<string, JobRecord>();
   private persist: boolean;
+  private jobsDir: string;
 
   constructor(options: JobManagerOptions = {}) {
     this.persist = options.persist ?? true;
+    this.jobsDir = join(homedir(), ".forgeai", "jobs");
     if (this.persist) {
-      mkdirSync(JOBS_DIR, { recursive: true });
+      mkdirSync(this.jobsDir, { recursive: true });
     }
   }
 
@@ -56,9 +56,9 @@ export class JobManager {
   listAll(): JobRecord[] {
     if (!this.persist) return Array.from(this.jobs.values());
     try {
-      const files = readdirSync(JOBS_DIR).filter((f) => f.endsWith(".json"));
+      const files = readdirSync(this.jobsDir).filter((f) => f.endsWith(".json"));
       return files.map((f) => {
-        const raw = readFileSync(join(JOBS_DIR, f), "utf-8");
+        const raw = readFileSync(join(this.jobsDir, f), "utf-8");
         return JSON.parse(raw) as JobRecord;
       });
     } catch {
@@ -68,12 +68,12 @@ export class JobManager {
 
   private save(job: JobRecord): void {
     if (!this.persist) return;
-    writeFileSync(join(JOBS_DIR, `${job.jobId}.json`), JSON.stringify(job, null, 2), "utf-8");
+    writeFileSync(join(this.jobsDir, `${job.jobId}.json`), JSON.stringify(job, null, 2), "utf-8");
   }
 
   private load(jobId: string): JobRecord | undefined {
     if (!this.persist) return undefined;
-    const path = join(JOBS_DIR, `${jobId}.json`);
+    const path = join(this.jobsDir, `${jobId}.json`);
     if (!existsSync(path)) return undefined;
     try {
       const raw = readFileSync(path, "utf-8");
