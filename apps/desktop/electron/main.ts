@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain } from "electron";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Pipeline, JobManager } from "@forgeai/core";
+import { Pipeline, JobManager, Modifier, type ModifierResult } from "@forgeai/core";
 import { loadConfig, WorldProject, type CLIFlags, type WorldProject as WorldProjectType } from "@forgeai/schemas";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -14,6 +14,19 @@ interface GenerateProjectRequest {
   model?: string;
   outputDir?: string;
   budget?: number;
+  repair?: boolean;
+  strict?: boolean;
+}
+
+interface ModifyProjectRequest {
+  projectDir: string;
+  request: string;
+  provider?: string;
+  model?: string;
+  outputDir?: string;
+  budget?: number;
+  dryRun?: boolean;
+  force?: boolean;
   repair?: boolean;
   strict?: boolean;
 }
@@ -40,7 +53,25 @@ interface ProjectDetails extends ProjectSummary {
   manifests: Array<{ name: string; path: string }>;
 }
 
-function toCliFlags(request: GenerateProjectRequest): CLIFlags {
+interface AdapterRequest {
+  provider?: string;
+  model?: string;
+  outputDir?: string;
+  budget?: number;
+}
+
+function modifierResultSummary(result: ModifierResult): Record<string, unknown> {
+  return {
+    patch: result.patch,
+    validation: result.validation,
+    costUsd: result.costUsd,
+    changedFiles: result.changedFiles,
+    jobId: result.jobId,
+    outputPath: result.outputPath,
+  };
+}
+
+function toCliFlags(request: AdapterRequest): CLIFlags {
   return {
     provider: request.provider,
     model: request.model,
@@ -177,6 +208,25 @@ function registerIpcHandlers() {
       outputPath: result.outputPath,
       costUsd: pipeline.totalSpentUsd,
       warnings: result.validation.reduce((count, validation) => count + validation.warnings.length, 0),
+    };
+  });
+  ipcMain.handle("forgeai:modify-project", async (_event, request: ModifyProjectRequest) => {
+    const config = loadConfig(toCliFlags(request));
+    const modifier = new Modifier({
+      projectDir: request.projectDir,
+      request: request.request,
+      config,
+      outputDir: request.outputDir?.trim() || undefined,
+      dryRun: request.dryRun,
+      force: request.force,
+      repair: request.repair,
+      strict: request.strict,
+    });
+
+    const result = await modifier.run();
+    return {
+      ...modifierResultSummary(result),
+      project: request.dryRun ? undefined : getProjectDetails(result.outputPath),
     };
   });
   ipcMain.handle("forgeai:list-jobs", () => new JobManager().listAll().sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)));

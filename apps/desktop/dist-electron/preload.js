@@ -3,6 +3,7 @@ contextBridge.exposeInMainWorld("forgeai", {
     listProjects: (outputDir) => ipcRenderer.invoke("forgeai:list-projects", outputDir),
     readProject: (projectPath) => ipcRenderer.invoke("forgeai:read-project", projectPath),
     generateProject: (request) => ipcRenderer.invoke("forgeai:generate-project", request),
+    modifyProject: (request) => ipcRenderer.invoke("forgeai:modify-project", request),
     listJobs: () => ipcRenderer.invoke("forgeai:list-jobs"),
     onGenerationProgress: (callback) => {
         const listener = (_event, progress) => callback(progress);

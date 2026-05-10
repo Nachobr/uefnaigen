@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import { ProjectBrowser } from "./components/ProjectBrowser.js";
 import { PromptWizard } from "./components/PromptWizard.js";
 import { LayoutPreview } from "./components/LayoutPreview.js";
+import { ProjectEditor } from "./components/ProjectEditor.js";
 import type { WorldProject } from "@forgeai/schemas";
 
-type View = "browser" | "create" | "preview";
+type View = "browser" | "create" | "preview" | "edit";
 
 export interface ProjectSummary {
   id: string;
@@ -53,12 +54,36 @@ interface GenerateProjectResponse {
   warnings: number;
 }
 
+export interface ModifyProjectRequest {
+  projectDir: string;
+  request: string;
+  provider?: string;
+  model?: string;
+  outputDir?: string;
+  budget?: number;
+  dryRun?: boolean;
+  force?: boolean;
+  repair?: boolean;
+  strict?: boolean;
+}
+
+export interface ModifyProjectResponse {
+  patch: { summary: string; operations: unknown[] };
+  validation: Array<{ validator: string; passed: boolean; errors: string[]; warnings: string[] }>;
+  costUsd: number;
+  changedFiles: string[];
+  jobId: string;
+  outputPath: string;
+  project?: ProjectDetails;
+}
+
 declare global {
   interface Window {
     forgeai: {
       listProjects: (outputDir?: string) => Promise<ProjectSummary[]>;
       readProject: (projectPath: string) => Promise<ProjectDetails>;
       generateProject: (request: GenerateProjectRequest) => Promise<GenerateProjectResponse>;
+      modifyProject: (request: ModifyProjectRequest) => Promise<ModifyProjectResponse>;
       listJobs: () => Promise<unknown[]>;
       onGenerationProgress: (callback: (progress: GenerationProgress) => void) => () => void;
     };
@@ -70,6 +95,7 @@ export function App() {
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [selectedProject, setSelectedProject] = useState<ProjectDetails | null>(null);
   const [generationSummary, setGenerationSummary] = useState<GenerateProjectResponse | null>(null);
+  const [modificationSummary, setModificationSummary] = useState<ModifyProjectResponse | null>(null);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -99,8 +125,19 @@ export function App() {
   function handleGenerated(result: GenerateProjectResponse) {
     setSelectedProject(result.project);
     setGenerationSummary(result);
+    setModificationSummary(null);
     setProjects((current) => [result.project, ...current.filter((p) => p.path !== result.project.path)]);
     setView("preview");
+  }
+
+  function handleModified(result: ModifyProjectResponse) {
+    setModificationSummary(result);
+    setGenerationSummary(null);
+    if (result.project) {
+      setSelectedProject(result.project);
+      setProjects((current) => [result.project!, ...current.filter((p) => p.path !== result.project!.path)]);
+      setView("preview");
+    }
   }
 
   useEffect(() => {
@@ -121,7 +158,7 @@ export function App() {
           ⚡ ForgeAI
         </h1>
         <nav style={{ display: "flex", gap: "8px" }}>
-          {(["browser", "create", "preview"] as const).map((v) => (
+          {(["browser", "create", "preview", "edit"] as const).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
@@ -136,7 +173,7 @@ export function App() {
                 fontWeight: 500,
               }}
             >
-              {v === "browser" ? "Projects" : v === "create" ? "Create" : "Preview"}
+              {v === "browser" ? "Projects" : v === "create" ? "Create" : v === "preview" ? "Preview" : "Edit"}
             </button>
           ))}
         </nav>
@@ -153,6 +190,11 @@ export function App() {
             Generated {generationSummary.project.name} · Job {generationSummary.jobId} · Cost ${generationSummary.costUsd.toFixed(4)} · {generationSummary.warnings} validation warnings · {generationSummary.outputPath}
           </div>
         )}
+        {modificationSummary && (
+          <div style={{ padding: "10px 12px", background: "#101c14", border: "1px solid #166534", borderRadius: "8px", color: "#bbf7d0", marginBottom: "16px", fontSize: "13px" }}>
+            {modificationSummary.project ? "Modified" : "Planned modification for"} {selectedProject?.name ?? "project"} · Job {modificationSummary.jobId} · Cost ${modificationSummary.costUsd.toFixed(4)} · {modificationSummary.changedFiles.length} changed files · {modificationSummary.outputPath}
+          </div>
+        )}
         {view === "browser" && (
           <ProjectBrowser
             projects={projects}
@@ -164,6 +206,7 @@ export function App() {
         )}
         {view === "create" && <PromptWizard onGenerated={handleGenerated} />}
         {view === "preview" && <LayoutPreview project={selectedProject} />}
+        {view === "edit" && <ProjectEditor project={selectedProject} onModified={handleModified} />}
       </main>
     </div>
   );

@@ -329,7 +329,7 @@ Token cost legend (estimated ForgeAI token spend to design + implement + verify;
   - [x] Use `worldDesign.mapName` for project naming — `assembleProject()` accepts optional `mapName` and prefers it over the truncated `brief.fantasy` fallback; pipeline passes it on both initial and post-repair assemble calls
   - 23/23 turbo tasks pass; smoke eval `40/40 (100%)`
 
-- [ ] **P2.3 — AI-assisted modification of generated tycoon projects** *(Cost: M–L)*
+- [x] **P2.3 — AI-assisted modification of generated tycoon projects** *(Cost: M–L)* ✅
   - Goal: let a creator point ForgeAI at an existing generated scaffold and ask for changes like “add a snowy premium forest zone”, “make the first upgrade cheaper”, or “add another worker automation tier” without regenerating from scratch
   - [x] Read current artifacts from `manifests/world.project.json`, split manifests, `Verse/`, `templates/resolved-template.json`, `worldgen.lock.json`, and `.ai/planner/module-plan.json` via reusable `loadProject()`
   - [x] Design a constrained patch format over canonical `WorldProject` (`add`/`replace`/`remove` paths plus `regenerate_verse_module`) so the LLM cannot freely rewrite the whole project
@@ -338,11 +338,12 @@ Token cost legend (estimated ForgeAI token spend to design + implement + verify;
   - [x] Human-edit guard: `worldgen.lock.json` now carries per-file hashes and modify blocks changed files without `--force`
   - [x] Verse changes are module-scoped: `regenerate_verse_module` reuses `.ai/planner/module-plan.json`, `VerseGenerator`, `VerseEmitter`, and linting; no textual Verse diffs in the patch schema
   - [x] Memo-cache integration: modifier patch proposals reuse `~/.forgeai/memo-cache` keyed by parent project hash + request + provider/model/seed
-  - Desktop later: add an “Edit this project” flow over the same core modifier API
-  - Tests: mock-LLM modifier test, patch application tests, validation failure tests, override-protection tests, Verse regeneration tests, memo-cache tests, and summary output tests
+  - [x] Desktop later: add an “Edit this project” flow over the same core modifier API (deferred; CLI/core flow is complete)
+  - [x] Tests: mock-LLM modifier test, patch application tests, validation failure tests, override-protection tests, Verse regeneration tests, memo-cache tests, and summary output tests
   - [x] Lineage: non-dry-run modify writes `.ai/modifications/<jobId>.json` and a `~/.forgeai/jobs/<jobId>.json` entry with parent project hash, patch, changed files, validation, repair, and cost
   - [x] Validation-failure repair coverage: modify tests now cover a bad patch that trips validators and is fixed by the repair loop
-  - [ ] Remaining: full packager-level repackage instead of the current focused manifest/docs/Verse write path; desktop “Edit this project” flow later
+  - [x] Full packager-level repackage: non-dry-run modify now routes through `ScaffoldPackager`, refreshes standard docs/manifests/config/lock, preserves untouched Verse bytes, writes regenerated modules only, and includes modification summary/records in packaged output
+  - Verification: `pnpm build && pnpm test` ✓ (24/24 turbo tasks)
 
 ### Recommended execution order
 1. P0.1 (canonical project assembly in core) — unblocks P1.2, P1.3, P1.4

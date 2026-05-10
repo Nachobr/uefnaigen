@@ -15,11 +15,15 @@ export interface PackagerInput {
   resolvedTemplate?: TemplateDefinition;
   templateId?: string;
   job?: JobRecord;
+  modification?: {
+    summaryMarkdown: string;
+    records?: Array<{ id: string; data: unknown }>;
+  };
 }
 
 export class ScaffoldPackager {
   async package(input: PackagerInput, outputDir: string): Promise<string> {
-    const { project, worldDesign, modulePlan, lootTables, balanceReport, verseFiles, resolvedTemplate, templateId, job } = input;
+    const { project, worldDesign, modulePlan, lootTables, balanceReport, verseFiles, resolvedTemplate, templateId, job, modification } = input;
 
     const dirs = [
       "",
@@ -28,6 +32,7 @@ export class ScaffoldPackager {
       "docs",
       ".ai/planner",
       ".ai/validation",
+      ".ai/modifications",
       "templates",
       "exports",
     ];
@@ -84,6 +89,12 @@ export class ScaffoldPackager {
     writeFileSync(join(outputDir, "docs/QA-CHECKLIST.md"), this.genQAChecklist(project), "utf-8");
     writeFileSync(join(outputDir, "docs/BALANCE-REPORT.md"), this.genBalanceReport(project.economy, balanceReport), "utf-8");
     writeFileSync(join(outputDir, "docs/HANDOFF-CHECKLIST.md"), this.genHandoffChecklist(project), "utf-8");
+    if (modification) {
+      writeFileSync(join(outputDir, "docs/MODIFICATION-SUMMARY.md"), modification.summaryMarkdown, "utf-8");
+      for (const record of modification.records ?? []) {
+        this.writeJson(outputDir, `.ai/modifications/${this.safeFileName(record.id)}.json`, record.data);
+      }
+    }
 
     // Config
     writeFileSync(join(outputDir, "worldgen.config.yaml"), `specVersion: "wg/1.0"\nprojectId: ${project.projectId}\nname: ${project.name}\nseed: ${project.source.seed}\ngenre: ${project.target.genre}\n`, "utf-8");

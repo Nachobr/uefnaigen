@@ -1,7 +1,7 @@
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, readFileSync, rmSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
-import type { ForgeAIConfig, WorldProject } from "@forgeai/schemas";
+import type { ForgeAIConfig, JobRecord, TemplateDefinition, WorldProject } from "@forgeai/schemas";
 import {
   BudgetAdapter,
   ModifierAgent,
@@ -9,8 +9,12 @@ import {
   VerseGenerator,
   createAdapterWithFallback,
   type LLMAdapter,
+  type LootTable,
   type ModulePlan,
+  type WorldDesign,
 } from "@forgeai/ai";
+import { ArenaSimulator, TycoonSimulator, type SimulationResult } from "@forgeai/balance";
+import { ScaffoldPackager } from "@forgeai/packager";
 import { VerseEmitter, lintVerseCode } from "@forgeai/verse";
 import { runAllValidators, RepairLoop, type ValidationResult, type RepairResult } from "@forgeai/validators";
 import type { Logger } from "pino";
@@ -165,7 +169,7 @@ export class Modifier {
         changedFiles: finalChangedFiles,
         costUsd: this.totalSpentUsd,
       });
-      writeModifiedProject({
+      await writeModifiedProject({
         sourceDir: this.options.projectDir,
         outputDir: outputPath,
         project,
@@ -173,7 +177,17 @@ export class Modifier {
         request: this.options.request,
         validation,
         regeneratedVerseFiles,
+        existingVerseFiles: loaded.verseFiles,
         modificationRecord,
+        resolvedTemplate: loaded.resolvedTemplate,
+        job: {
+          ...job,
+          status: "complete",
+          currentStage: 8,
+          updatedAt: modificationRecord.createdAt,
+          completedAt: modificationRecord.createdAt,
+          stageResults: { modify: modificationRecord },
+        },
       });
       job.stageResults = { modify: modificationRecord };
       jobManager.transition(job.jobId, "complete", 8);
@@ -213,45 +227,39 @@ interface WriteModifiedProjectInput {
   patch: ProjectPatchType;
   request: string;
   validation: ValidationResult[];
+  existingVerseFiles: Map<string, string>;
   regeneratedVerseFiles: Map<string, string>;
   modificationRecord: ModificationRecord;
+  resolvedTemplate?: TemplateDefinition;
+  job: JobRecord;
 }
 
-function writeModifiedProject(input: WriteModifiedProjectInput): void {
+async function writeModifiedProject(input: WriteModifiedProjectInput): Promise<void> {
   if (input.outputDir !== input.sourceDir) {
     rmSync(input.outputDir, { recursive: true, force: true });
     cpSync(input.sourceDir, input.outputDir, { recursive: true });
   }
 
-  mkdirSync(join(input.outputDir, "manifests"), { recursive: true });
-  mkdirSync(join(input.outputDir, "docs"), { recursive: true });
-  mkdirSync(join(input.outputDir, ".ai", "validation"), { recursive: true });
-
-  writeJson(input.outputDir, "manifests/world.project.json", input.project);
-  writeJson(input.outputDir, "manifests/layout.grid.json", input.project.layout);
-  writeJson(input.outputDir, "manifests/economy.json", input.project.economy);
-  writeJson(input.outputDir, "manifests/device_manifest.json", input.project.devices);
-  writeJson(input.outputDir, "manifests/prefab_manifest.json", input.project.prefabs);
-  writeJson(input.outputDir, "manifests/variant_zones.json", input.project.variantZones ?? []);
-  writeJson(input.outputDir, ".ai/validation/summary.json", input.project.validation);
+  const verseFiles = new Map(input.existingVerseFiles);
   for (const [filename, code] of input.regeneratedVerseFiles) {
-    writeFileSync(join(input.outputDir, "Verse", filename), code, "utf-8");
+    verseFiles.set(filename, code);
   }
-  mkdirSync(join(input.outputDir, ".ai", "modifications"), { recursive: true });
-  writeJson(input.outputDir, `.ai/modifications/${input.modificationRecord.jobId}.json`, input.modificationRecord);
-  writeFileSync(join(input.outputDir, "docs", "MODIFICATION-SUMMARY.md"), modificationSummary(input), "utf-8");
-  writeJson(input.outputDir, "worldgen.lock.json", {
-    specVersion: input.project.specVersion,
-    projectId: input.project.projectId,
-    projectName: input.project.name,
-    seed: input.project.source.seed,
-    genre: input.project.target.genre,
-    fileHashes: collectFileHashes(input.outputDir),
-  });
-}
 
-function writeJson(base: string, path: string, data: unknown): void {
-  writeFileSync(join(base, path), JSON.stringify(data, null, 2), "utf-8");
+  await new ScaffoldPackager().package({
+    project: input.project,
+    worldDesign: loadWorldDesign(input.sourceDir, input.project),
+    modulePlan: loadModulePlan(input.sourceDir),
+    lootTables: loadLootTables(input.sourceDir),
+    balanceReport: simulateBalance(input.project),
+    verseFiles,
+    resolvedTemplate: input.resolvedTemplate,
+    templateId: input.resolvedTemplate?.templateId,
+    job: input.job,
+    modification: {
+      summaryMarkdown: modificationSummary(input),
+      records: [{ id: input.modificationRecord.jobId, data: input.modificationRecord }],
+    },
+  }, input.outputDir);
 }
 
 function modificationSummary(input: WriteModifiedProjectInput): string {
@@ -270,26 +278,52 @@ ${input.validation.map((v) => `- ${v.validator}: ${v.passed ? "passed" : "failed
 `;
 }
 
-function collectFileHashes(outputDir: string): Record<string, string> {
-  const hashes: Record<string, string> = {};
-  for (const file of collectFiles(outputDir).sort()) {
-    const normalized = file.split(/[\\/]/).join("/");
-    if (normalized === "worldgen.lock.json") continue;
-    hashes[normalized] = createHash("sha256").update(readFileSync(join(outputDir, file))).digest("hex");
-  }
-  return hashes;
+function readJsonIfExists<T>(path: string): T | undefined {
+  if (!existsSync(path)) return undefined;
+  return JSON.parse(readFileSync(path, "utf-8")) as T;
 }
 
-function collectFiles(dir: string, prefix = ""): string[] {
-  if (!existsSync(dir)) return [];
-  const files: string[] = [];
-  for (const entry of readdirSync(join(dir, prefix), { withFileTypes: true })) {
-    const rel = prefix ? join(prefix, entry.name) : entry.name;
-    const fullPath = join(dir, rel);
-    if (entry.isDirectory()) files.push(...collectFiles(dir, rel));
-    else if (statSync(fullPath).isFile()) files.push(rel);
+function loadWorldDesign(projectDir: string, project: WorldProject): WorldDesign {
+  const fromDisk = readJsonIfExists<unknown>(join(projectDir, ".ai", "planner", "world-design.json"));
+  if (fromDisk) return fromDisk as WorldDesign;
+  return {
+    mapName: project.name,
+    theme: project.design.fantasy,
+    zones: project.layout.zones.map((zone, index) => ({
+      zoneId: zone.zoneId,
+      name: zone.name,
+      purpose: zone.purpose,
+      description: `${zone.name} (${zone.purpose})`,
+      tier: index + 1,
+      unlockRequirement: zone.progressionGate ? "See layout progressionGate" : undefined,
+    })),
+    progressionBeats: project.layout.zones.map((zone) => `Reach ${zone.name}`),
+    coreLoop: project.design.coreLoop,
+    sessionPacing: {
+      earlyGame: "Use current project pacing from generated scaffold.",
+      midGame: "Use current project pacing from generated scaffold.",
+      lateGame: "Use current project pacing from generated scaffold.",
+    },
+  };
+}
+
+function loadLootTables(projectDir: string): LootTable[] {
+  return (readJsonIfExists<unknown>(join(projectDir, "manifests", "loot_tables.json")) ?? []) as LootTable[];
+}
+
+function simulateBalance(project: WorldProject): SimulationResult {
+  if (project.target.genre === "battle_arena") {
+    const result = new ArenaSimulator().simulate(project.economy, 8);
+    return {
+      timeToFirstUpgradeSec: 0,
+      timeToAutomationMin: null,
+      timeToPrestigeMin: null,
+      incomePerMinute: 0,
+      violations: result.violations,
+      adjustments: [],
+    };
   }
-  return files;
+  return new TycoonSimulator().simulate(project.economy, project.design.sessionLengthMin);
 }
 
 function buildModificationRecord(input: Omit<ModificationRecord, "createdAt">): ModificationRecord {
