@@ -1,0 +1,13 @@
+{
+  "progressionBeats": [
+    "Earn first wood from Log Yard.",
+    "Buy Sharper Axe near the one-minute mark.",
+    "Unlock Hire Mill Workers and open Prestige Ridge.",
+    "Reach Prestige Mill by the target session end."
+  ],
+  "sessionPacing": {
+    "earlyGame": "Spawn in Starter Grove, learn income, and buy the first upgrade within 45–90 seconds.",
+    "midGame": "Route through Sawmill Shop to add automation and unlock the gated area.",
+    "lateGame": "Use Prestige Ridge for prestige/rebirth setup and creator handoff checks."
+  }
+}

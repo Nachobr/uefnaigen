@@ -1,0 +1,16 @@
+[
+  {
+    "tableId": "loot_resource_zone",
+    "name": "Iron Vein Drops",
+    "zoneId": "zone_ore_vein",
+    "entries": [
+      {
+        "itemId": "ore",
+        "name": "Ore",
+        "weight": 100,
+        "rarity": "common",
+        "effect": "+10 Ore"
+      }
+    ]
+  }
+]

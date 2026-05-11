@@ -1,0 +1,110 @@
+{
+  "worldType": "grid2d",
+  "bounds": {
+    "width": 3200,
+    "depth": 2400,
+    "height": 800
+  },
+  "zones": [
+    {
+      "zoneId": "zone_start",
+      "name": "Starter Grove",
+      "purpose": "starter_area",
+      "footprint": {
+        "x": 0,
+        "y": 0,
+        "w": 1200,
+        "h": 1000
+      },
+      "elevation": 0
+    },
+    {
+      "zoneId": "zone_log_yard",
+      "name": "Log Yard",
+      "purpose": "resource_area",
+      "footprint": {
+        "x": 1300,
+        "y": 0,
+        "w": 1400,
+        "h": 1000
+      },
+      "elevation": 0
+    },
+    {
+      "zoneId": "zone_sawmill",
+      "name": "Sawmill Shop",
+      "purpose": "shop",
+      "footprint": {
+        "x": 0,
+        "y": 1100,
+        "w": 1400,
+        "h": 900
+      },
+      "elevation": 0,
+      "progressionGate": {}
+    },
+    {
+      "zoneId": "zone_prestige",
+      "name": "Prestige Ridge",
+      "purpose": "unlock_gate",
+      "footprint": {
+        "x": 1500,
+        "y": 1100,
+        "w": 1200,
+        "h": 900
+      },
+      "elevation": 0,
+      "progressionGate": {}
+    },
+    {
+      "zoneId": "zone_upgrade_lane",
+      "name": "Upgrade Lane",
+      "purpose": "upgrade_lane",
+      "footprint": {
+        "x": 2800,
+        "y": 0,
+        "w": 900,
+        "h": 800
+      },
+      "elevation": 0,
+      "progressionGate": {}
+    },
+    {
+      "zoneId": "zone_worker_yard",
+      "name": "Automation Yard",
+      "purpose": "resource_area",
+      "footprint": {
+        "x": 2800,
+        "y": 900,
+        "w": 900,
+        "h": 800
+      },
+      "elevation": 0,
+      "progressionGate": {}
+    },
+    {
+      "zoneId": "zone_rebirth",
+      "name": "Rebirth Platform",
+      "purpose": "unlock_gate",
+      "footprint": {
+        "x": 0,
+        "y": 1900,
+        "w": 900,
+        "h": 700
+      },
+      "elevation": 0,
+      "progressionGate": {}
+    }
+  ],
+  "spawnPoints": [
+    {
+      "id": "spawn_1",
+      "location": {
+        "x": 120,
+        "y": 120,
+        "z": 0
+      },
+      "zoneId": "zone_start"
+    }
+  ]
+}

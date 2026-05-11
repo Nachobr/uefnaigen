@@ -1,0 +1,12 @@
+{
+  "jobId": "2b5b54e3-daa9-4575-99fc-8735a9fef32a",
+  "projectId": "2427bb71-ebc0-4b7c-9f3d-956aeeb7b9db",
+  "status": "complete",
+  "currentStage": 8,
+  "startedAt": "2026-05-11T12:32:32.453Z",
+  "updatedAt": "2026-05-11T12:32:32.459Z",
+  "seed": 303,
+  "prompt": "A compact solo-friendly starter tycoon. Collect coins, buy two upgrades, unlock one new zone, save progress, and rebirth after a short 12 minute session.",
+  "templateId": "tycoon/base",
+  "completedAt": "2026-05-11T12:32:32.459Z"
+}

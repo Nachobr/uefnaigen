@@ -1,0 +1,12 @@
+{
+  "jobId": "0bc9e7c9-6594-438e-b529-f3c14d7b2e43",
+  "projectId": "0bf6dac9-1ec5-4ff3-910a-3e74dc44ef8d",
+  "status": "complete",
+  "currentStage": 8,
+  "startedAt": "2026-05-11T12:32:32.434Z",
+  "updatedAt": "2026-05-11T12:32:32.442Z",
+  "seed": 202,
+  "prompt": "A mining empire tycoon for 8 players. Mine ore, smelt bars, upgrade pickaxes and drills, unlock deeper caves, hire miners, and prestige for gem multipliers.",
+  "templateId": "tycoon/mining-empire",
+  "completedAt": "2026-05-11T12:32:32.442Z"
+}

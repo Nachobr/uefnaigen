@@ -1,0 +1,16 @@
+[
+  {
+    "tableId": "loot_resource_zone",
+    "name": "Log Yard Drops",
+    "zoneId": "zone_log_yard",
+    "entries": [
+      {
+        "itemId": "wood",
+        "name": "Wood",
+        "weight": 100,
+        "rarity": "common",
+        "effect": "+10 Wood"
+      }
+    ]
+  }
+]

@@ -1,0 +1,58 @@
+{
+  "currencies": [
+    {
+      "currencyId": "wood",
+      "name": "Wood",
+      "persistent": true
+    }
+  ],
+  "generators": [
+    {
+      "sourceId": "gen_primary",
+      "name": "Tree Chopping",
+      "currencyId": "wood",
+      "baseRate": 10,
+      "rateUnit": "per_action",
+      "zoneId": "zone_log_yard"
+    },
+    {
+      "sourceId": "gen_worker",
+      "name": "Hire Mill Workers",
+      "currencyId": "wood",
+      "baseRate": 20,
+      "rateUnit": "per_second",
+      "zoneId": "zone_sawmill"
+    }
+  ],
+  "sinks": [
+    {
+      "sinkId": "sink_upgrade_1",
+      "name": "Sharper Axe",
+      "currencyId": "wood",
+      "cost": 600,
+      "type": "upgrade",
+      "repeatable": false
+    },
+    {
+      "sinkId": "sink_automation",
+      "name": "Hire Mill Workers",
+      "currencyId": "wood",
+      "cost": 1200,
+      "type": "unlock",
+      "repeatable": false
+    },
+    {
+      "sinkId": "sink_prestige",
+      "name": "Prestige Mill",
+      "currencyId": "wood",
+      "cost": 4000,
+      "type": "prestige",
+      "repeatable": false
+    }
+  ],
+  "targetCurves": {
+    "timeToFirstUpgradeSec": 60,
+    "timeToAutomationMin": 6,
+    "timeToPrestigeMin": 20
+  }
+}

@@ -1,0 +1,1192 @@
+{
+  "specVersion": "wg/1.0",
+  "projectId": "0bf6dac9-1ec5-4ff3-910a-3e74dc44ef8d",
+  "name": "Mining Empire Starter",
+  "slug": "0bc9e7c9-6594-438e-b529-f3c14d7b2e43",
+  "createdAt": "2026-05-11T12:32:32.434Z",
+  "updatedAt": "2026-05-11T12:32:32.440Z",
+  "source": {
+    "mode": "map-studio",
+    "prompt": "A mining empire tycoon for 8 players. Mine ore, smelt bars, upgrade pickaxes and drills, unlock deeper caves, hire miners, and prestige for gem multipliers.",
+    "seed": 202
+  },
+  "target": {
+    "genre": "tycoon",
+    "uefnVersion": "32.00",
+    "outputMode": "scaffold"
+  },
+  "design": {
+    "fantasy": "Grow a mining company from hand-mined ore to automated drill operations.",
+    "coreLoop": [
+      "mine ore",
+      "smelt bars",
+      "upgrade tools",
+      "unlock caves",
+      "prestige for gems"
+    ],
+    "sessionLengthMin": 20,
+    "progressionStyle": "linear"
+  },
+  "layout": {
+    "worldType": "grid2d",
+    "bounds": {
+      "width": 3200,
+      "depth": 2400,
+      "height": 800
+    },
+    "zones": [
+      {
+        "zoneId": "zone_start",
+        "name": "Surface Claim",
+        "purpose": "starter_area",
+        "footprint": {
+          "x": 0,
+          "y": 0,
+          "w": 1100,
+          "h": 1000
+        },
+        "elevation": 0
+      },
+      {
+        "zoneId": "zone_ore_vein",
+        "name": "Iron Vein",
+        "purpose": "resource_area",
+        "footprint": {
+          "x": 1200,
+          "y": 0,
+          "w": 1400,
+          "h": 1000
+        },
+        "elevation": 0
+      },
+      {
+        "zoneId": "zone_furnace",
+        "name": "Furnace Row",
+        "purpose": "shop",
+        "footprint": {
+          "x": 0,
+          "y": 1100,
+          "w": 1400,
+          "h": 900
+        },
+        "elevation": 0,
+        "progressionGate": {}
+      },
+      {
+        "zoneId": "zone_deep_cave",
+        "name": "Deep Gem Cave",
+        "purpose": "unlock_gate",
+        "footprint": {
+          "x": 1500,
+          "y": 1100,
+          "w": 1200,
+          "h": 900
+        },
+        "elevation": 0,
+        "progressionGate": {}
+      },
+      {
+        "zoneId": "zone_upgrade_lane",
+        "name": "Upgrade Lane",
+        "purpose": "upgrade_lane",
+        "footprint": {
+          "x": 2800,
+          "y": 0,
+          "w": 900,
+          "h": 800
+        },
+        "elevation": 0,
+        "progressionGate": {}
+      },
+      {
+        "zoneId": "zone_worker_yard",
+        "name": "Automation Yard",
+        "purpose": "resource_area",
+        "footprint": {
+          "x": 2800,
+          "y": 900,
+          "w": 900,
+          "h": 800
+        },
+        "elevation": 0,
+        "progressionGate": {}
+      },
+      {
+        "zoneId": "zone_rebirth",
+        "name": "Rebirth Platform",
+        "purpose": "unlock_gate",
+        "footprint": {
+          "x": 0,
+          "y": 1900,
+          "w": 900,
+          "h": 700
+        },
+        "elevation": 0,
+        "progressionGate": {}
+      }
+    ],
+    "spawnPoints": [
+      {
+        "id": "spawn_1",
+        "location": {
+          "x": 120,
+          "y": 120,
+          "z": 0
+        },
+        "zoneId": "zone_start"
+      }
+    ]
+  },
+  "economy": {
+    "currencies": [
+      {
+        "currencyId": "ore",
+        "name": "Ore",
+        "persistent": true
+      }
+    ],
+    "generators": [
+      {
+        "sourceId": "gen_primary",
+        "name": "Ore Mining",
+        "currencyId": "ore",
+        "baseRate": 10,
+        "rateUnit": "per_action",
+        "zoneId": "zone_ore_vein"
+      },
+      {
+        "sourceId": "gen_worker",
+        "name": "Hire Miners",
+        "currencyId": "ore",
+        "baseRate": 20,
+        "rateUnit": "per_second",
+        "zoneId": "zone_furnace"
+      }
+    ],
+    "sinks": [
+      {
+        "sinkId": "sink_upgrade_1",
+        "name": "Pickaxe Upgrade",
+        "currencyId": "ore",
+        "cost": 600,
+        "type": "upgrade",
+        "repeatable": false
+      },
+      {
+        "sinkId": "sink_automation",
+        "name": "Hire Miners",
+        "currencyId": "ore",
+        "cost": 1200,
+        "type": "unlock",
+        "repeatable": false
+      },
+      {
+        "sinkId": "sink_prestige",
+        "name": "Gem Prestige",
+        "currencyId": "ore",
+        "cost": 4000,
+        "type": "prestige",
+        "repeatable": false
+      }
+    ],
+    "targetCurves": {
+      "timeToFirstUpgradeSec": 60,
+      "timeToAutomationMin": 6,
+      "timeToPrestigeMin": 20
+    }
+  },
+  "devices": [
+    {
+      "id": "dev_resource_trigger",
+      "type": "trigger",
+      "label": "Ore Mining Trigger",
+      "transform": {
+        "location": {
+          "x": 300,
+          "y": 200,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Ore Mining Trigger"
+      },
+      "zoneId": "zone_ore_vein"
+    },
+    {
+      "id": "dev_sell_button",
+      "type": "button",
+      "label": "Sell Button",
+      "transform": {
+        "location": {
+          "x": 200,
+          "y": 200,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Sell Button"
+      },
+      "zoneId": "zone_start"
+    },
+    {
+      "id": "dev_upgrade_button",
+      "type": "button",
+      "label": "Pickaxe Upgrade Button",
+      "transform": {
+        "location": {
+          "x": 250,
+          "y": 250,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Pickaxe Upgrade Button"
+      },
+      "zoneId": "zone_furnace"
+    },
+    {
+      "id": "dev_gate_barrier",
+      "type": "barrier",
+      "label": "Deep Gem Cave Gate",
+      "transform": {
+        "location": {
+          "x": 80,
+          "y": 120,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Deep Gem Cave Gate"
+      },
+      "zoneId": "zone_deep_cave"
+    },
+    {
+      "id": "dev_currency_tracker",
+      "type": "tracker",
+      "label": "Ore Tracker",
+      "transform": {
+        "location": {
+          "x": 160,
+          "y": 120,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Ore Tracker"
+      },
+      "zoneId": "zone_start"
+    },
+    {
+      "id": "dev_resource_spawner",
+      "type": "item_spawner",
+      "label": "Ore Mining Spawner",
+      "transform": {
+        "location": {
+          "x": 420,
+          "y": 260,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Ore Mining Spawner"
+      },
+      "zoneId": "zone_ore_vein"
+    },
+    {
+      "id": "dev_save_point",
+      "type": "save_point",
+      "label": "Save Progress Point",
+      "transform": {
+        "location": {
+          "x": 260,
+          "y": 120,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Save Progress Point"
+      },
+      "zoneId": "zone_start"
+    },
+    {
+      "id": "dev_hud_message",
+      "type": "hud_message",
+      "label": "Tycoon HUD Message",
+      "transform": {
+        "location": {
+          "x": 320,
+          "y": 120,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Tycoon HUD Message"
+      },
+      "zoneId": "zone_start"
+    },
+    {
+      "id": "dev_zone_upgrade_lane_marker",
+      "type": "trigger",
+      "label": "Upgrade Lane Import Marker",
+      "transform": {
+        "location": {
+          "x": 2920,
+          "y": 120,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Upgrade Lane Import Marker"
+      },
+      "zoneId": "zone_upgrade_lane"
+    },
+    {
+      "id": "dev_zone_worker_yard_marker",
+      "type": "trigger",
+      "label": "Automation Yard Import Marker",
+      "transform": {
+        "location": {
+          "x": 2920,
+          "y": 1020,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Automation Yard Import Marker"
+      },
+      "zoneId": "zone_worker_yard"
+    },
+    {
+      "id": "dev_zone_rebirth_marker",
+      "type": "trigger",
+      "label": "Rebirth Platform Import Marker",
+      "transform": {
+        "location": {
+          "x": 120,
+          "y": 2020,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Rebirth Platform Import Marker"
+      },
+      "zoneId": "zone_rebirth"
+    }
+  ],
+  "prefabs": [],
+  "scripts": [
+    {
+      "kind": "module",
+      "name": "GameManager",
+      "imports": [
+        {
+          "kind": "import",
+          "path": "/Fortnite.com/Devices"
+        },
+        {
+          "kind": "import",
+          "path": "/Verse.org/Simulation"
+        }
+      ],
+      "declarations": [
+        {
+          "kind": "class",
+          "name": "game_manager",
+          "extends": "creative_device",
+          "fields": [
+            {
+              "kind": "field",
+              "name": "ResourceTrigger",
+              "type": "trigger_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "trigger_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "SellButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "UpgradeButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "GateBarrier",
+              "type": "barrier_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "barrier_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "CurrencyTracker",
+              "type": "tracker_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "tracker_device{}"
+              }
+            }
+          ],
+          "methods": [
+            {
+              "kind": "function",
+              "name": "OnBegin",
+              "params": [],
+              "returnType": "void",
+              "attributes": [
+                "override",
+                "suspends"
+              ],
+              "body": [
+                {
+                  "kind": "statement",
+                  "code": "Print(\"Mining Empire Starter GameManager ready\")"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "module",
+      "name": "EconomyManager",
+      "imports": [
+        {
+          "kind": "import",
+          "path": "/Fortnite.com/Devices"
+        },
+        {
+          "kind": "import",
+          "path": "/Verse.org/Simulation"
+        }
+      ],
+      "declarations": [
+        {
+          "kind": "class",
+          "name": "economy_manager",
+          "extends": "creative_device",
+          "fields": [
+            {
+              "kind": "field",
+              "name": "ResourceTrigger",
+              "type": "trigger_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "trigger_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "SellButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "UpgradeButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "GateBarrier",
+              "type": "barrier_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "barrier_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "CurrencyTracker",
+              "type": "tracker_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "tracker_device{}"
+              }
+            }
+          ],
+          "methods": [
+            {
+              "kind": "function",
+              "name": "OnBegin",
+              "params": [],
+              "returnType": "void",
+              "attributes": [
+                "override",
+                "suspends"
+              ],
+              "body": [
+                {
+                  "kind": "statement",
+                  "code": "Print(\"Mining Empire Starter EconomyManager ready\")"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "module",
+      "name": "UpgradeManager",
+      "imports": [
+        {
+          "kind": "import",
+          "path": "/Fortnite.com/Devices"
+        },
+        {
+          "kind": "import",
+          "path": "/Verse.org/Simulation"
+        }
+      ],
+      "declarations": [
+        {
+          "kind": "class",
+          "name": "upgrade_manager",
+          "extends": "creative_device",
+          "fields": [
+            {
+              "kind": "field",
+              "name": "ResourceTrigger",
+              "type": "trigger_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "trigger_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "SellButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "UpgradeButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "GateBarrier",
+              "type": "barrier_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "barrier_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "CurrencyTracker",
+              "type": "tracker_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "tracker_device{}"
+              }
+            }
+          ],
+          "methods": [
+            {
+              "kind": "function",
+              "name": "OnBegin",
+              "params": [],
+              "returnType": "void",
+              "attributes": [
+                "override",
+                "suspends"
+              ],
+              "body": [
+                {
+                  "kind": "statement",
+                  "code": "Print(\"Mining Empire Starter UpgradeManager ready\")"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "module",
+      "name": "PurchaseButtonController",
+      "imports": [
+        {
+          "kind": "import",
+          "path": "/Fortnite.com/Devices"
+        },
+        {
+          "kind": "import",
+          "path": "/Verse.org/Simulation"
+        }
+      ],
+      "declarations": [
+        {
+          "kind": "class",
+          "name": "purchase_button_controller",
+          "extends": "creative_device",
+          "fields": [
+            {
+              "kind": "field",
+              "name": "ResourceTrigger",
+              "type": "trigger_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "trigger_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "SellButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "UpgradeButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "GateBarrier",
+              "type": "barrier_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "barrier_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "CurrencyTracker",
+              "type": "tracker_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "tracker_device{}"
+              }
+            }
+          ],
+          "methods": [
+            {
+              "kind": "function",
+              "name": "OnBegin",
+              "params": [],
+              "returnType": "void",
+              "attributes": [
+                "override",
+                "suspends"
+              ],
+              "body": [
+                {
+                  "kind": "statement",
+                  "code": "Print(\"Mining Empire Starter PurchaseButtonController ready\")"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "module",
+      "name": "SaveManager",
+      "imports": [
+        {
+          "kind": "import",
+          "path": "/Fortnite.com/Devices"
+        },
+        {
+          "kind": "import",
+          "path": "/Verse.org/Simulation"
+        }
+      ],
+      "declarations": [
+        {
+          "kind": "class",
+          "name": "save_manager",
+          "extends": "creative_device",
+          "fields": [
+            {
+              "kind": "field",
+              "name": "ResourceTrigger",
+              "type": "trigger_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "trigger_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "SellButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "UpgradeButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "GateBarrier",
+              "type": "barrier_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "barrier_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "CurrencyTracker",
+              "type": "tracker_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "tracker_device{}"
+              }
+            }
+          ],
+          "methods": [
+            {
+              "kind": "function",
+              "name": "OnBegin",
+              "params": [],
+              "returnType": "void",
+              "attributes": [
+                "override",
+                "suspends"
+              ],
+              "body": [
+                {
+                  "kind": "statement",
+                  "code": "Print(\"Mining Empire Starter SaveManager ready\")"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "module",
+      "name": "PrestigeManager",
+      "imports": [
+        {
+          "kind": "import",
+          "path": "/Fortnite.com/Devices"
+        },
+        {
+          "kind": "import",
+          "path": "/Verse.org/Simulation"
+        }
+      ],
+      "declarations": [
+        {
+          "kind": "class",
+          "name": "prestige_manager",
+          "extends": "creative_device",
+          "fields": [
+            {
+              "kind": "field",
+              "name": "ResourceTrigger",
+              "type": "trigger_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "trigger_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "SellButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "UpgradeButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "GateBarrier",
+              "type": "barrier_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "barrier_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "CurrencyTracker",
+              "type": "tracker_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "tracker_device{}"
+              }
+            }
+          ],
+          "methods": [
+            {
+              "kind": "function",
+              "name": "OnBegin",
+              "params": [],
+              "returnType": "void",
+              "attributes": [
+                "override",
+                "suspends"
+              ],
+              "body": [
+                {
+                  "kind": "statement",
+                  "code": "Print(\"Mining Empire Starter PrestigeManager ready\")"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "module",
+      "name": "HUDController",
+      "imports": [
+        {
+          "kind": "import",
+          "path": "/Fortnite.com/Devices"
+        },
+        {
+          "kind": "import",
+          "path": "/Verse.org/Simulation"
+        }
+      ],
+      "declarations": [
+        {
+          "kind": "class",
+          "name": "hudcontroller",
+          "extends": "creative_device",
+          "fields": [
+            {
+              "kind": "field",
+              "name": "ResourceTrigger",
+              "type": "trigger_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "trigger_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "SellButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "UpgradeButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "GateBarrier",
+              "type": "barrier_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "barrier_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "CurrencyTracker",
+              "type": "tracker_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "tracker_device{}"
+              }
+            }
+          ],
+          "methods": [
+            {
+              "kind": "function",
+              "name": "OnBegin",
+              "params": [],
+              "returnType": "void",
+              "attributes": [
+                "override",
+                "suspends"
+              ],
+              "body": [
+                {
+                  "kind": "statement",
+                  "code": "Print(\"Mining Empire Starter HUDController ready\")"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "module",
+      "name": "ResourceNodeController",
+      "imports": [
+        {
+          "kind": "import",
+          "path": "/Fortnite.com/Devices"
+        },
+        {
+          "kind": "import",
+          "path": "/Verse.org/Simulation"
+        }
+      ],
+      "declarations": [
+        {
+          "kind": "class",
+          "name": "resource_node_controller",
+          "extends": "creative_device",
+          "fields": [
+            {
+              "kind": "field",
+              "name": "ResourceTrigger",
+              "type": "trigger_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "trigger_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "SellButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "UpgradeButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "GateBarrier",
+              "type": "barrier_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "barrier_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "CurrencyTracker",
+              "type": "tracker_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "tracker_device{}"
+              }
+            }
+          ],
+          "methods": [
+            {
+              "kind": "function",
+              "name": "OnBegin",
+              "params": [],
+              "returnType": "void",
+              "attributes": [
+                "override",
+                "suspends"
+              ],
+              "body": [
+                {
+                  "kind": "statement",
+                  "code": "Print(\"Mining Empire Starter ResourceNodeController ready\")"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "validation": [
+    {
+      "validator": "structural",
+      "passed": true
+    },
+    {
+      "validator": "schema",
+      "passed": true
+    },
+    {
+      "validator": "crossref",
+      "passed": true
+    },
+    {
+      "validator": "verse-lint",
+      "passed": true
+    },
+    {
+      "validator": "verse-memory",
+      "passed": true
+    },
+    {
+      "validator": "package-readiness",
+      "passed": true
+    },
+    {
+      "validator": "template-conformance",
+      "passed": true
+    }
+  ]
+}

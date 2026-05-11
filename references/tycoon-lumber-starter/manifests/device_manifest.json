@@ -1,0 +1,233 @@
+[
+  {
+    "id": "dev_resource_trigger",
+    "type": "trigger",
+    "label": "Tree Chopping Trigger",
+    "transform": {
+      "location": {
+        "x": 300,
+        "y": 200,
+        "z": 0
+      },
+      "rotation": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      }
+    },
+    "properties": {
+      "purpose": "Tree Chopping Trigger"
+    },
+    "zoneId": "zone_log_yard"
+  },
+  {
+    "id": "dev_sell_button",
+    "type": "button",
+    "label": "Sell Button",
+    "transform": {
+      "location": {
+        "x": 200,
+        "y": 200,
+        "z": 0
+      },
+      "rotation": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      }
+    },
+    "properties": {
+      "purpose": "Sell Button"
+    },
+    "zoneId": "zone_start"
+  },
+  {
+    "id": "dev_upgrade_button",
+    "type": "button",
+    "label": "Sharper Axe Button",
+    "transform": {
+      "location": {
+        "x": 250,
+        "y": 250,
+        "z": 0
+      },
+      "rotation": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      }
+    },
+    "properties": {
+      "purpose": "Sharper Axe Button"
+    },
+    "zoneId": "zone_sawmill"
+  },
+  {
+    "id": "dev_gate_barrier",
+    "type": "barrier",
+    "label": "Prestige Ridge Gate",
+    "transform": {
+      "location": {
+        "x": 80,
+        "y": 120,
+        "z": 0
+      },
+      "rotation": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      }
+    },
+    "properties": {
+      "purpose": "Prestige Ridge Gate"
+    },
+    "zoneId": "zone_prestige"
+  },
+  {
+    "id": "dev_currency_tracker",
+    "type": "tracker",
+    "label": "Wood Tracker",
+    "transform": {
+      "location": {
+        "x": 160,
+        "y": 120,
+        "z": 0
+      },
+      "rotation": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      }
+    },
+    "properties": {
+      "purpose": "Wood Tracker"
+    },
+    "zoneId": "zone_start"
+  },
+  {
+    "id": "dev_resource_spawner",
+    "type": "item_spawner",
+    "label": "Tree Chopping Spawner",
+    "transform": {
+      "location": {
+        "x": 420,
+        "y": 260,
+        "z": 0
+      },
+      "rotation": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      }
+    },
+    "properties": {
+      "purpose": "Tree Chopping Spawner"
+    },
+    "zoneId": "zone_log_yard"
+  },
+  {
+    "id": "dev_save_point",
+    "type": "save_point",
+    "label": "Save Progress Point",
+    "transform": {
+      "location": {
+        "x": 260,
+        "y": 120,
+        "z": 0
+      },
+      "rotation": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      }
+    },
+    "properties": {
+      "purpose": "Save Progress Point"
+    },
+    "zoneId": "zone_start"
+  },
+  {
+    "id": "dev_hud_message",
+    "type": "hud_message",
+    "label": "Tycoon HUD Message",
+    "transform": {
+      "location": {
+        "x": 320,
+        "y": 120,
+        "z": 0
+      },
+      "rotation": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      }
+    },
+    "properties": {
+      "purpose": "Tycoon HUD Message"
+    },
+    "zoneId": "zone_start"
+  },
+  {
+    "id": "dev_zone_upgrade_lane_marker",
+    "type": "trigger",
+    "label": "Upgrade Lane Import Marker",
+    "transform": {
+      "location": {
+        "x": 2920,
+        "y": 120,
+        "z": 0
+      },
+      "rotation": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      }
+    },
+    "properties": {
+      "purpose": "Upgrade Lane Import Marker"
+    },
+    "zoneId": "zone_upgrade_lane"
+  },
+  {
+    "id": "dev_zone_worker_yard_marker",
+    "type": "trigger",
+    "label": "Automation Yard Import Marker",
+    "transform": {
+      "location": {
+        "x": 2920,
+        "y": 1020,
+        "z": 0
+      },
+      "rotation": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      }
+    },
+    "properties": {
+      "purpose": "Automation Yard Import Marker"
+    },
+    "zoneId": "zone_worker_yard"
+  },
+  {
+    "id": "dev_zone_rebirth_marker",
+    "type": "trigger",
+    "label": "Rebirth Platform Import Marker",
+    "transform": {
+      "location": {
+        "x": 120,
+        "y": 2020,
+        "z": 0
+      },
+      "rotation": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      }
+    },
+    "properties": {
+      "purpose": "Rebirth Platform Import Marker"
+    },
+    "zoneId": "zone_rebirth"
+  }
+]

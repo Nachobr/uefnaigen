@@ -316,7 +316,8 @@ Token cost legend (estimated ForgeAI token spend to design + implement + verify;
   - [x] Packager now adds a tycoon-specific import pass to generated `README-UEFN-IMPORT.md` (resource zones, progression zones, economy data, known-good checks)
   - [x] Added packager test coverage for tycoon import guidance and recorded UEFN-only handoff steps in `docs/PATCHNOTES-REVIEW.md`
   - Verification: `pnpm --filter @forgeai/packager test` ✓, `pnpm --filter @forgeai/packager build` ✓, `pnpm --filter @forgeai/packager lint` ✓, `pnpm build && pnpm test` ✓
-  - [ ] Generate the 3 reference scaffolds under `./references/` with budget caps and archive their eval/package reports
+  - [x] Generate the 3 reference scaffolds under `./references/` with budget caps and archive their eval/package reports
+    - Generated `tycoon-lumber-starter`, `tycoon-mining-starter`, and `tycoon-compact-smoke` plus `.zip` archives; eval/package reports archived under `references/_reports/`; all reference validators passed with 0 warnings
   - [ ] Import at least `tycoon-lumber-starter` into UEFN and record manual fixes/screenshots/video
 
 - [x] **P2.2 — Quick wins** *(Cost: S total)* ✅

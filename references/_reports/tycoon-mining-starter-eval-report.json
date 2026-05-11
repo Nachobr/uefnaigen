@@ -1,0 +1,191 @@
+{
+  "slug": "tycoon-mining-starter",
+  "prompt": "A mining empire tycoon for 8 players. Mine ore, smelt bars, upgrade pickaxes and drills, unlock deeper caves, hire miners, and prestige for gem multipliers.",
+  "command": "uefn-ai create \"A mining empire tycoon for 8 players. Mine ore, smelt bars, upgrade pickaxes and drills, unlock deeper caves, hire miners, and prestige for gem multipliers.\" --genre tycoon --template tycoon/mining-empire --seed 202 --out ./references/tycoon-mining-starter --budget 0.25 --zip",
+  "generationMode": "deterministic mock LLM injected into core Pipeline because no live provider was configured in this workspace",
+  "provider": "groq",
+  "model": "llama-3.3-70b-versatile",
+  "budgetUsd": 0.25,
+  "costUsd": 0,
+  "llmCalls": 17,
+  "durationMs": 18,
+  "outputDir": "/Users/nacho/Documents/uefn-ai-generator/references/tycoon-mining-starter",
+  "archivePath": "/Users/nacho/Documents/uefn-ai-generator/references/tycoon-mining-starter.zip",
+  "templateId": "tycoon/mining-empire",
+  "seed": 202,
+  "status": "complete",
+  "validationPassed": true,
+  "validationWarnings": 0,
+  "firstPassPassed": true,
+  "repairTriggered": false,
+  "repairPasses": 0,
+  "packageFileCount": 39,
+  "zones": 7,
+  "devices": 11,
+  "verseFiles": [
+    "economy_manager.verse",
+    "game_manager.verse",
+    "hudcontroller.verse",
+    "prestige_manager.verse",
+    "purchase_button_controller.verse",
+    "resource_node_controller.verse",
+    "save_manager.verse",
+    "upgrade_manager.verse"
+  ],
+  "events": [
+    {
+      "stage": 1,
+      "name": "Parsing prompt",
+      "detail": "Extracting genre, constraints, style..."
+    },
+    {
+      "stage": 1,
+      "name": "Parsing prompt",
+      "detail": "Genre: tycoon | Session: 20 min"
+    },
+    {
+      "stage": 2,
+      "name": "Selecting template",
+      "detail": "Matching genre to template..."
+    },
+    {
+      "stage": 2,
+      "name": "Selecting template",
+      "detail": "Using: tycoon/mining-empire"
+    },
+    {
+      "stage": 3,
+      "name": "Planning world",
+      "detail": "Generating zones, progression, pacing..."
+    },
+    {
+      "stage": 3,
+      "name": "Planning world",
+      "detail": "Zones: 7 (Surface Claim → Iron Vein → Furnace Row → Deep Gem Cave → Upgrade Lane → Automation Yard → Rebirth Platform)"
+    },
+    {
+      "stage": 4,
+      "name": "Planning layout",
+      "detail": "Generating spatial coordinates..."
+    },
+    {
+      "stage": 4,
+      "name": "Planning layout",
+      "detail": "7 zones placed, 1 spawn points"
+    },
+    {
+      "stage": 5,
+      "name": "Planning systems",
+      "detail": "Designing economy, devices, rules..."
+    },
+    {
+      "stage": 5,
+      "name": "Planning systems",
+      "detail": "11 devices | 1 currencies"
+    },
+    {
+      "stage": 6,
+      "name": "Balancing economy",
+      "detail": "Tuning income/sink curves..."
+    },
+    {
+      "stage": 6,
+      "name": "Balancing economy",
+      "detail": "⚠ 1 violations, auto-adjusting..."
+    },
+    {
+      "stage": 6,
+      "name": "Balancing economy",
+      "detail": "First upgrade: 26s | Automation: N/Am | Prestige: 2.9m"
+    },
+    {
+      "stage": 7,
+      "name": "Building devices",
+      "detail": "Mapping devices to concrete instances..."
+    },
+    {
+      "stage": 7,
+      "name": "Building devices",
+      "detail": "11 devices placed"
+    },
+    {
+      "stage": 8,
+      "name": "Planning Verse",
+      "detail": "Designing module structure..."
+    },
+    {
+      "stage": 8,
+      "name": "Planning Verse",
+      "detail": "8 modules planned"
+    },
+    {
+      "stage": 8,
+      "name": "Planning Verse",
+      "detail": "Generating Verse source files..."
+    },
+    {
+      "stage": 8,
+      "name": "Planning Verse",
+      "detail": "8/8 Verse files generated"
+    },
+    {
+      "stage": 8,
+      "name": "Validating",
+      "detail": "✓ 7 validators passed"
+    },
+    {
+      "stage": 8,
+      "name": "Packaging",
+      "detail": "Writing scaffold to /Users/nacho/Documents/uefn-ai-generator/references/tycoon-mining-starter..."
+    },
+    {
+      "stage": 8,
+      "name": "Packaging",
+      "detail": "✓ Archive: /Users/nacho/Documents/uefn-ai-generator/references/tycoon-mining-starter.zip"
+    }
+  ],
+  "validation": [
+    {
+      "validator": "structural",
+      "passed": true,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "validator": "schema",
+      "passed": true,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "validator": "crossref",
+      "passed": true,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "validator": "verse-lint",
+      "passed": true,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "validator": "verse-memory",
+      "passed": true,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "validator": "package-readiness",
+      "passed": true,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "validator": "template-conformance",
+      "passed": true,
+      "errors": [],
+      "warnings": []
+    }
+  ]
+}

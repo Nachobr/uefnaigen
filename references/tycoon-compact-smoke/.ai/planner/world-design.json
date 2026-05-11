@@ -1,0 +1,70 @@
+{
+  "mapName": "Compact Solo Tycoon",
+  "theme": "small clean tycoon pad designed for fast UEFN import smoke testing",
+  "zones": [
+    {
+      "zoneId": "zone_start",
+      "name": "Starter Pad",
+      "purpose": "starter_area",
+      "description": "Compact spawn and first coin collector.",
+      "tier": 1
+    },
+    {
+      "zoneId": "zone_coin_loop",
+      "name": "Coin Loop",
+      "purpose": "resource_area",
+      "description": "Short collection loop for smoke testing income.",
+      "tier": 1
+    },
+    {
+      "zoneId": "zone_upgrade",
+      "name": "Upgrade Kiosk",
+      "purpose": "shop",
+      "description": "Two visible purchases and rebirth button.",
+      "tier": 2,
+      "unlockRequirement": "Purchase the previous upgrade gate."
+    },
+    {
+      "zoneId": "zone_bonus",
+      "name": "Bonus Alcove",
+      "purpose": "unlock_gate",
+      "description": "Single locked zone opened by the second purchase.",
+      "tier": 2,
+      "unlockRequirement": "Purchase the previous upgrade gate."
+    },
+    {
+      "zoneId": "zone_upgrade_lane",
+      "name": "Upgrade Lane",
+      "purpose": "upgrade_lane",
+      "description": "Linear purchase lane for visible progression checks.",
+      "tier": 2,
+      "unlockRequirement": "Purchase the previous upgrade gate."
+    },
+    {
+      "zoneId": "zone_worker_yard",
+      "name": "Automation Yard",
+      "purpose": "resource_area",
+      "description": "Worker and passive income setup area.",
+      "tier": 3,
+      "unlockRequirement": "Purchase the previous upgrade gate."
+    }
+  ],
+  "progressionBeats": [
+    "Earn first coins from Coin Loop.",
+    "Buy Coin Upgrade near the one-minute mark.",
+    "Unlock Auto Collector and open Bonus Alcove.",
+    "Reach Quick Rebirth by the target session end."
+  ],
+  "coreLoop": [
+    "collect coins",
+    "buy upgrades",
+    "unlock a zone",
+    "save progress",
+    "rebirth"
+  ],
+  "sessionPacing": {
+    "earlyGame": "Spawn in Starter Pad, learn income, and buy the first upgrade within 45–90 seconds.",
+    "midGame": "Route through Upgrade Kiosk to add automation and unlock the gated area.",
+    "lateGame": "Use Bonus Alcove for prestige/rebirth setup and creator handoff checks."
+  }
+}

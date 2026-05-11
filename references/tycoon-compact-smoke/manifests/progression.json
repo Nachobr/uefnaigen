@@ -1,0 +1,13 @@
+{
+  "progressionBeats": [
+    "Earn first coins from Coin Loop.",
+    "Buy Coin Upgrade near the one-minute mark.",
+    "Unlock Auto Collector and open Bonus Alcove.",
+    "Reach Quick Rebirth by the target session end."
+  ],
+  "sessionPacing": {
+    "earlyGame": "Spawn in Starter Pad, learn income, and buy the first upgrade within 45–90 seconds.",
+    "midGame": "Route through Upgrade Kiosk to add automation and unlock the gated area.",
+    "lateGame": "Use Bonus Alcove for prestige/rebirth setup and creator handoff checks."
+  }
+}

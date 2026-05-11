@@ -1,0 +1,58 @@
+{
+  "currencies": [
+    {
+      "currencyId": "coins",
+      "name": "Coins",
+      "persistent": true
+    }
+  ],
+  "generators": [
+    {
+      "sourceId": "gen_primary",
+      "name": "Coin Collection",
+      "currencyId": "coins",
+      "baseRate": 12,
+      "rateUnit": "per_action",
+      "zoneId": "zone_coin_loop"
+    },
+    {
+      "sourceId": "gen_worker",
+      "name": "Auto Collector",
+      "currencyId": "coins",
+      "baseRate": 24,
+      "rateUnit": "per_second",
+      "zoneId": "zone_upgrade"
+    }
+  ],
+  "sinks": [
+    {
+      "sinkId": "sink_upgrade_1",
+      "name": "Coin Upgrade",
+      "currencyId": "coins",
+      "cost": 90,
+      "type": "upgrade",
+      "repeatable": false
+    },
+    {
+      "sinkId": "sink_automation",
+      "name": "Auto Collector",
+      "currencyId": "coins",
+      "cost": 90,
+      "type": "unlock",
+      "repeatable": false
+    },
+    {
+      "sinkId": "sink_prestige",
+      "name": "Quick Rebirth",
+      "currencyId": "coins",
+      "cost": 320,
+      "type": "prestige",
+      "repeatable": false
+    }
+  ],
+  "targetCurves": {
+    "timeToFirstUpgradeSec": 60,
+    "timeToAutomationMin": 3,
+    "timeToPrestigeMin": 12
+  }
+}

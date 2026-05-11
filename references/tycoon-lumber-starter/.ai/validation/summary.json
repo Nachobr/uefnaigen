@@ -1,0 +1,30 @@
+[
+  {
+    "validator": "structural",
+    "passed": true
+  },
+  {
+    "validator": "schema",
+    "passed": true
+  },
+  {
+    "validator": "crossref",
+    "passed": true
+  },
+  {
+    "validator": "verse-lint",
+    "passed": true
+  },
+  {
+    "validator": "verse-memory",
+    "passed": true
+  },
+  {
+    "validator": "package-readiness",
+    "passed": true
+  },
+  {
+    "validator": "template-conformance",
+    "passed": true
+  }
+]

@@ -1,0 +1,236 @@
+{
+  "modules": [
+    {
+      "moduleName": "GameManager",
+      "className": "game_manager",
+      "extends": "creative_device",
+      "purpose": "GameManager support for Mining Empire Starter.",
+      "editableFields": [
+        {
+          "name": "ResourceTrigger",
+          "type": "trigger_device",
+          "deviceId": "dev_resource_trigger"
+        },
+        {
+          "name": "SellButton",
+          "type": "button_device",
+          "deviceId": "dev_sell_button"
+        },
+        {
+          "name": "UpgradeButton",
+          "type": "button_device",
+          "deviceId": "dev_upgrade_button"
+        },
+        {
+          "name": "GateBarrier",
+          "type": "barrier_device",
+          "deviceId": "dev_gate_barrier"
+        },
+        {
+          "name": "CurrencyTracker",
+          "type": "tracker_device",
+          "deviceId": "dev_currency_tracker"
+        }
+      ],
+      "methods": [
+        {
+          "name": "OnBegin",
+          "purpose": "Initialize GameManager",
+          "params": [],
+          "returnType": "void",
+          "attributes": [
+            "override",
+            "suspends"
+          ]
+        }
+      ],
+      "imports": [
+        "/Fortnite.com/Devices",
+        "/Verse.org/Simulation"
+      ],
+      "dependsOn": []
+    },
+    {
+      "moduleName": "EconomyManager",
+      "className": "economy_manager",
+      "extends": "creative_device",
+      "purpose": "EconomyManager support for Mining Empire Starter.",
+      "editableFields": [],
+      "methods": [
+        {
+          "name": "OnBegin",
+          "purpose": "Initialize EconomyManager",
+          "params": [],
+          "returnType": "void",
+          "attributes": [
+            "override",
+            "suspends"
+          ]
+        }
+      ],
+      "imports": [
+        "/Fortnite.com/Devices",
+        "/Verse.org/Simulation"
+      ],
+      "dependsOn": [
+        "GameManager"
+      ]
+    },
+    {
+      "moduleName": "UpgradeManager",
+      "className": "upgrade_manager",
+      "extends": "creative_device",
+      "purpose": "UpgradeManager support for Mining Empire Starter.",
+      "editableFields": [],
+      "methods": [
+        {
+          "name": "OnBegin",
+          "purpose": "Initialize UpgradeManager",
+          "params": [],
+          "returnType": "void",
+          "attributes": [
+            "override",
+            "suspends"
+          ]
+        }
+      ],
+      "imports": [
+        "/Fortnite.com/Devices",
+        "/Verse.org/Simulation"
+      ],
+      "dependsOn": [
+        "GameManager"
+      ]
+    },
+    {
+      "moduleName": "PurchaseButtonController",
+      "className": "purchase_button_controller",
+      "extends": "creative_device",
+      "purpose": "PurchaseButtonController support for Mining Empire Starter.",
+      "editableFields": [],
+      "methods": [
+        {
+          "name": "OnBegin",
+          "purpose": "Initialize PurchaseButtonController",
+          "params": [],
+          "returnType": "void",
+          "attributes": [
+            "override",
+            "suspends"
+          ]
+        }
+      ],
+      "imports": [
+        "/Fortnite.com/Devices",
+        "/Verse.org/Simulation"
+      ],
+      "dependsOn": [
+        "GameManager"
+      ]
+    },
+    {
+      "moduleName": "SaveManager",
+      "className": "save_manager",
+      "extends": "creative_device",
+      "purpose": "SaveManager support for Mining Empire Starter.",
+      "editableFields": [],
+      "methods": [
+        {
+          "name": "OnBegin",
+          "purpose": "Initialize SaveManager",
+          "params": [],
+          "returnType": "void",
+          "attributes": [
+            "override",
+            "suspends"
+          ]
+        }
+      ],
+      "imports": [
+        "/Fortnite.com/Devices",
+        "/Verse.org/Simulation"
+      ],
+      "dependsOn": [
+        "GameManager"
+      ]
+    },
+    {
+      "moduleName": "PrestigeManager",
+      "className": "prestige_manager",
+      "extends": "creative_device",
+      "purpose": "PrestigeManager support for Mining Empire Starter.",
+      "editableFields": [],
+      "methods": [
+        {
+          "name": "OnBegin",
+          "purpose": "Initialize PrestigeManager",
+          "params": [],
+          "returnType": "void",
+          "attributes": [
+            "override",
+            "suspends"
+          ]
+        }
+      ],
+      "imports": [
+        "/Fortnite.com/Devices",
+        "/Verse.org/Simulation"
+      ],
+      "dependsOn": [
+        "GameManager"
+      ]
+    },
+    {
+      "moduleName": "HUDController",
+      "className": "hudcontroller",
+      "extends": "creative_device",
+      "purpose": "HUDController support for Mining Empire Starter.",
+      "editableFields": [],
+      "methods": [
+        {
+          "name": "OnBegin",
+          "purpose": "Initialize HUDController",
+          "params": [],
+          "returnType": "void",
+          "attributes": [
+            "override",
+            "suspends"
+          ]
+        }
+      ],
+      "imports": [
+        "/Fortnite.com/Devices",
+        "/Verse.org/Simulation"
+      ],
+      "dependsOn": [
+        "GameManager"
+      ]
+    },
+    {
+      "moduleName": "ResourceNodeController",
+      "className": "resource_node_controller",
+      "extends": "creative_device",
+      "purpose": "ResourceNodeController support for Mining Empire Starter.",
+      "editableFields": [],
+      "methods": [
+        {
+          "name": "OnBegin",
+          "purpose": "Initialize ResourceNodeController",
+          "params": [],
+          "returnType": "void",
+          "attributes": [
+            "override",
+            "suspends"
+          ]
+        }
+      ],
+      "imports": [
+        "/Fortnite.com/Devices",
+        "/Verse.org/Simulation"
+      ],
+      "dependsOn": [
+        "GameManager"
+      ]
+    }
+  ]
+}

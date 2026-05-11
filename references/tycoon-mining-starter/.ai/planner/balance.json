@@ -1,0 +1,58 @@
+{
+  "currencies": [
+    {
+      "currencyId": "ore",
+      "name": "Ore",
+      "persistent": true
+    }
+  ],
+  "generators": [
+    {
+      "sourceId": "gen_primary",
+      "name": "Ore Mining",
+      "currencyId": "ore",
+      "baseRate": 10,
+      "rateUnit": "per_action",
+      "zoneId": "zone_ore_vein"
+    },
+    {
+      "sourceId": "gen_worker",
+      "name": "Hire Miners",
+      "currencyId": "ore",
+      "baseRate": 20,
+      "rateUnit": "per_second",
+      "zoneId": "zone_furnace"
+    }
+  ],
+  "sinks": [
+    {
+      "sinkId": "sink_upgrade_1",
+      "name": "Pickaxe Upgrade",
+      "currencyId": "ore",
+      "cost": 600,
+      "type": "upgrade",
+      "repeatable": false
+    },
+    {
+      "sinkId": "sink_automation",
+      "name": "Hire Miners",
+      "currencyId": "ore",
+      "cost": 1200,
+      "type": "unlock",
+      "repeatable": false
+    },
+    {
+      "sinkId": "sink_prestige",
+      "name": "Gem Prestige",
+      "currencyId": "ore",
+      "cost": 4000,
+      "type": "prestige",
+      "repeatable": false
+    }
+  ],
+  "targetCurves": {
+    "timeToFirstUpgradeSec": 60,
+    "timeToAutomationMin": 6,
+    "timeToPrestigeMin": 20
+  }
+}

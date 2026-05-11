@@ -1,0 +1,78 @@
+{
+  "mapName": "Mining Empire Starter",
+  "theme": "layered mine with glowing ore seams, furnaces, drills, and gem caves",
+  "zones": [
+    {
+      "zoneId": "zone_start",
+      "name": "Surface Claim",
+      "purpose": "starter_area",
+      "description": "Spawn claim with first ore rocks and tutorial board.",
+      "tier": 1
+    },
+    {
+      "zoneId": "zone_ore_vein",
+      "name": "Iron Vein",
+      "purpose": "resource_area",
+      "description": "Early ore nodes and minecart sell route.",
+      "tier": 1
+    },
+    {
+      "zoneId": "zone_furnace",
+      "name": "Furnace Row",
+      "purpose": "shop",
+      "description": "Smelter, pickaxe, drill, and miner purchases.",
+      "tier": 2,
+      "unlockRequirement": "Purchase the previous upgrade gate."
+    },
+    {
+      "zoneId": "zone_deep_cave",
+      "name": "Deep Gem Cave",
+      "purpose": "unlock_gate",
+      "description": "Prestige cave gated by late mining upgrades.",
+      "tier": 3,
+      "unlockRequirement": "Purchase the previous upgrade gate."
+    },
+    {
+      "zoneId": "zone_upgrade_lane",
+      "name": "Upgrade Lane",
+      "purpose": "upgrade_lane",
+      "description": "Linear purchase lane for visible progression checks.",
+      "tier": 2,
+      "unlockRequirement": "Purchase the previous upgrade gate."
+    },
+    {
+      "zoneId": "zone_worker_yard",
+      "name": "Automation Yard",
+      "purpose": "resource_area",
+      "description": "Worker and passive income setup area.",
+      "tier": 3,
+      "unlockRequirement": "Purchase the previous upgrade gate."
+    },
+    {
+      "zoneId": "zone_rebirth",
+      "name": "Rebirth Platform",
+      "purpose": "unlock_gate",
+      "description": "Prestige and rebirth handoff test platform.",
+      "tier": 4,
+      "unlockRequirement": "Purchase the previous upgrade gate."
+    }
+  ],
+  "progressionBeats": [
+    "Earn first ore from Iron Vein.",
+    "Buy Pickaxe Upgrade near the one-minute mark.",
+    "Unlock Hire Miners and open Deep Gem Cave.",
+    "Reach Gem Prestige by the target session end."
+  ],
+  "coreLoop": [
+    "mine ore",
+    "smelt bars",
+    "upgrade tools",
+    "unlock caves",
+    "prestige for gems"
+  ],
+  "sessionPacing": {
+    "earlyGame": "Spawn in Surface Claim, learn income, and buy the first upgrade within 45–90 seconds.",
+    "midGame": "Route through Furnace Row to add automation and unlock the gated area.",
+    "lateGame": "Use Deep Gem Cave for prestige/rebirth setup and creator handoff checks."
+  }
+}

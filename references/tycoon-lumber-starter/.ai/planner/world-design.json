@@ -1,0 +1,78 @@
+{
+  "mapName": "Lumber Mill Starter",
+  "theme": "bright forest mill with sawdust paths and cozy work yards",
+  "zones": [
+    {
+      "zoneId": "zone_start",
+      "name": "Starter Grove",
+      "purpose": "starter_area",
+      "description": "Safe spawn with first trees and tutorial signs.",
+      "tier": 1
+    },
+    {
+      "zoneId": "zone_log_yard",
+      "name": "Log Yard",
+      "purpose": "resource_area",
+      "description": "Dense trees feeding the first sell loop.",
+      "tier": 1
+    },
+    {
+      "zoneId": "zone_sawmill",
+      "name": "Sawmill Shop",
+      "purpose": "shop",
+      "description": "Axe, sawmill, and worker automation purchases.",
+      "tier": 2,
+      "unlockRequirement": "Purchase the previous upgrade gate."
+    },
+    {
+      "zoneId": "zone_prestige",
+      "name": "Prestige Ridge",
+      "purpose": "unlock_gate",
+      "description": "Late-game prestige gate with multiplier signage.",
+      "tier": 3,
+      "unlockRequirement": "Purchase the previous upgrade gate."
+    },
+    {
+      "zoneId": "zone_upgrade_lane",
+      "name": "Upgrade Lane",
+      "purpose": "upgrade_lane",
+      "description": "Linear purchase lane for visible progression checks.",
+      "tier": 2,
+      "unlockRequirement": "Purchase the previous upgrade gate."
+    },
+    {
+      "zoneId": "zone_worker_yard",
+      "name": "Automation Yard",
+      "purpose": "resource_area",
+      "description": "Worker and passive income setup area.",
+      "tier": 3,
+      "unlockRequirement": "Purchase the previous upgrade gate."
+    },
+    {
+      "zoneId": "zone_rebirth",
+      "name": "Rebirth Platform",
+      "purpose": "unlock_gate",
+      "description": "Prestige and rebirth handoff test platform.",
+      "tier": 4,
+      "unlockRequirement": "Purchase the previous upgrade gate."
+    }
+  ],
+  "progressionBeats": [
+    "Earn first wood from Log Yard.",
+    "Buy Sharper Axe near the one-minute mark.",
+    "Unlock Hire Mill Workers and open Prestige Ridge.",
+    "Reach Prestige Mill by the target session end."
+  ],
+  "coreLoop": [
+    "chop trees",
+    "sell logs",
+    "buy upgrades",
+    "unlock sawmills",
+    "prestige"
+  ],
+  "sessionPacing": {
+    "earlyGame": "Spawn in Starter Grove, learn income, and buy the first upgrade within 45–90 seconds.",
+    "midGame": "Route through Sawmill Shop to add automation and unlock the gated area.",
+    "lateGame": "Use Prestige Ridge for prestige/rebirth setup and creator handoff checks."
+  }
+}

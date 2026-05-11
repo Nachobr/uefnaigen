@@ -1,0 +1,16 @@
+[
+  {
+    "tableId": "loot_resource_zone",
+    "name": "Coin Loop Drops",
+    "zoneId": "zone_coin_loop",
+    "entries": [
+      {
+        "itemId": "coins",
+        "name": "Coins",
+        "weight": 100,
+        "rarity": "common",
+        "effect": "+12 Coins"
+      }
+    ]
+  }
+]

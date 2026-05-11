@@ -1,0 +1,1067 @@
+{
+  "specVersion": "wg/1.0",
+  "projectId": "2427bb71-ebc0-4b7c-9f3d-956aeeb7b9db",
+  "name": "Compact Solo Tycoon",
+  "slug": "2b5b54e3-daa9-4575-99fc-8735a9fef32a",
+  "createdAt": "2026-05-11T12:32:32.453Z",
+  "updatedAt": "2026-05-11T12:32:32.458Z",
+  "source": {
+    "mode": "map-studio",
+    "prompt": "A compact solo-friendly starter tycoon. Collect coins, buy two upgrades, unlock one new zone, save progress, and rebirth after a short 12 minute session.",
+    "seed": 303
+  },
+  "target": {
+    "genre": "tycoon",
+    "uefnVersion": "32.00",
+    "outputMode": "scaffold"
+  },
+  "design": {
+    "fantasy": "A compact coin tycoon with two purchases, one gate, save, and short rebirth loop.",
+    "coreLoop": [
+      "collect coins",
+      "buy upgrades",
+      "unlock a zone",
+      "save progress",
+      "rebirth"
+    ],
+    "sessionLengthMin": 12,
+    "progressionStyle": "linear"
+  },
+  "layout": {
+    "worldType": "grid2d",
+    "bounds": {
+      "width": 3200,
+      "depth": 2400,
+      "height": 800
+    },
+    "zones": [
+      {
+        "zoneId": "zone_start",
+        "name": "Starter Pad",
+        "purpose": "starter_area",
+        "footprint": {
+          "x": 0,
+          "y": 0,
+          "w": 900,
+          "h": 800
+        },
+        "elevation": 0
+      },
+      {
+        "zoneId": "zone_coin_loop",
+        "name": "Coin Loop",
+        "purpose": "resource_area",
+        "footprint": {
+          "x": 1000,
+          "y": 0,
+          "w": 900,
+          "h": 800
+        },
+        "elevation": 0
+      },
+      {
+        "zoneId": "zone_upgrade",
+        "name": "Upgrade Kiosk",
+        "purpose": "shop",
+        "footprint": {
+          "x": 0,
+          "y": 900,
+          "w": 900,
+          "h": 700
+        },
+        "elevation": 0,
+        "progressionGate": {}
+      },
+      {
+        "zoneId": "zone_bonus",
+        "name": "Bonus Alcove",
+        "purpose": "unlock_gate",
+        "footprint": {
+          "x": 1000,
+          "y": 900,
+          "w": 900,
+          "h": 700
+        },
+        "elevation": 0,
+        "progressionGate": {}
+      },
+      {
+        "zoneId": "zone_upgrade_lane",
+        "name": "Upgrade Lane",
+        "purpose": "upgrade_lane",
+        "footprint": {
+          "x": 2800,
+          "y": 0,
+          "w": 900,
+          "h": 800
+        },
+        "elevation": 0,
+        "progressionGate": {}
+      },
+      {
+        "zoneId": "zone_worker_yard",
+        "name": "Automation Yard",
+        "purpose": "resource_area",
+        "footprint": {
+          "x": 2800,
+          "y": 900,
+          "w": 900,
+          "h": 800
+        },
+        "elevation": 0,
+        "progressionGate": {}
+      }
+    ],
+    "spawnPoints": [
+      {
+        "id": "spawn_1",
+        "location": {
+          "x": 120,
+          "y": 120,
+          "z": 0
+        },
+        "zoneId": "zone_start"
+      }
+    ]
+  },
+  "economy": {
+    "currencies": [
+      {
+        "currencyId": "coins",
+        "name": "Coins",
+        "persistent": true
+      }
+    ],
+    "generators": [
+      {
+        "sourceId": "gen_primary",
+        "name": "Coin Collection",
+        "currencyId": "coins",
+        "baseRate": 12,
+        "rateUnit": "per_action",
+        "zoneId": "zone_coin_loop"
+      },
+      {
+        "sourceId": "gen_worker",
+        "name": "Auto Collector",
+        "currencyId": "coins",
+        "baseRate": 24,
+        "rateUnit": "per_second",
+        "zoneId": "zone_upgrade"
+      }
+    ],
+    "sinks": [
+      {
+        "sinkId": "sink_upgrade_1",
+        "name": "Coin Upgrade",
+        "currencyId": "coins",
+        "cost": 90,
+        "type": "upgrade",
+        "repeatable": false
+      },
+      {
+        "sinkId": "sink_automation",
+        "name": "Auto Collector",
+        "currencyId": "coins",
+        "cost": 90,
+        "type": "unlock",
+        "repeatable": false
+      },
+      {
+        "sinkId": "sink_prestige",
+        "name": "Quick Rebirth",
+        "currencyId": "coins",
+        "cost": 320,
+        "type": "prestige",
+        "repeatable": false
+      }
+    ],
+    "targetCurves": {
+      "timeToFirstUpgradeSec": 60,
+      "timeToAutomationMin": 3,
+      "timeToPrestigeMin": 12
+    }
+  },
+  "devices": [
+    {
+      "id": "dev_resource_trigger",
+      "type": "trigger",
+      "label": "Coin Collection Trigger",
+      "transform": {
+        "location": {
+          "x": 300,
+          "y": 200,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Coin Collection Trigger"
+      },
+      "zoneId": "zone_coin_loop"
+    },
+    {
+      "id": "dev_sell_button",
+      "type": "button",
+      "label": "Sell Button",
+      "transform": {
+        "location": {
+          "x": 200,
+          "y": 200,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Sell Button"
+      },
+      "zoneId": "zone_start"
+    },
+    {
+      "id": "dev_upgrade_button",
+      "type": "button",
+      "label": "Coin Upgrade Button",
+      "transform": {
+        "location": {
+          "x": 250,
+          "y": 250,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Coin Upgrade Button"
+      },
+      "zoneId": "zone_upgrade"
+    },
+    {
+      "id": "dev_gate_barrier",
+      "type": "barrier",
+      "label": "Bonus Alcove Gate",
+      "transform": {
+        "location": {
+          "x": 80,
+          "y": 120,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Bonus Alcove Gate"
+      },
+      "zoneId": "zone_bonus"
+    },
+    {
+      "id": "dev_currency_tracker",
+      "type": "tracker",
+      "label": "Coins Tracker",
+      "transform": {
+        "location": {
+          "x": 160,
+          "y": 120,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Coins Tracker"
+      },
+      "zoneId": "zone_start"
+    },
+    {
+      "id": "dev_resource_spawner",
+      "type": "item_spawner",
+      "label": "Coin Collection Spawner",
+      "transform": {
+        "location": {
+          "x": 420,
+          "y": 260,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Coin Collection Spawner"
+      },
+      "zoneId": "zone_coin_loop"
+    },
+    {
+      "id": "dev_save_point",
+      "type": "save_point",
+      "label": "Save Progress Point",
+      "transform": {
+        "location": {
+          "x": 260,
+          "y": 120,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Save Progress Point"
+      },
+      "zoneId": "zone_start"
+    },
+    {
+      "id": "dev_hud_message",
+      "type": "hud_message",
+      "label": "Tycoon HUD Message",
+      "transform": {
+        "location": {
+          "x": 320,
+          "y": 120,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Tycoon HUD Message"
+      },
+      "zoneId": "zone_start"
+    },
+    {
+      "id": "dev_zone_upgrade_lane_marker",
+      "type": "trigger",
+      "label": "Upgrade Lane Import Marker",
+      "transform": {
+        "location": {
+          "x": 2920,
+          "y": 120,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Upgrade Lane Import Marker"
+      },
+      "zoneId": "zone_upgrade_lane"
+    },
+    {
+      "id": "dev_zone_worker_yard_marker",
+      "type": "trigger",
+      "label": "Automation Yard Import Marker",
+      "transform": {
+        "location": {
+          "x": 2920,
+          "y": 1020,
+          "z": 0
+        },
+        "rotation": {
+          "pitch": 0,
+          "yaw": 0,
+          "roll": 0
+        }
+      },
+      "properties": {
+        "purpose": "Automation Yard Import Marker"
+      },
+      "zoneId": "zone_worker_yard"
+    }
+  ],
+  "prefabs": [],
+  "scripts": [
+    {
+      "kind": "module",
+      "name": "GameManager",
+      "imports": [
+        {
+          "kind": "import",
+          "path": "/Fortnite.com/Devices"
+        },
+        {
+          "kind": "import",
+          "path": "/Verse.org/Simulation"
+        }
+      ],
+      "declarations": [
+        {
+          "kind": "class",
+          "name": "game_manager",
+          "extends": "creative_device",
+          "fields": [
+            {
+              "kind": "field",
+              "name": "ResourceTrigger",
+              "type": "trigger_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "trigger_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "SellButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "UpgradeButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "GateBarrier",
+              "type": "barrier_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "barrier_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "CurrencyTracker",
+              "type": "tracker_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "tracker_device{}"
+              }
+            }
+          ],
+          "methods": [
+            {
+              "kind": "function",
+              "name": "OnBegin",
+              "params": [],
+              "returnType": "void",
+              "attributes": [
+                "override",
+                "suspends"
+              ],
+              "body": [
+                {
+                  "kind": "statement",
+                  "code": "Print(\"Compact Solo Tycoon GameManager ready\")"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "module",
+      "name": "EconomyManager",
+      "imports": [
+        {
+          "kind": "import",
+          "path": "/Fortnite.com/Devices"
+        },
+        {
+          "kind": "import",
+          "path": "/Verse.org/Simulation"
+        }
+      ],
+      "declarations": [
+        {
+          "kind": "class",
+          "name": "economy_manager",
+          "extends": "creative_device",
+          "fields": [
+            {
+              "kind": "field",
+              "name": "ResourceTrigger",
+              "type": "trigger_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "trigger_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "SellButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "UpgradeButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "GateBarrier",
+              "type": "barrier_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "barrier_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "CurrencyTracker",
+              "type": "tracker_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "tracker_device{}"
+              }
+            }
+          ],
+          "methods": [
+            {
+              "kind": "function",
+              "name": "OnBegin",
+              "params": [],
+              "returnType": "void",
+              "attributes": [
+                "override",
+                "suspends"
+              ],
+              "body": [
+                {
+                  "kind": "statement",
+                  "code": "Print(\"Compact Solo Tycoon EconomyManager ready\")"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "module",
+      "name": "UpgradeManager",
+      "imports": [
+        {
+          "kind": "import",
+          "path": "/Fortnite.com/Devices"
+        },
+        {
+          "kind": "import",
+          "path": "/Verse.org/Simulation"
+        }
+      ],
+      "declarations": [
+        {
+          "kind": "class",
+          "name": "upgrade_manager",
+          "extends": "creative_device",
+          "fields": [
+            {
+              "kind": "field",
+              "name": "ResourceTrigger",
+              "type": "trigger_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "trigger_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "SellButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "UpgradeButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "GateBarrier",
+              "type": "barrier_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "barrier_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "CurrencyTracker",
+              "type": "tracker_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "tracker_device{}"
+              }
+            }
+          ],
+          "methods": [
+            {
+              "kind": "function",
+              "name": "OnBegin",
+              "params": [],
+              "returnType": "void",
+              "attributes": [
+                "override",
+                "suspends"
+              ],
+              "body": [
+                {
+                  "kind": "statement",
+                  "code": "Print(\"Compact Solo Tycoon UpgradeManager ready\")"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "module",
+      "name": "PurchaseButtonController",
+      "imports": [
+        {
+          "kind": "import",
+          "path": "/Fortnite.com/Devices"
+        },
+        {
+          "kind": "import",
+          "path": "/Verse.org/Simulation"
+        }
+      ],
+      "declarations": [
+        {
+          "kind": "class",
+          "name": "purchase_button_controller",
+          "extends": "creative_device",
+          "fields": [
+            {
+              "kind": "field",
+              "name": "ResourceTrigger",
+              "type": "trigger_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "trigger_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "SellButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "UpgradeButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "GateBarrier",
+              "type": "barrier_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "barrier_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "CurrencyTracker",
+              "type": "tracker_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "tracker_device{}"
+              }
+            }
+          ],
+          "methods": [
+            {
+              "kind": "function",
+              "name": "OnBegin",
+              "params": [],
+              "returnType": "void",
+              "attributes": [
+                "override",
+                "suspends"
+              ],
+              "body": [
+                {
+                  "kind": "statement",
+                  "code": "Print(\"Compact Solo Tycoon PurchaseButtonController ready\")"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "module",
+      "name": "SaveManager",
+      "imports": [
+        {
+          "kind": "import",
+          "path": "/Fortnite.com/Devices"
+        },
+        {
+          "kind": "import",
+          "path": "/Verse.org/Simulation"
+        }
+      ],
+      "declarations": [
+        {
+          "kind": "class",
+          "name": "save_manager",
+          "extends": "creative_device",
+          "fields": [
+            {
+              "kind": "field",
+              "name": "ResourceTrigger",
+              "type": "trigger_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "trigger_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "SellButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "UpgradeButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "GateBarrier",
+              "type": "barrier_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "barrier_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "CurrencyTracker",
+              "type": "tracker_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "tracker_device{}"
+              }
+            }
+          ],
+          "methods": [
+            {
+              "kind": "function",
+              "name": "OnBegin",
+              "params": [],
+              "returnType": "void",
+              "attributes": [
+                "override",
+                "suspends"
+              ],
+              "body": [
+                {
+                  "kind": "statement",
+                  "code": "Print(\"Compact Solo Tycoon SaveManager ready\")"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "module",
+      "name": "PrestigeManager",
+      "imports": [
+        {
+          "kind": "import",
+          "path": "/Fortnite.com/Devices"
+        },
+        {
+          "kind": "import",
+          "path": "/Verse.org/Simulation"
+        }
+      ],
+      "declarations": [
+        {
+          "kind": "class",
+          "name": "prestige_manager",
+          "extends": "creative_device",
+          "fields": [
+            {
+              "kind": "field",
+              "name": "ResourceTrigger",
+              "type": "trigger_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "trigger_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "SellButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "UpgradeButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "GateBarrier",
+              "type": "barrier_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "barrier_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "CurrencyTracker",
+              "type": "tracker_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "tracker_device{}"
+              }
+            }
+          ],
+          "methods": [
+            {
+              "kind": "function",
+              "name": "OnBegin",
+              "params": [],
+              "returnType": "void",
+              "attributes": [
+                "override",
+                "suspends"
+              ],
+              "body": [
+                {
+                  "kind": "statement",
+                  "code": "Print(\"Compact Solo Tycoon PrestigeManager ready\")"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "module",
+      "name": "HUDController",
+      "imports": [
+        {
+          "kind": "import",
+          "path": "/Fortnite.com/Devices"
+        },
+        {
+          "kind": "import",
+          "path": "/Verse.org/Simulation"
+        }
+      ],
+      "declarations": [
+        {
+          "kind": "class",
+          "name": "hudcontroller",
+          "extends": "creative_device",
+          "fields": [
+            {
+              "kind": "field",
+              "name": "ResourceTrigger",
+              "type": "trigger_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "trigger_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "SellButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "UpgradeButton",
+              "type": "button_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "button_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "GateBarrier",
+              "type": "barrier_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "barrier_device{}"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "CurrencyTracker",
+              "type": "tracker_device",
+              "editable": true,
+              "defaultValue": {
+                "kind": "expression",
+                "code": "tracker_device{}"
+              }
+            }
+          ],
+          "methods": [
+            {
+              "kind": "function",
+              "name": "OnBegin",
+              "params": [],
+              "returnType": "void",
+              "attributes": [
+                "override",
+                "suspends"
+              ],
+              "body": [
+                {
+                  "kind": "statement",
+                  "code": "Print(\"Compact Solo Tycoon HUDController ready\")"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "validation": [
+    {
+      "validator": "structural",
+      "passed": true
+    },
+    {
+      "validator": "schema",
+      "passed": true
+    },
+    {
+      "validator": "crossref",
+      "passed": true
+    },
+    {
+      "validator": "verse-lint",
+      "passed": true
+    },
+    {
+      "validator": "verse-memory",
+      "passed": true
+    },
+    {
+      "validator": "package-readiness",
+      "passed": true
+    },
+    {
+      "validator": "template-conformance",
+      "passed": true
+    }
+  ]
+}

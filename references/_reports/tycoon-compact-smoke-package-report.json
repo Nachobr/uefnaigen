@@ -1,0 +1,178 @@
+{
+  "slug": "tycoon-compact-smoke",
+  "outputDir": "/Users/nacho/Documents/uefn-ai-generator/references/tycoon-compact-smoke",
+  "archivePath": "/Users/nacho/Documents/uefn-ai-generator/references/tycoon-compact-smoke.zip",
+  "archiveExists": true,
+  "archiveMagic": "504b0304",
+  "archiveBytes": 67659,
+  "fileCount": 39,
+  "manifestCounts": {
+    "zones": 6,
+    "devices": 10,
+    "scripts": 7,
+    "currencies": 1,
+    "generators": 2,
+    "sinks": 3,
+    "validators": 7
+  },
+  "validationPassed": true,
+  "validationWarnings": 0,
+  "files": [
+    {
+      "path": ".ai/job.json",
+      "bytes": 499
+    },
+    {
+      "path": ".ai/planner/balance.json",
+      "bytes": 1184
+    },
+    {
+      "path": ".ai/planner/module-plan.json",
+      "bytes": 5116
+    },
+    {
+      "path": ".ai/planner/world-design.json",
+      "bytes": 2214
+    },
+    {
+      "path": ".ai/reference-generation-report.json",
+      "bytes": 4948
+    },
+    {
+      "path": ".ai/validation/crossref.json",
+      "bytes": 47
+    },
+    {
+      "path": ".ai/validation/package-readiness.json",
+      "bytes": 56
+    },
+    {
+      "path": ".ai/validation/schema.json",
+      "bytes": 45
+    },
+    {
+      "path": ".ai/validation/structural.json",
+      "bytes": 49
+    },
+    {
+      "path": ".ai/validation/summary.json",
+      "bytes": 428
+    },
+    {
+      "path": ".ai/validation/template-conformance.json",
+      "bytes": 59
+    },
+    {
+      "path": ".ai/validation/verse-lint.json",
+      "bytes": 49
+    },
+    {
+      "path": ".ai/validation/verse-memory.json",
+      "bytes": 51
+    },
+    {
+      "path": "README-UEFN-IMPORT.md",
+      "bytes": 2293
+    },
+    {
+      "path": "README.md",
+      "bytes": 894
+    },
+    {
+      "path": "Verse/economy_manager.verse",
+      "bytes": 544
+    },
+    {
+      "path": "Verse/game_manager.verse",
+      "bytes": 538
+    },
+    {
+      "path": "Verse/hudcontroller.verse",
+      "bytes": 541
+    },
+    {
+      "path": "Verse/prestige_manager.verse",
+      "bytes": 546
+    },
+    {
+      "path": "Verse/purchase_button_controller.verse",
+      "bytes": 565
+    },
+    {
+      "path": "Verse/save_manager.verse",
+      "bytes": 538
+    },
+    {
+      "path": "Verse/upgrade_manager.verse",
+      "bytes": 544
+    },
+    {
+      "path": "docs/BALANCE-REPORT.md",
+      "bytes": 355
+    },
+    {
+      "path": "docs/DESIGN-SUMMARY.md",
+      "bytes": 803
+    },
+    {
+      "path": "docs/DEVICE-WIRING.md",
+      "bytes": 963
+    },
+    {
+      "path": "docs/HANDOFF-CHECKLIST.md",
+      "bytes": 2892
+    },
+    {
+      "path": "docs/QA-CHECKLIST.md",
+      "bytes": 855
+    },
+    {
+      "path": "docs/SYSTEMS-OVERVIEW.md",
+      "bytes": 375
+    },
+    {
+      "path": "manifests/device_manifest.json",
+      "bytes": 3896
+    },
+    {
+      "path": "manifests/economy.json",
+      "bytes": 1184
+    },
+    {
+      "path": "manifests/layout.grid.json",
+      "bytes": 1777
+    },
+    {
+      "path": "manifests/loot_tables.json",
+      "bytes": 283
+    },
+    {
+      "path": "manifests/prefab_manifest.json",
+      "bytes": 2
+    },
+    {
+      "path": "manifests/progression.json",
+      "bytes": 539
+    },
+    {
+      "path": "manifests/variant_zones.json",
+      "bytes": 2
+    },
+    {
+      "path": "manifests/world.project.json",
+      "bytes": 26255
+    },
+    {
+      "path": "templates/resolved-template.json",
+      "bytes": 1517
+    },
+    {
+      "path": "worldgen.config.yaml",
+      "bytes": 120
+    },
+    {
+      "path": "worldgen.lock.json",
+      "bytes": 4159
+    }
+  ]
+}

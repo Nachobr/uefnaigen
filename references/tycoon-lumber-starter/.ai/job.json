@@ -1,0 +1,12 @@
+{
+  "jobId": "6dc15a13-cc9e-4dfd-80bb-b9f2d8d9be8c",
+  "projectId": "a07f7ef5-1d5e-4de2-a877-1fe40c900126",
+  "status": "complete",
+  "currentStage": 8,
+  "startedAt": "2026-05-11T12:32:32.407Z",
+  "updatedAt": "2026-05-11T12:32:32.419Z",
+  "seed": 101,
+  "prompt": "A colorful lumber tycoon for 8 players. Chop trees, sell logs, unlock sawmills, buy workers, and prestige every 20 minutes.",
+  "templateId": "tycoon/lumber-mill",
+  "completedAt": "2026-05-11T12:32:32.419Z"
+}

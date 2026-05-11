@@ -1,0 +1,97 @@
+{
+  "worldType": "grid2d",
+  "bounds": {
+    "width": 3200,
+    "depth": 2400,
+    "height": 800
+  },
+  "zones": [
+    {
+      "zoneId": "zone_start",
+      "name": "Starter Pad",
+      "purpose": "starter_area",
+      "footprint": {
+        "x": 0,
+        "y": 0,
+        "w": 900,
+        "h": 800
+      },
+      "elevation": 0
+    },
+    {
+      "zoneId": "zone_coin_loop",
+      "name": "Coin Loop",
+      "purpose": "resource_area",
+      "footprint": {
+        "x": 1000,
+        "y": 0,
+        "w": 900,
+        "h": 800
+      },
+      "elevation": 0
+    },
+    {
+      "zoneId": "zone_upgrade",
+      "name": "Upgrade Kiosk",
+      "purpose": "shop",
+      "footprint": {
+        "x": 0,
+        "y": 900,
+        "w": 900,
+        "h": 700
+      },
+      "elevation": 0,
+      "progressionGate": {}
+    },
+    {
+      "zoneId": "zone_bonus",
+      "name": "Bonus Alcove",
+      "purpose": "unlock_gate",
+      "footprint": {
+        "x": 1000,
+        "y": 900,
+        "w": 900,
+        "h": 700
+      },
+      "elevation": 0,
+      "progressionGate": {}
+    },
+    {
+      "zoneId": "zone_upgrade_lane",
+      "name": "Upgrade Lane",
+      "purpose": "upgrade_lane",
+      "footprint": {
+        "x": 2800,
+        "y": 0,
+        "w": 900,
+        "h": 800
+      },
+      "elevation": 0,
+      "progressionGate": {}
+    },
+    {
+      "zoneId": "zone_worker_yard",
+      "name": "Automation Yard",
+      "purpose": "resource_area",
+      "footprint": {
+        "x": 2800,
+        "y": 900,
+        "w": 900,
+        "h": 800
+      },
+      "elevation": 0,
+      "progressionGate": {}
+    }
+  ],
+  "spawnPoints": [
+    {
+      "id": "spawn_1",
+      "location": {
+        "x": 120,
+        "y": 120,
+        "z": 0
+      },
+      "zoneId": "zone_start"
+    }
+  ]
+}
