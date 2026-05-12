@@ -38,6 +38,7 @@ function readEnvVars(): Record<string, unknown> {
 
   if (process.env.FORGEAI_PROVIDER) env.provider = process.env.FORGEAI_PROVIDER;
   if (process.env.FORGEAI_MODEL) env.model = process.env.FORGEAI_MODEL;
+  if (process.env.FORGEAI_OLLAMA_BASE_URL) env.ollamaBaseUrl = process.env.FORGEAI_OLLAMA_BASE_URL;
   if (process.env.FORGEAI_OUTPUT_DIR) env.outputDir = process.env.FORGEAI_OUTPUT_DIR;
   if (process.env.FORGEAI_VERBOSE) env.verbose = process.env.FORGEAI_VERBOSE === "true";
 
@@ -47,6 +48,7 @@ function readEnvVars(): Record<string, unknown> {
 export interface CLIFlags {
   provider?: string;
   model?: string;
+  ollamaUrl?: string;
   out?: string;
   verbose?: boolean;
   budget?: number;
@@ -56,6 +58,7 @@ function fromCLIFlags(flags: CLIFlags): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   if (flags.provider) result.provider = flags.provider;
   if (flags.model) result.model = flags.model;
+  if (flags.ollamaUrl) result.ollamaBaseUrl = flags.ollamaUrl;
   if (flags.out) result.outputDir = flags.out;
   if (flags.verbose !== undefined) result.verbose = flags.verbose;
   if (flags.budget !== undefined) result.budgetUsd = flags.budget;
@@ -89,6 +92,11 @@ function deepMerge(
   return result;
 }
 
+function normalizeConfig(config: Record<string, unknown>): Record<string, unknown> {
+  if (typeof config.ollamaBaseUrl !== "string") return config;
+  return { ...config, ollamaBaseUrl: config.ollamaBaseUrl.trim() };
+}
+
 /**
  * Load config with precedence: defaults < config file < env vars < CLI flags
  */
@@ -98,7 +106,7 @@ export function loadConfig(cliFlags: CLIFlags = {}): ForgeAIConfig {
   const flagConfig = fromCLIFlags(cliFlags);
 
   const merged = deepMerge(DEFAULT_CONFIG, fileConfig, envConfig, flagConfig);
-  return ForgeAIConfig.parse(merged);
+  return ForgeAIConfig.parse(normalizeConfig(merged));
 }
 
 /**

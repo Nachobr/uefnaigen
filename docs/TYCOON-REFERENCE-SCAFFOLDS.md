@@ -52,7 +52,14 @@ A reference scaffold is only "known good" after passing this checklist in UEFN:
 
 ## Next concrete work
 
-1. Generate the three references above with a low budget cap.
-2. Import `tycoon-lumber-starter` into UEFN first.
-3. Record every manual fix needed in `docs/PATCHNOTES-REVIEW.md`.
+1. Import `tycoon-lumber-starter` into UEFN first.
+2. Copy `docs/UEFN-IMPORT-EVIDENCE-TEMPLATE.md` to `references/_reports/tycoon-lumber-starter-uefn-import.md` and fill it during import.
+3. Record every manual fix needed, including screenshots/video paths or links.
 4. Convert repeated manual fixes into deterministic packager, template, device-mapping, or validator improvements.
+
+## Current reference status
+
+- The three reference scaffolds have been generated under `references/` with `.zip` archives and package/eval reports in `references/_reports/`.
+- `tycoon-lumber-starter` repo-side verification passed: archive integrity, required scaffold files, 7 validation results, 7 zones, 11 devices, and 8 Verse files.
+- `uefn-ai validate` now loads split manifests plus `templates/resolved-template.json`, so CLI validation includes template conformance and no longer emits the missing-template warning for generated scaffolds.
+- The remaining blocker is UEFN-only evidence: Verse compiler output, device placement screenshots, playtest video, and a list of manual fixes.

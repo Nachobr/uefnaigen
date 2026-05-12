@@ -125,6 +125,20 @@ The fallback chain auto-pulls `qwen3.5:9b` if all API providers fail.
 
 ---
 
+## 3.1 Using Google Colab or Jupyter
+
+If a collaborator does not want to install Node.js, pnpm, or ForgeAI locally, they can run generation from a shared notebook and download the generated scaffold zip.
+
+Use [`docs/COLAB-JUPYTER-GUIDE.md`](./COLAB-JUPYTER-GUIDE.md) and the notebook at `notebooks/forgeai_colab_t4_ollama_ngrok.ipynb`.
+
+Important limits:
+
+- Colab replaces local shell setup, not UEFN. UEFN import still happens on a Windows machine with UEFN installed.
+- The recommended notebook path runs Ollama on a Colab T4 GPU and connects ForgeAI with `--provider ollama --ollama-url <ngrok-url>`.
+- If you want zero live LLM calls, use the generated reference scaffolds under `references/` instead of running a new generation.
+
+---
+
 ## 4. Provider Fallback Chain
 
 If you have multiple API keys set, ForgeAI tries them in order:

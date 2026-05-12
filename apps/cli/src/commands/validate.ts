@@ -1,7 +1,5 @@
 import { Command } from "commander";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { WorldProject } from "@forgeai/schemas";
+import { loadProject } from "@forgeai/core";
 import { runAllValidators } from "@forgeai/validators";
 
 export const validateCommand = new Command("validate")
@@ -9,17 +7,15 @@ export const validateCommand = new Command("validate")
   .argument("<project-dir>", "Path to project directory")
   .option("--json", "Machine-readable output")
   .action(async (projectDir, options) => {
-    const manifestPath = join(projectDir, "manifests", "world.project.json");
-    let raw: string;
+    let loaded: ReturnType<typeof loadProject>;
     try {
-      raw = readFileSync(manifestPath, "utf-8");
-    } catch {
-      console.error(`✗ Could not read ${manifestPath}`);
+      loaded = loadProject(projectDir);
+    } catch (err) {
+      console.error(`✗ Could not load ForgeAI scaffold: ${err instanceof Error ? err.message : String(err)}`);
       process.exit(1);
     }
 
-    const project = WorldProject.parse(JSON.parse(raw));
-    const results = runAllValidators(project);
+    const results = runAllValidators(loaded.project, { resolvedTemplate: loaded.resolvedTemplate });
 
     if (options.json) {
       console.log(JSON.stringify(results, null, 2));

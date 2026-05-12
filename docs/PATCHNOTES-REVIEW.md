@@ -40,9 +40,14 @@ Repo-side work now points ForgeAI toward importable tycoon scaffolds before addi
 
 Remaining UEFN-only validation:
 
-1. Generate the three references under `./references/` with budget caps.
-2. Import `tycoon-lumber-starter` into UEFN.
-3. Compile generated Verse in UEFN.
-4. Place and wire devices from `manifests/device_manifest.json` and `docs/DEVICE-WIRING.md`.
-5. Playtest spawn, first currency earn, first upgrade timing, zone unlock, HUD/tracker updates, save/rejoin, and prestige/rebirth behavior.
-6. Record screenshots/video and any manual fixes here before turning repeated fixes into code.
+1. Import `tycoon-lumber-starter` into UEFN.
+2. Compile generated Verse in UEFN.
+3. Place and wire devices from `manifests/device_manifest.json` and `docs/DEVICE-WIRING.md`.
+4. Playtest spawn, first currency earn, first upgrade timing, zone unlock, HUD/tracker updates, save/rejoin, and prestige/rebirth behavior.
+5. Copy `docs/UEFN-IMPORT-EVIDENCE-TEMPLATE.md` to `references/_reports/tycoon-lumber-starter-uefn-import.md` and record screenshots/video plus any manual fixes before turning repeated fixes into code.
+
+Repo-side status update:
+
+- Generated reference scaffolds and `.zip` archives exist for `tycoon-lumber-starter`, `tycoon-mining-starter`, and `tycoon-compact-smoke`.
+- `tycoon-lumber-starter` passed archive integrity, required-file, and validator checks from this workspace.
+- The CLI `validate` command now loads the full generated scaffold, including split manifests and the resolved template, before running validators.

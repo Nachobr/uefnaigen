@@ -17,6 +17,7 @@ export const modifyCommand = new Command("modify")
   .option("--json", "Machine-readable output")
   .option("--model <id>", "Override default model")
   .option("--provider <id>", "Choose AI provider")
+  .option("--ollama-url <url>", "Ollama-compatible base URL")
   .option("--verbose", "Detailed logs")
   .action(async (projectDir, request, options) => {
     const config = loadConfig(options as CLIFlags);

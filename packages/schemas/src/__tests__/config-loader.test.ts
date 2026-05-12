@@ -20,6 +20,7 @@ describe("loadConfig", () => {
     delete process.env.GROQ_API_KEY;
     delete process.env.FORGEAI_PROVIDER;
     delete process.env.FORGEAI_MODEL;
+    delete process.env.FORGEAI_OLLAMA_BASE_URL;
     delete process.env.FORGEAI_OUTPUT_DIR;
     delete process.env.FORGEAI_VERBOSE;
   });
@@ -58,5 +59,17 @@ describe("loadConfig", () => {
   it("CLI flags set output dir", () => {
     const config = loadConfig({ out: "/tmp/test-output" });
     expect(config.outputDir).toBe("/tmp/test-output");
+  });
+
+  it("sets Ollama base URL from env and CLI flags", () => {
+    process.env.FORGEAI_OLLAMA_BASE_URL = "https://example.ngrok-free.app";
+    expect(loadConfig().ollamaBaseUrl).toBe("https://example.ngrok-free.app");
+    expect(loadConfig({ ollamaUrl: "http://localhost:11434" }).ollamaBaseUrl).toBe("http://localhost:11434");
+  });
+
+  it("trims whitespace from Ollama base URL", () => {
+    process.env.FORGEAI_OLLAMA_BASE_URL = "https://example.ngrok-free.app ";
+    expect(loadConfig().ollamaBaseUrl).toBe("https://example.ngrok-free.app");
+    expect(loadConfig({ ollamaUrl: " http://localhost:11434 " }).ollamaBaseUrl).toBe("http://localhost:11434");
   });
 });

@@ -23,6 +23,8 @@ export GOOGLE_API_KEY=...
 uefn-ai create "A colorful lumber tycoon for 8 players. Chop trees, sell logs, unlock sawmills, buy pets, and prestige every 20 min."
 ```
 
+Prefer a hosted notebook? See the [Google Colab / Jupyter guide](./docs/COLAB-JUPYTER-GUIDE.md) for running ForgeAI from a shared notebook and downloading the generated scaffold zip.
+
 ## Features
 
 - **Prompt → Scaffold** — Full UEFN project from a single sentence
@@ -56,10 +58,11 @@ uefn-ai create "A colorful lumber tycoon for 8 players. Chop trees, sell logs, u
 --out <path>         Output directory (default: ./output)
 --seed <number>      Deterministic seed for reproducible output
 --model <id>         Override LLM model
---provider <id>      Choose AI provider (anthropic, openai, groq, ollama)
+--provider <id>      Choose AI provider (google, anthropic, openai, groq, ollama)
+--ollama-url <url>   Ollama-compatible base URL, including a remote Colab/ngrok URL
 --budget <usd>       Stop if inference cost exceeds threshold
 --dry-run            Plan only, no file writes
---zip                Export as .tar.gz archive
+--zip                Export as a .zip archive
 --json               Machine-readable JSON output
 --strict             Fail on warnings
 --verbose            Detailed logs
@@ -105,6 +108,12 @@ uefn-ai create "A mining empire tycoon for 8 players. Mine ore, smelt bars, upgr
 ```
 
 See [`docs/TYCOON-REFERENCE-SCAFFOLDS.md`](./docs/TYCOON-REFERENCE-SCAFFOLDS.md) for acceptance criteria and the deferred non-tycoon scope.
+
+## Google Colab / Jupyter
+
+Collaborators who do not want to install the toolchain locally can run ForgeAI from a notebook, generate the tycoon scaffold in Colab, and download the resulting `.zip` for UEFN import. Start with [`docs/COLAB-JUPYTER-GUIDE.md`](./docs/COLAB-JUPYTER-GUIDE.md).
+
+For no hosted LLM API calls, `notebooks/forgeai_colab_t4_ollama_ngrok.ipynb` runs Ollama on a Colab T4 GPU and exposes it through ngrok. Point the CLI at it with `--provider ollama --ollama-url <ngrok-url>`.
 
 ## Supported Providers
 

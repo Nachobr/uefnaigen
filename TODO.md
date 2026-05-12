@@ -318,6 +318,14 @@ Token cost legend (estimated ForgeAI token spend to design + implement + verify;
   - Verification: `pnpm --filter @forgeai/packager test` ✓, `pnpm --filter @forgeai/packager build` ✓, `pnpm --filter @forgeai/packager lint` ✓, `pnpm build && pnpm test` ✓
   - [x] Generate the 3 reference scaffolds under `./references/` with budget caps and archive their eval/package reports
     - Generated `tycoon-lumber-starter`, `tycoon-mining-starter`, and `tycoon-compact-smoke` plus `.zip` archives; eval/package reports archived under `references/_reports/`; all reference validators passed with 0 warnings
+  - [x] Repo-side prep for UEFN import evidence
+    - Re-checked `tycoon-lumber-starter` archive integrity, required scaffold files, 7 validators, 7 zones, 11 devices, and 8 Verse files
+    - Fixed `uefn-ai validate` to load generated split manifests and `templates/resolved-template.json`, so template conformance runs from the CLI without a missing-template warning
+    - Added `docs/UEFN-IMPORT-EVIDENCE-TEMPLATE.md` for recording UEFN compiler output, screenshots/video, playtest results, and manual fixes
+  - [x] Added `docs/COLAB-JUPYTER-GUIDE.md` and README/GUIDE links for collaborators running ForgeAI from a shared Colab/Jupyter notebook
+  - [x] Added Colab T4 + Ollama + ngrok notebook path and `--ollama-url` / `FORGEAI_OLLAMA_BASE_URL` support for remote Ollama-compatible model servers
+  - [x] Added Antigravity Colab extension smoke-test protocol for the T4/Ollama/ngrok notebook
+  - [x] Removed the Gemini/API Colab notebook; keeping only the T4/Ollama/ngrok notebook path for collaborator testing
   - [ ] Import at least `tycoon-lumber-starter` into UEFN and record manual fixes/screenshots/video
 
 - [x] **P2.2 — Quick wins** *(Cost: S total)* ✅

@@ -14,9 +14,12 @@ interface DoctorCheck {
 
 export const doctorCommand = new Command("doctor")
   .description("Check local environment for ForgeAI requirements")
+  .option("--provider <id>", "Choose AI provider")
+  .option("--model <id>", "Override default model")
+  .option("--ollama-url <url>", "Ollama-compatible base URL")
   .option("--json", "Machine-readable output")
-  .action(async (options: { json?: boolean }) => {
-    const checks = await runDoctorChecks();
+  .action(async (options: { json?: boolean; provider?: string; model?: string; ollamaUrl?: string }) => {
+    const checks = await runDoctorChecks(options);
     const ok = checks.every((check) => check.status !== "fail");
 
     if (options.json) {
@@ -33,7 +36,7 @@ export const doctorCommand = new Command("doctor")
     if (!ok) process.exitCode = 1;
   });
 
-async function runDoctorChecks(): Promise<DoctorCheck[]> {
+async function runDoctorChecks(options: { provider?: string; model?: string; ollamaUrl?: string } = {}): Promise<DoctorCheck[]> {
   const checks: DoctorCheck[] = [];
   const nodeVersion = process.version;
   const nodeMajor = parseInt(nodeVersion.slice(1), 10);
@@ -53,7 +56,7 @@ async function runDoctorChecks(): Promise<DoctorCheck[]> {
   let outputDir = "./output";
   let ollamaBaseUrl = "http://localhost:11434";
   try {
-    const config = loadConfig();
+    const config = loadConfig(options);
     outputDir = config.outputDir;
     ollamaBaseUrl = config.ollamaBaseUrl;
     checks.push({ name: "Config parse", status: "pass", message: "valid" });
