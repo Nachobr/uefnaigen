@@ -16,6 +16,8 @@ export interface GenerateValidatedOptions<T> {
   temperature?: number;
   maxTokens?: number;
   repairPolicy?: RepairPolicy;
+  /** Stage-specific normalizer applied after parseJsonResponse and before schema validation. */
+  normalize?: (data: unknown) => unknown;
 }
 
 const REPAIR_SYSTEM_PROMPT = `You repair machine-generated JSON.
@@ -46,6 +48,7 @@ export async function generateValidated<T>(
 
   let candidate = parseJsonResponse(response.content, stage);
   candidate = applyNormalizers(candidate, repairPolicy);
+  if (opts.normalize) candidate = opts.normalize(candidate);
 
   let parseResult = schema.safeParse(candidate);
   if (parseResult.success) return parseResult.data;
@@ -69,6 +72,7 @@ export async function generateValidated<T>(
 
     candidate = parseJsonResponse(repairResponse.content, `${stage}:Repair`);
     candidate = applyNormalizers(candidate, repairPolicy);
+    if (opts.normalize) candidate = opts.normalize(candidate);
 
     parseResult = schema.safeParse(candidate);
     if (parseResult.success) return parseResult.data;
@@ -83,9 +87,37 @@ export async function generateValidated<T>(
 }
 
 function formatZodIssues(error: ZodError): string {
-  return error.issues
-    .map((issue) => `- $.${issue.path.join(".")}: ${issue.message}`)
-    .join("\n");
+  const lines: string[] = [];
+  for (const issue of error.issues) {
+    formatIssue(issue, [], lines);
+  }
+  return lines.join("\n");
+}
+
+function formatIssue(
+  issue: z.ZodIssue,
+  parentPath: (string | number)[],
+  out: string[],
+): void {
+  const fullPath = [...parentPath, ...issue.path];
+  const pathStr = fullPath.join(".");
+
+  // Expand union errors so the repair LLM can see why each branch failed
+  if (issue.code === "invalid_union" && Array.isArray((issue as z.ZodInvalidUnionIssue).unionErrors)) {
+    out.push(`- $.${pathStr}: invalid_union (no branch matched)`);
+    const branches = (issue as z.ZodInvalidUnionIssue).unionErrors;
+    branches.forEach((branchError, idx) => {
+      out.push(`  branch[${idx}]:`);
+      for (const sub of branchError.issues) {
+        const subLines: string[] = [];
+        formatIssue(sub, fullPath, subLines);
+        for (const line of subLines) out.push(`    ${line}`);
+      }
+    });
+    return;
+  }
+
+  out.push(`- $.${pathStr}: ${issue.message}`);
 }
 
 export function applyNormalizers(

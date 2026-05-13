@@ -19,7 +19,7 @@ export { BalancePlanner } from "./balance-planner.js";
 export { DeviceMapper } from "./device-mapper.js";
 export { VersePlanner, type ModulePlan } from "./verse-planner.js";
 export { LootGenerator, type LootTable } from "./loot-generator.js";
-export { VerseGenerator } from "./verse-generator.js";
+export { VerseGenerator, normalizeVerseModule } from "./verse-generator.js";
 export { VerseCopilot } from "./verse-copilot.js";
 export { VariantZoneGenerator } from "./variant-zone-generator.js";
 export { ModifierAgent, ModifierPatch, ModifierPatchOperation, type ModifierPatch as ModifierPatchType } from "./modifier-agent.js";

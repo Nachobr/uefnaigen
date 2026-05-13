@@ -65,7 +65,7 @@ export class Modifier {
       info: (obj: object, msg?: string) => this.logger.info(obj, msg),
     };
     let adapter = options.llm ?? createAdapterWithFallback(options.config, { logger: fallbackLogger });
-    adapter = new RetryAdapter(adapter);
+    adapter = new RetryAdapter(adapter, { timeoutMs: llmTimeoutMs(options.config.provider) });
     this.budgetAdapter = new BudgetAdapter(adapter, options.config.budgetUsd ?? Number.POSITIVE_INFINITY, {
       provider: options.config.provider,
       model: options.config.model,
@@ -335,6 +335,15 @@ function computeParentProjectHash(project: WorldProject, verseFiles: Map<string,
     project,
     verseFiles: [...verseFiles.entries()].sort(([a], [b]) => a.localeCompare(b)),
   })).digest("hex");
+}
+
+function llmTimeoutMs(provider: ForgeAIConfig["provider"]): number {
+  const override = process.env.FORGEAI_LLM_TIMEOUT_MS;
+  if (override) {
+    const parsed = Number.parseInt(override, 10);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  return provider === "ollama" ? 300_000 : 120_000;
 }
 
 function toProjectValidation(result: ValidationResult): WorldProject["validation"][number] {

@@ -202,6 +202,35 @@
 
 ---
 
+## Day 16 — Verse Stage Hardening (qwen2.5-coder via Colab/ngrok) ✅
+
+Resumed job `d8fde5db-...` (lumber tycoon) against a remote `qwen2.5-coder:7b-instruct` Ollama tunnel and turned the silent `$.declarations.0: Invalid input` failure into a complete pipeline run.
+
+- [x] **Better Verse schema errors** — `VerseModule.declarations` switched from `z.union` to `z.discriminatedUnion("kind", ...)` in `packages/schemas/src/verse-ast.ts`; surfaces real per-branch missing-field errors instead of `Invalid input`
+- [x] **Recursive Zod issue formatter** — `formatZodIssues` in `packages/ai/src/structured-output.ts` now expands `invalid_union` issues into per-branch sub-errors so the repair LLM gets actionable diagnostics
+- [x] **Stage-level normalizer hook** — `GenerateValidatedOptions.normalize?: (data) => unknown` runs after `parseJsonResponse` on first pass and every repair pass
+- [x] **`normalizeVerseModule`** — coerces stray `body[]` items into `{kind:"statement", code:"…"}`: handles wrong `kind` (`"if"` / `"expression"`), bare strings, and unknown structured objects (serialized into `// TODO:` statement so model intent is never silently dropped)
+- [x] **Strengthened `VerseGenerator` system prompt** — adds CRITICAL `body[]` rules and a multi-statement example so the model learns to encode control flow as raw Verse strings, not nested AST nodes
+- [x] **Verse hallucination lint rules** in `VerseLintValidator`:
+  - Errors on literal prompt-example placeholders (`SomeDevice.SomeEvent`, `SomeEvent.Subscribe`, `Subscribe(Handler)`)
+  - Errors when a method's body uses `[Agent]` failable bind without `Agent:agent` in scope (params or class members)
+  - Errors when `.Subscribe(Identifier)` references an identifier that is not declared anywhere in the module (still allows literal `Handler` so existing fixture stays compatible — the placeholder rule above catches that case)
+- [x] **Colab notebook hardening** (`notebooks/forgeai_colab_t4_ollama_ngrok.ipynb`):
+  - `OLLAMA_CONTEXT_LENGTH=8192`, `OLLAMA_KEEP_ALIVE=30m`, `OLLAMA_FLASH_ATTENTION=1` env knobs (root cause of original Verse stage failure was 2048-token default truncating the response)
+  - Default model switched to `qwen2.5-coder:7b-instruct`
+  - Smoke test now mirrors ForgeAI's actual call shape and asserts a Verse-module-shaped response with `declarations[0].kind` set
+  - Removed invalid `request_header_add` ngrok option that caused HTTP 400; ngrok-free interstitial is documented as a non-issue for non-browser API clients
+- [x] **Tests:** new `verse-generator.test.ts` (3 normalizer cases) + 4 new validator tests (placeholder leakage, unbound Agent, declared-Agent allow, undeclared subscribe target)
+- [x] **End-to-end verification:** lumber tycoon resumed completes 11/11 modules + all 7 validators (5 advisory warnings, 0 errors) + zip archive on remote qwen2.5-coder:7b-instruct via ngrok
+
+### Day 16 — Known follow-ups (not done; size estimates in token cost legend at top of file)
+- [ ] **Verse hallucination repair loop** *(Cost: M)* — feed the new VerseLintValidator errors into a Verse-stage repair pass so projects with `// TODO:` placeholders, undeclared subscribe targets, or unbound `Agent` get an automatic LLM rewrite before packaging instead of just failing the validator
+- [ ] **Stronger UEFN API surface in the Verse system prompt** *(Cost: S–M)* — current prompt examples encourage hallucinated members like `Player.Currency`, `PrestigeSystem.Initialize()`. Add a curated UEFN cheat-sheet (real device events: `TriggeredEvent`, `ItemSpawnedEvent`, `EliminatedEvent`; real `agent`/`player` API surface; `var` patterns) and inject it via `withKnowledgeContext`
+- [ ] **Per-stage provider override** *(Cost: M)* — let users keep planning stages on cheap Ollama but escalate only the Verse stage to a stronger paid model (Sonnet/GPT-4.1) where the quality bar matters most; document recipe in `docs/COLAB-JUPYTER-GUIDE.md`
+- [ ] **Try `qwen2.5-coder:14b-instruct-q4_K_M` on T4** *(Cost: XS to try, no code)* — see if it fits in 16 GB VRAM and produces non-hallucinated method bodies for the lumber tycoon prompt
+
+---
+
 ## Day 15 — Reliability Fixes ($4 remaining)
 - [x] Fix stale error in `structured-output.ts` repair loop (re-uses initial parse error on every pass)
 - [x] Genre-aware simulator dispatch in pipeline (uses ArenaSimulator for battle_arena genre)

@@ -56,6 +56,6 @@ export const VerseModule = z.object({
   kind: z.literal("module"),
   name: z.string(),
   imports: z.array(VerseImport),
-  declarations: z.array(z.union([VerseClass, VerseFunction])),
+  declarations: z.array(z.discriminatedUnion("kind", [VerseClass, VerseFunction])),
 });
 export type VerseModule = z.infer<typeof VerseModule>;

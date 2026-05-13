@@ -234,6 +234,146 @@ describe("VerseLintValidator", () => {
     expect(result.passed).toBe(true);
     expect(result.warnings.length).toBeGreaterThan(0);
   });
+
+  it("flags literal prompt-example placeholders as errors", () => {
+    const project = makeProject({
+      scripts: [
+        {
+          kind: "module",
+          name: "Bad",
+          imports: [],
+          declarations: [
+            {
+              kind: "class",
+              name: "bad",
+              extends: "creative_device",
+              fields: [],
+              methods: [
+                {
+                  kind: "function",
+                  name: "OnBegin",
+                  params: [],
+                  returnType: "void",
+                  attributes: ["override", "suspends"],
+                  body: [{ kind: "statement", code: "SomeDevice.SomeEvent.Subscribe(Handler)" }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const result = new VerseLintValidator().validate(project);
+    expect(result.passed).toBe(false);
+    expect(result.errors.some((e) => e.includes("SomeDevice.SomeEvent"))).toBe(true);
+    expect(result.errors.some((e) => e.includes("Handler"))).toBe(true);
+  });
+
+  it("flags failable use of Agent when method has no Agent parameter", () => {
+    const project = makeProject({
+      scripts: [
+        {
+          kind: "module",
+          name: "Bad",
+          imports: [],
+          declarations: [
+            {
+              kind: "class",
+              name: "bad",
+              extends: "creative_device",
+              fields: [],
+              methods: [
+                {
+                  kind: "function",
+                  name: "OnBegin",
+                  params: [],
+                  returnType: "void",
+                  attributes: ["override", "suspends"],
+                  body: [{ kind: "statement", code: "if (Player := player[Agent]):" }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const result = new VerseLintValidator().validate(project);
+    expect(result.passed).toBe(false);
+    expect(result.errors.some((e) => e.includes("'Agent'"))).toBe(true);
+  });
+
+  it("does not flag Agent when method declares it as a parameter", () => {
+    const project = makeProject({
+      scripts: [
+        {
+          kind: "module",
+          name: "Ok",
+          imports: [],
+          declarations: [
+            {
+              kind: "class",
+              name: "ok",
+              extends: "creative_device",
+              fields: [],
+              methods: [
+                {
+                  kind: "function",
+                  name: "Handle",
+                  params: [{ name: "Agent", type: "agent" }],
+                  returnType: "void",
+                  attributes: [],
+                  body: [{ kind: "statement", code: "if (Player := player[Agent]):" }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const result = new VerseLintValidator().validate(project);
+    expect(result.errors.some((e) => e.includes("'Agent'"))).toBe(false);
+  });
+
+  it("flags Subscribe to a callback that is not declared in the module", () => {
+    const project = makeProject({
+      scripts: [
+        {
+          kind: "module",
+          name: "Bad",
+          imports: [],
+          declarations: [
+            {
+              kind: "class",
+              name: "bad",
+              extends: "creative_device",
+              fields: [
+                {
+                  kind: "field",
+                  name: "Trigger",
+                  type: "trigger_device",
+                  editable: true,
+                  defaultValue: { kind: "expression", code: "trigger_device{}" },
+                },
+              ],
+              methods: [
+                {
+                  kind: "function",
+                  name: "OnBegin",
+                  params: [],
+                  returnType: "void",
+                  attributes: ["override", "suspends"],
+                  body: [{ kind: "statement", code: "Trigger.TriggeredEvent.Subscribe(NotDeclared)" }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const result = new VerseLintValidator().validate(project);
+    expect(result.passed).toBe(false);
+    expect(result.errors.some((e) => e.includes("undeclared callback 'NotDeclared'"))).toBe(true);
+  });
 });
 
 describe("VerseMemoryValidator", () => {

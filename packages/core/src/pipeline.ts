@@ -97,7 +97,7 @@ export class Pipeline {
     };
     let adapter: LLMAdapter =
       options.llm ?? createAdapterWithFallback(options.config, { logger: fallbackLogger });
-    adapter = new RetryAdapter(adapter);
+    adapter = new RetryAdapter(adapter, { timeoutMs: llmTimeoutMs(options.config.provider) });
     // Always wrap with BudgetAdapter so we capture per-call usage events even when no budget is set.
     const budget = options.config.budgetUsd ?? Number.POSITIVE_INFINITY;
     this.budgetAdapter = new BudgetAdapter(adapter, budget, {
@@ -575,4 +575,13 @@ export class Pipeline {
       archivePath,
     };
   }
+}
+
+function llmTimeoutMs(provider: ForgeAIConfig["provider"]): number {
+  const override = process.env.FORGEAI_LLM_TIMEOUT_MS;
+  if (override) {
+    const parsed = Number.parseInt(override, 10);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  return provider === "ollama" ? 300_000 : 120_000;
 }
