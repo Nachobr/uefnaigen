@@ -1,5 +1,6 @@
 import type { JobRecord, ForgeAIConfig, LayoutSpec, EconomySpec, DeviceInstance, VerseModule, WorldProject } from "@forgeai/schemas";
 import {
+  createAdapterForStage,
   createAdapterWithFallback,
   IntentExtractor,
   TemplateRouter,
@@ -14,6 +15,7 @@ import {
   BudgetAdapter,
   RetryAdapter,
   type LLMAdapter,
+  type SharedBudget,
   type NormalizedBrief,
   type WorldDesign,
   type SystemsDesign,
@@ -85,24 +87,38 @@ export class Pipeline {
   private logger: Logger;
   private ledger: UsageLedger;
   private budgetAdapter?: BudgetAdapter;
+  private sharedBudget: SharedBudget = { spentUsd: 0 };
+  private stageAdapters = new Map<string, LLMAdapter>();
+  private fallbackLogger: { warn: (obj: object, msg?: string) => void; error: (obj: object, msg?: string) => void; info: (obj: object, msg?: string) => void };
 
   constructor(private options: PipelineOptions) {
     this.jobManager = new JobManager({ persist: !options.dryRun });
     this.logger = options.logger ?? createLogger({ enabled: options.config.verbose });
     this.ledger = new UsageLedger({ persist: !options.dryRun });
-    const fallbackLogger = {
+    this.fallbackLogger = {
       warn: (obj: object, msg?: string) => this.logger.warn(obj, msg),
       error: (obj: object, msg?: string) => this.logger.error(obj, msg),
       info: (obj: object, msg?: string) => this.logger.info(obj, msg),
     };
     let adapter: LLMAdapter =
-      options.llm ?? createAdapterWithFallback(options.config, { logger: fallbackLogger });
+      options.llm ?? createAdapterWithFallback(options.config, { logger: this.fallbackLogger });
     adapter = new RetryAdapter(adapter, { timeoutMs: llmTimeoutMs(options.config.provider) });
     // Always wrap with BudgetAdapter so we capture per-call usage events even when no budget is set.
-    const budget = options.config.budgetUsd ?? Number.POSITIVE_INFINITY;
-    this.budgetAdapter = new BudgetAdapter(adapter, budget, {
-      provider: options.config.provider,
-      model: options.config.model,
+    this.budgetAdapter = this.wrapWithBudget(adapter, options.config.provider, options.config.model);
+    this.llm = this.budgetAdapter;
+  }
+
+  /** Total USD spent during this pipeline run (best-effort estimate from BudgetAdapter). */
+  get totalSpentUsd(): number {
+    return this.sharedBudget.spentUsd;
+  }
+
+  private wrapWithBudget(adapter: LLMAdapter, provider: ForgeAIConfig["provider"], model: string): BudgetAdapter {
+    const budget = this.options.config.budgetUsd ?? Number.POSITIVE_INFINITY;
+    return new BudgetAdapter(adapter, budget, {
+      provider,
+      model,
+      sharedBudget: this.sharedBudget,
       onUsage: (event) => {
         this.ledger.recordCall(event.provider, event.inputTokens, event.outputTokens, event.costUsd);
         this.logger.info(
@@ -118,12 +134,22 @@ export class Pipeline {
         );
       },
     });
-    this.llm = this.budgetAdapter;
   }
 
-  /** Total USD spent during this pipeline run (best-effort estimate from BudgetAdapter). */
-  get totalSpentUsd(): number {
-    return this.budgetAdapter?.totalSpentUsd ?? 0;
+  private getAdapterForStage(stage: string): LLMAdapter {
+    const override = this.options.config.stageOverrides?.[stage];
+    if (!override) return this.llm;
+    const cached = this.stageAdapters.get(stage);
+    if (cached) return cached;
+
+    let adapter = createAdapterForStage(this.options.config, stage, { logger: this.fallbackLogger });
+    if (!adapter) return this.llm;
+    const provider = override.provider ?? this.options.config.provider;
+    const model = override.model ?? this.options.config.model;
+    adapter = new RetryAdapter(adapter, { timeoutMs: llmTimeoutMs(provider) });
+    adapter = this.wrapWithBudget(adapter, provider, model);
+    this.stageAdapters.set(stage, adapter);
+    return adapter;
   }
 
   private emit(stage: number, name: string, detail: string): void {
@@ -204,6 +230,7 @@ export class Pipeline {
         knowledgeVersion: KNOWLEDGE_VERSION,
         genreOverride: this.options.genre,
         templateOverride: this.options.templateId,
+        stageOverrides: this.options.config.stageOverrides,
       },
       { persist: !this.options.dryRun },
     );
@@ -355,8 +382,9 @@ export class Pipeline {
 
     // ── Stage 8: Verse Code Generation ──
     this.emit(8, "Planning Verse", "Generating Verse source files...");
+    const verseLlm = this.getAdapterForStage("8-verseFiles");
     const verseGenerator = new VerseGenerator(
-      this.llm,
+      verseLlm,
       this.buildKnowledgeContext(knowledgeStore, brief.genre, {
         tags: ["verse", "pattern", "editable", "failable"],
         type: "verse_pattern",
@@ -466,9 +494,19 @@ export class Pipeline {
     if (!allPassed() && this.options.repair) {
       const passes = this.options.config.maxRepairPasses ?? 3;
       this.emit(8, "Validating", `⚠ Validation failed; running repair loop (max ${passes} passes)...`);
-      const repairLoop = new RepairLoop(this.llm, passes, validatorOptions);
+      const repairLoop = new RepairLoop(this.llm, passes, validatorOptions, {
+        generator: verseGenerator,
+        emitter,
+        modulePlan,
+      });
       repairResult = await repairLoop.run(project);
       validation = repairResult.finalResults;
+      verseFiles.clear();
+      for (const script of project.scripts) {
+        const rawCode = emitter.emit(script);
+        const { code } = lintVerseCode(rawCode);
+        verseFiles.set(`${verseFileStem(script)}.verse`, code);
+      }
       project = assembleProject({
         job,
         prompt: this.options.prompt,
@@ -584,4 +622,9 @@ function llmTimeoutMs(provider: ForgeAIConfig["provider"]): number {
     if (Number.isFinite(parsed) && parsed > 0) return parsed;
   }
   return provider === "ollama" ? 300_000 : 120_000;
+}
+
+function verseFileStem(module: VerseModule): string {
+  const classDecl = module.declarations.find((d) => d.kind === "class");
+  return classDecl?.name ?? module.name;
 }

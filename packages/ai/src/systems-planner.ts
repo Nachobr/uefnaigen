@@ -167,25 +167,7 @@ Zones:\n${zoneInfo}`;
       { temperature: 0.3, jsonMode: true },
     );
 
-    let devices = parseJsonResponse(devResponse.content, "SystemsPlanner:Devices");
-    if (devices && typeof devices === "object" && !Array.isArray(devices)) {
-      const obj = devices as Record<string, unknown>;
-      if (Array.isArray(obj.devices)) {
-        devices = obj.devices;
-      } else {
-        const arrayKey = Object.keys(obj).find((k) => Array.isArray(obj[k]));
-        if (arrayKey) {
-          const arr = obj[arrayKey] as unknown[];
-          const nested = arr.flatMap((item) => {
-            if (item && typeof item === "object" && "devices" in item && Array.isArray((item as Record<string, unknown>).devices)) {
-              return (item as Record<string, unknown>).devices as unknown[];
-            }
-            return [item];
-          });
-          devices = nested;
-        }
-      }
-    }
+    let devices = normalizeDeviceList(parseJsonResponse(devResponse.content, "SystemsPlanner:Devices"));
     devices = applyNormalizers(devices);
 
     return SystemsDesign.parse({
@@ -198,4 +180,53 @@ Zones:\n${zoneInfo}`;
       gameRules: econResult.gameRules,
     });
   }
+}
+
+export function normalizeDeviceList(data: unknown): unknown {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return data;
+  if (isDeviceLike(data)) return [data];
+
+  const obj = data as Record<string, unknown>;
+  if (Array.isArray(obj.devices)) return flattenNestedDevices(obj.devices);
+  if (obj.devices && typeof obj.devices === "object" && !Array.isArray(obj.devices)) {
+    return normalizeDeviceList(obj.devices);
+  }
+
+  const arrayKey = Object.keys(obj).find((k) => Array.isArray(obj[k]));
+  if (arrayKey) return flattenNestedDevices(obj[arrayKey] as unknown[]);
+
+  const values = Object.values(obj);
+  if (values.every(isDeviceLike)) return values;
+
+  const nestedDevices = collectDeviceLikeValues(data);
+  if (nestedDevices.length > 0) return nestedDevices;
+
+  return data;
+}
+
+function flattenNestedDevices(items: unknown[]): unknown[] {
+  return items.flatMap((item) => {
+    if (item && typeof item === "object" && !Array.isArray(item)) {
+      const obj = item as Record<string, unknown>;
+      if (Array.isArray(obj.devices)) return obj.devices;
+      if (obj.devices && typeof obj.devices === "object" && !Array.isArray(obj.devices)) {
+        const normalized = normalizeDeviceList(obj.devices);
+        return Array.isArray(normalized) ? normalized : [normalized];
+      }
+    }
+    return [item];
+  });
+}
+
+function collectDeviceLikeValues(value: unknown): unknown[] {
+  if (isDeviceLike(value)) return [value];
+  if (!value || typeof value !== "object") return [];
+  if (Array.isArray(value)) return value.flatMap(collectDeviceLikeValues);
+  return Object.values(value as Record<string, unknown>).flatMap(collectDeviceLikeValues);
+}
+
+function isDeviceLike(value: unknown): boolean {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const obj = value as Record<string, unknown>;
+  return typeof obj.id === "string" && typeof obj.type === "string" && typeof obj.label === "string";
 }

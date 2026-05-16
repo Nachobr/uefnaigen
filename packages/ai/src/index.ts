@@ -1,12 +1,12 @@
 export { type LLMAdapter, type LLMMessage, type LLMResponse } from "./adapter.js";
-export { createAdapter, createAdapterWithFallback } from "./factory.js";
+export { createAdapter, createAdapterWithFallback, createAdapterForStage } from "./factory.js";
 export { AnthropicAdapter } from "./anthropic-adapter.js";
 export { OpenAIAdapter } from "./openai-adapter.js";
 export { GroqAdapter } from "./groq-adapter.js";
 export { OllamaAdapter } from "./ollama-adapter.js";
 export { GeminiAdapter } from "./gemini-adapter.js";
 export { FallbackAdapter } from "./fallback-adapter.js";
-export { BudgetAdapter, BudgetExceededError, type UsageEvent, type BudgetAdapterOptions } from "./budget-adapter.js";
+export { BudgetAdapter, BudgetExceededError, type UsageEvent, type BudgetAdapterOptions, type SharedBudget } from "./budget-adapter.js";
 export { estimateCostUsd, getPricing, type ModelPricing, type ProviderId } from "./pricing.js";
 export { type FallbackLogger, type FallbackAdapterOptions } from "./fallback-adapter.js";
 export { RetryAdapter, type RetryOptions } from "./retry-adapter.js";

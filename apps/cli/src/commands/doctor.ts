@@ -2,7 +2,7 @@ import { Command } from "commander";
 import { accessSync, constants, existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { loadConfig } from "@forgeai/schemas";
+import { loadConfig, type ForgeAIConfig, type LLMProvider } from "@forgeai/schemas";
 
 type CheckStatus = "pass" | "warn" | "fail";
 
@@ -55,8 +55,10 @@ async function runDoctorChecks(options: { provider?: string; model?: string; oll
 
   let outputDir = "./output";
   let ollamaBaseUrl = "http://localhost:11434";
+  let parsedConfig: ForgeAIConfig | undefined;
   try {
     const config = loadConfig(options);
+    parsedConfig = config;
     outputDir = config.outputDir;
     ollamaBaseUrl = config.ollamaBaseUrl;
     checks.push({ name: "Config parse", status: "pass", message: "valid" });
@@ -71,6 +73,17 @@ async function runDoctorChecks(options: { provider?: string; model?: string; oll
   checks.push(checkWritablePath("Output dir", resolve(outputDir), false));
   checks.push(checkWritablePath("Stage cache", join(homedir(), ".forgeai", "stage-cache"), true));
   checks.push(checkWritablePath("Memo cache", join(homedir(), ".forgeai", "memo-cache"), true));
+  if (parsedConfig?.stageOverrides) {
+    for (const [stage, override] of Object.entries(parsedConfig.stageOverrides)) {
+      const provider = override.provider ?? parsedConfig.provider;
+      const model = override.model ?? parsedConfig.model;
+      checks.push({
+        name: "Stage override",
+        status: stageOverrideAvailable(provider),
+        message: `${stage}: ${provider}/${model}${override.ollamaUrl ? ` at ${override.ollamaUrl}` : ""}`,
+      });
+    }
+  }
 
   const providers = [
     ["Anthropic", "ANTHROPIC_API_KEY"],
@@ -138,6 +151,17 @@ async function isOllamaRunning(baseUrl: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+function stageOverrideAvailable(provider: LLMProvider): CheckStatus {
+  if (provider === "ollama") return "pass";
+  const envVars: Record<Exclude<LLMProvider, "ollama">, string> = {
+    anthropic: "ANTHROPIC_API_KEY",
+    openai: "OPENAI_API_KEY",
+    groq: "GROQ_API_KEY",
+    google: "GOOGLE_API_KEY",
+  };
+  return process.env[envVars[provider]] ? "pass" : "warn";
 }
 
 function statusIcon(status: CheckStatus): string {

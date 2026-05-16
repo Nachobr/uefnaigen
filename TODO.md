@@ -223,11 +223,168 @@ Resumed job `d8fde5db-...` (lumber tycoon) against a remote `qwen2.5-coder:7b-in
 - [x] **Tests:** new `verse-generator.test.ts` (3 normalizer cases) + 4 new validator tests (placeholder leakage, unbound Agent, declared-Agent allow, undeclared subscribe target)
 - [x] **End-to-end verification:** lumber tycoon resumed completes 11/11 modules + all 7 validators (5 advisory warnings, 0 errors) + zip archive on remote qwen2.5-coder:7b-instruct via ngrok
 
-### Day 16 — Known follow-ups (not done; size estimates in token cost legend at top of file)
-- [ ] **Verse hallucination repair loop** *(Cost: M)* — feed the new VerseLintValidator errors into a Verse-stage repair pass so projects with `// TODO:` placeholders, undeclared subscribe targets, or unbound `Agent` get an automatic LLM rewrite before packaging instead of just failing the validator
-- [ ] **Stronger UEFN API surface in the Verse system prompt** *(Cost: S–M)* — current prompt examples encourage hallucinated members like `Player.Currency`, `PrestigeSystem.Initialize()`. Add a curated UEFN cheat-sheet (real device events: `TriggeredEvent`, `ItemSpawnedEvent`, `EliminatedEvent`; real `agent`/`player` API surface; `var` patterns) and inject it via `withKnowledgeContext`
-- [ ] **Per-stage provider override** *(Cost: M)* — let users keep planning stages on cheap Ollama but escalate only the Verse stage to a stronger paid model (Sonnet/GPT-4.1) where the quality bar matters most; document recipe in `docs/COLAB-JUPYTER-GUIDE.md`
-- [ ] **Try `qwen2.5-coder:14b-instruct-q4_K_M` on T4** *(Cost: XS to try, no code)* — see if it fits in 16 GB VRAM and produces non-hallucinated method bodies for the lumber tycoon prompt
+### Day 16 — Known follow-ups (size estimates in token cost legend at top of file)
+- [x] **Stronger UEFN API surface in the Verse system prompt** *(Cost: S–M)* ✅
+  - Reworked `packages/knowledge/src/seed-knowledge.ts` to be per-entry idempotent (was all-or-nothing) so users with an existing `~/.forgeai/knowledge/entries.json` get new cheat-sheet entries on next run
+  - Added 6 new `verse_pattern` entries that directly target the hallucination patterns observed in qwen2.5-coder runs:
+    - `verse_subscribe_handler_must_be_method` — Subscribe args must be class methods, never `Handler`
+    - `verse_agent_parameter_required` — `Agent` must come from a Subscribe handler param, never appear in `OnBegin`
+    - `verse_no_invented_player_members` — `Player.Currency`, `Player.PrestigeLevel`, etc. don't exist; teaches `var ScoresByAgent : [agent]int = map{}` pattern
+    - `verse_no_global_system_objects` — no `PrestigeSystem.Initialize()`; everything goes through `@editable` device fields
+    - `verse_real_device_events_cheatsheet` — real event names per device type (`TriggeredEvent`, `InteractedWithEvent`, `ItemPickedUpEvent`, `EliminatedEvent`, etc.)
+    - `verse_class_skeleton_with_handler` — full canonical class skeleton with mutable agent-keyed map state
+  - Tags chosen so the existing `VerseGenerator` knowledge query (`tags: ["verse", "pattern", "editable", "failable"]`, `type: "verse_pattern"`) picks them up without any pipeline changes
+  - Tests: 10 knowledge tests pass (was 9; replaced obsolete "does not re-seed" test with two new ones for per-entry idempotence and user-entry preservation)
+  - Verified: 24/24 turbo tasks; 224 tests pass
+
+- [x] **Verse hallucination repair loop wiring** *(Cost: S; M if regenerate-on-fail)* ✅
+  - `RepairLoop` now accepts optional Verse repair context and regenerates modules that fail `verse-lint` before falling back to JSON patch repair
+  - Pipeline passes the existing stage-8 `VerseGenerator`, `VerseEmitter`, and `ModulePlan`, preserving BudgetAdapter/RetryAdapter behavior
+  - Added regression coverage for placeholder leakage repaired by module regeneration; focused validators/core builds pass
+- [x] **Per-stage provider override** *(Cost: M)* ✅
+  - Added `stageOverrides` config schema plus `--verse-provider`, `--verse-model`, and `--verse-ollama-url` flags for create/resume
+  - Pipeline now uses a stage-specific adapter for `8-verseFiles`, with RetryAdapter/BudgetAdapter wrapping and a shared budget pool across adapters
+  - Memo-cache keys include stage override config so hybrid Verse outputs do not collide with pure-Ollama runs
+  - Doctor reports configured stage overrides and warns when hosted-provider keys are missing; Colab guide documents hybrid Ollama + paid Verse usage
+- [ ] **Try `qwen2.5-coder:14b-instruct-q4_K_M` on T4** *(Cost: XS to try, no code)* — see spec plan below
+
+---
+
+## Day 16 — Spec plans for remaining follow-ups
+
+These specs are written so a cheap/lightweight LLM (qwen2.5-coder:7b-instruct or similar) can execute them in isolation, without re-reading this whole TODO. Each spec includes goal, files to touch, step-by-step plan, risks, and acceptance criteria. Read AGENTS.md before starting any spec.
+
+### Spec A — Verse-aware repair loop *(Cost: S–M)*
+
+**Goal**
+When `runAllValidators` returns errors from the `verse-lint` validator (literal prompt placeholders, unbound `Agent`, undeclared `Subscribe(...)` targets), the existing `RepairLoop` should *regenerate the affected Verse module* via `VerseGenerator.generate()` instead of emitting a JSON patch over `WorldProject`. JSON-patching individual `scripts[i].declarations[j].methods[k].body[l].code` strings is unreliable; a fresh module-level generation with the strengthened prompt + cheat-sheet knowledge is much more likely to fix the hallucinations.
+
+**Files to touch**
+- `packages/validators/src/repair-loop.ts` — add Verse-regeneration branch
+- `packages/core/src/pipeline.ts` — pass `VerseGenerator`, `VerseEmitter`, and `ModulePlan` to `RepairLoop`
+- `packages/validators/src/__tests__/validators.test.ts` (or a new `repair-loop.test.ts`) — mock-LLM test for the regeneration path
+
+**Step-by-step**
+1. Extend `RepairLoop` constructor with optional `verseRepairContext?: { generator: VerseGenerator; emitter: VerseEmitter; modulePlan: ModulePlan }`. Keep all existing call sites compiling — make it optional.
+2. In `RepairLoop.run()`, after `runAllValidators(project, this.validatorOptions)`:
+   - Filter results for `validator === "verse-lint"` and `passed === false`.
+   - For each error message, the format is `"<ModuleName>: ..."`. Extract the module name (everything before the first `:`).
+   - Look up the matching entry in `modulePlan.modules` by `m.className === moduleName`.
+   - Call `await generator.generate(planEntry)` to regenerate the AST.
+   - Re-emit via `emitter.emit(ast)` and `lintVerseCode()`.
+   - Replace `project.scripts[i]` (matched by `name === moduleName`) with the new AST.
+   - Record the action in `repairs` as `[pass N][verse-regen] <moduleName>`.
+   - Cap regen attempts per module at **2**; if it still fails, fall through to the JSON-patch path (so we never spin forever).
+3. After Verse regeneration, re-run validators. If everything passes, return early. Otherwise, fall through to the existing JSON-patch loop for any remaining non-verse-lint errors.
+4. In `pipeline.ts`, when constructing the `RepairLoop` (search for `new RepairLoop(`), pass `verseRepairContext: { generator: verseGenerator, emitter, modulePlan }` (these objects are already in scope at that point in `Pipeline.run()`).
+5. Tests:
+   - New mock-LLM test where the initial `VerseGenerator` returns a module containing `SomeDevice.SomeEvent.Subscribe(Handler)` (so `verse-lint` fails). The repair loop's mock generator returns a clean module on the second call. Assert `passed === true` after repair and `repairs` contains a `verse-regen` entry.
+   - Existing repair-loop tests must still pass.
+
+**Risks**
+- Adapter cost: regeneration calls the LLM. Make sure each regen still goes through `BudgetAdapter` (it does, because `VerseGenerator` already uses the wrapped adapter from the pipeline).
+- Infinite loops if regenerated module also fails: enforced by the per-module cap of 2 in step 2.
+- Back-compat: `RepairLoop` is constructed in `pipeline.ts` and `modifier.ts` — check both. The modifier already does its own `regenerate_verse_module` flow so it's fine if it doesn't pass the new context (graceful degradation).
+
+**Acceptance criteria**
+- `pnpm build && pnpm test` ✓ (24/24 turbo tasks)
+- New regeneration test passes
+- Smoke eval still 40/40
+- TODO.md follow-up checked off with a short summary
+
+---
+
+### Spec B — Per-stage provider override *(Cost: M)*
+
+**Goal**
+Let users keep cheap planning stages (intent, world, layout, systems, balance, devices, verse-plan, loot) on a free/local provider while escalating only the *Verse generation* stage (stage 8) to a stronger paid provider (Anthropic Sonnet, GPT-4.1, Gemini 2.x). This is the highest-leverage cost/quality tradeoff for tycoon scaffolds.
+
+**Files to touch**
+- `packages/schemas/src/config.ts` — add `stageOverrides` field
+- `packages/ai/src/factory.ts` — add `createAdapterForStage(config, stageName)` helper
+- `packages/core/src/pipeline.ts` — replace `this.llm` for stage 8 only with a stage-specific adapter
+- `apps/cli/src/commands/create.ts` and `resume.ts` — add `--verse-provider`, `--verse-model`, `--verse-ollama-url` flags
+- `apps/cli/src/commands/doctor.ts` — show stage overrides if configured
+- `docs/COLAB-JUPYTER-GUIDE.md` — document the hybrid Ollama-planning + paid-Verse recipe
+
+**Step-by-step**
+1. Schema: add to `ForgeAIConfig`:
+   ```ts
+   stageOverrides: z.record(z.string(), z.object({
+     provider: z.enum(["anthropic","openai","groq","google","ollama"]).optional(),
+     model: z.string().optional(),
+     ollamaUrl: z.string().optional(),
+   })).optional()
+   ```
+   Stage names should match those used in `memoOrCompute()` (e.g. `"8-verseFiles"`).
+2. Factory: `createAdapterForStage(config: ForgeAIConfig, stage: string): LLMAdapter`. If `config.stageOverrides?.[stage]` exists, build a config clone with the overrides and call `createAdapterWithFallback(...)`. Otherwise return null and let caller use the default `this.llm`. Cache per (provider,model) pair so we don't rebuild for every call.
+3. Pipeline: introduce a private `getAdapterForStage(stage: string): LLMAdapter` that returns the stage adapter if present, else `this.llm`. Wrap each non-default adapter with `RetryAdapter` + `BudgetAdapter`, sharing the same `Pipeline.totalSpentUsd` accumulator (extract a `SharedBudget` ref so multiple `BudgetAdapter` instances credit/debit the same total — see `BudgetAdapter` for current structure).
+4. Wire stage 8 (the only one we care about right now): in the `verseGenerator = new VerseGenerator(...)` block, replace `this.llm` with `this.getAdapterForStage("8-verseFiles")`.
+5. CLI: in `create.ts` and `resume.ts`, add the three flags above. If any are passed, populate `stageOverrides["8-verseFiles"]` before constructing the Pipeline.
+6. Doctor: if `config.stageOverrides` exists, print a table. Include a warning if the override provider's API key isn't set.
+7. Docs: add a "Hybrid Ollama + paid Verse" section to `docs/COLAB-JUPYTER-GUIDE.md` with one fully-worked example command.
+8. Tests:
+   - Pipeline mock test that verifies stage 8 uses the override adapter while stages 1–7 use the default.
+   - Schema test for `stageOverrides` parsing.
+
+**Risks**
+- Memo-cache keys already include `provider + model`. Verify that stage 8's memo key uses the *override* provider/model, not the default — otherwise a hybrid run would hit a stale cache entry from a pure-Ollama run. Extend `cache-key.ts` with a per-stage provider/model field if needed.
+- Budget aggregation: per-stage adapters need to share the budget pool. Don't accidentally create independent budgets that each allow `--budget` USD of spend.
+- Doctor output should not block the run if a stage override's API key is missing — warn, don't error.
+
+**Acceptance criteria**
+- New CLI flags work end-to-end (manual smoke test on a 1-prompt run is enough; don't burn budget on full eval)
+- All existing tests still pass
+- Memo-cache discriminates stage 8 results between hybrid runs and pure-Ollama runs
+- Doctor reports overrides
+- Docs include one runnable recipe
+
+---
+
+### Spec C — Try `qwen2.5-coder:14b-instruct-q4_K_M` on Colab T4 *(Cost: XS, no code)*
+
+**Goal**
+Empirically verify whether the 14B coder model fits in T4's 16 GB VRAM (q4_K_M quantization is ~9 GB, KV cache for `num_ctx=8192` is ~3–4 GB, so it should just barely fit) and whether it produces materially fewer hallucinations than the 7B variant for the lumber tycoon prompt.
+
+**Steps (manual, in the Colab notebook — no repo code changes needed)**
+1. In `notebooks/forgeai_colab_t4_ollama_ngrok.ipynb` cell 4, change:
+   ```python
+   MODEL = "qwen2.5-coder:14b-instruct-q4_K_M"
+   ```
+2. Run cells 1–4 from a fresh runtime. After the pull completes, run `!nvidia-smi` and verify the VRAM after model load is **<15 GB** (leaving ~1 GB headroom for KV cache during long generations).
+3. If OOM, fall back to `qwen2.5-coder:7b-instruct-fp16` or `deepseek-coder:6.7b-instruct-q5_K_M`. If still OOM, drop `OLLAMA_CONTEXT_LENGTH` from 8192 → 4096 in cell 3 and retry.
+4. Run the smoke test cell (cell 5) — assert it still produces a valid Verse-module-shaped JSON with `declarations[0].kind` set.
+5. Open the ngrok tunnel (cell 6), then on your laptop run the lumber tycoon resume command from this thread (`uefn-ai resume d8fde5db-... --provider ollama --model qwen2.5-coder:14b-instruct-q4_K_M --ollama-url ...`).
+6. After the run, `grep -rn "Player\.\(Currency\|Score\|PrestigeLevel\|ApplyReward\)\|PrestigeSystem\." output/<dir>/Verse/` to count hallucinations. Compare to the 7B run (which had at least 6 such hallucinations).
+7. Run `uefn-ai validate output/<dir>` and count `verse-lint` errors (not warnings). Compare to the 7B baseline.
+8. Write findings to a new file `docs/MODEL-COMPARISON.md` with: VRAM usage, generation time per module, hallucination count, validator error count, sample diffs, and a recommendation. Commit it.
+
+**Acceptance criteria**
+- `docs/MODEL-COMPARISON.md` exists with at least the four metrics above
+- Either the 7B or 14B is identified as the recommended Colab default (update notebook cell 4 accordingly)
+
+---
+
+### Spec D — UEFN import evidence for `tycoon-lumber-starter` *(Manual, no code)*
+
+**Goal**
+Close out the last open checkbox in P2.1 by actually importing one reference scaffold into UEFN, recording what compiles, what doesn't, and what manual fixes were needed. This is the only remaining quality signal that says "ForgeAI ships UEFN-importable output".
+
+**Steps**
+1. Install/launch UEFN (Fortnite Creative 2.0). Create a new blank Creative project.
+2. From the repo, open `references/tycoon-lumber-starter/README-UEFN-IMPORT.md` and follow the import steps verbatim:
+   - Copy the `Verse/` directory contents into the project's Verse folder.
+   - Create the device instances listed in `manifests/device_manifest.json` and label them per the `@editable` field names in each `.verse` file.
+3. Hit **Build Verse Code** in UEFN. Capture every compiler error verbatim into a fresh copy of `docs/UEFN-IMPORT-EVIDENCE-TEMPLATE.md` saved as `docs/UEFN-IMPORT-EVIDENCE-lumber.md`.
+4. Apply minimal manual fixes to make it compile. For each fix, record the file, the original line, the patched line, and a one-line reason.
+5. Push **Launch Session**. Record a 30-second video of: spawn → use the resource zone → buy an upgrade → see the upgrade applied. If any of those don't work, note it in the evidence file.
+6. Commit `docs/UEFN-IMPORT-EVIDENCE-lumber.md` plus screenshots/video (or a public link) and check off the P2.1 checkbox.
+
+**Acceptance criteria**
+- `docs/UEFN-IMPORT-EVIDENCE-lumber.md` filled out completely
+- Either: zero manual fixes needed, OR a list of fixes + matching follow-up TODO entries describing what to teach the generator so the next run produces them automatically
+- Video/screenshots committed or linked
+- TODO.md P2.1 final checkbox checked
 
 ---
 

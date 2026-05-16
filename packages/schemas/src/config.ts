@@ -6,6 +6,13 @@ export type LLMProvider = z.infer<typeof LLMProvider>;
 export const PricingTier = z.enum(["free", "pro", "studio"]);
 export type PricingTier = z.infer<typeof PricingTier>;
 
+export const StageOverrideConfig = z.object({
+  provider: LLMProvider.optional(),
+  model: z.string().optional(),
+  ollamaUrl: z.string().optional(),
+});
+export type StageOverrideConfig = z.infer<typeof StageOverrideConfig>;
+
 export const TierLimits = z.object({
   maxGenerationsPerMonth: z.number().int(),
   maxCopilotCallsPerDay: z.number().int(),
@@ -58,6 +65,7 @@ export const ForgeAIConfig = z.object({
   verbose: z.boolean().default(false),
   maxRepairPasses: z.number().int().min(1).max(5).default(3),
   budgetUsd: z.number().positive().optional(),
+  stageOverrides: z.record(z.string(), StageOverrideConfig).optional(),
   tier: PricingTier.default("free"),
 });
 export type ForgeAIConfig = z.infer<typeof ForgeAIConfig>;

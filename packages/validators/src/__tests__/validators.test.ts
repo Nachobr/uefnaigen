@@ -7,7 +7,10 @@ import { VerseMemoryValidator } from "../verse-memory-validator.js";
 import { TemplateConformanceValidator } from "../template-conformance-validator.js";
 import { PackageReadinessValidator } from "../package-readiness-validator.js";
 import { runAllValidators } from "../runner.js";
-import type { WorldProject } from "@forgeai/schemas";
+import { RepairLoop } from "../repair-loop.js";
+import { VerseEmitter } from "@forgeai/verse";
+import type { VerseModule, WorldProject } from "@forgeai/schemas";
+import type { LLMAdapter, ModulePlan, VerseGenerator } from "@forgeai/ai";
 
 function makeProject(overrides: Partial<WorldProject> = {}): WorldProject {
   return {
@@ -448,5 +451,160 @@ describe("PackageReadinessValidator", () => {
     expect(result.errors.some((e) => e.includes("no zones"))).toBe(true);
     expect(result.errors.some((e) => e.includes("no devices"))).toBe(true);
     expect(result.errors.some((e) => e.includes("no currencies"))).toBe(true);
+  });
+});
+
+describe("RepairLoop", () => {
+  it("regenerates Verse modules that fail verse-lint before JSON patching", async () => {
+    const project = makeProject({
+      scripts: [
+        {
+          kind: "module",
+          name: "EconomyManager",
+          imports: [{ kind: "import", path: "/Fortnite.com/Devices" }],
+          declarations: [
+            {
+              kind: "class",
+              name: "economy_manager",
+              extends: "creative_device",
+              fields: [],
+              methods: [
+                {
+                  kind: "function",
+                  name: "OnBegin",
+                  params: [],
+                  returnType: "void",
+                  attributes: ["override", "suspends"],
+                  body: [{ kind: "statement", code: "SomeDevice.SomeEvent.Subscribe(Handler)" }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const repairedModule: VerseModule = {
+      kind: "module",
+      name: "EconomyManager",
+      imports: [{ kind: "import", path: "/Fortnite.com/Devices" }],
+      declarations: [
+        {
+          kind: "class",
+          name: "economy_manager",
+          extends: "creative_device",
+          fields: [
+            {
+              kind: "field",
+              name: "SellTrigger",
+              type: "trigger_device",
+              editable: true,
+              defaultValue: { kind: "expression", code: "trigger_device{}" },
+            },
+          ],
+          methods: [
+            {
+              kind: "function",
+              name: "OnBegin",
+              params: [],
+              returnType: "void",
+              attributes: ["override", "suspends"],
+              body: [{ kind: "statement", code: "SellTrigger.TriggeredEvent.Subscribe(HandleSell)" }],
+            },
+            {
+              kind: "function",
+              name: "HandleSell",
+              params: [{ name: "Agent", type: "agent" }],
+              returnType: "void",
+              attributes: [],
+              body: [{ kind: "statement", code: "if (Player := player[Agent]):" }],
+            },
+          ],
+        },
+      ],
+    };
+    const modulePlan: ModulePlan = {
+      modules: [
+        {
+          moduleName: "EconomyManager",
+          className: "EconomyManager",
+          extends: "creative_device",
+          purpose: "Tracks economy events",
+          editableFields: [],
+          methods: [],
+          imports: ["/Fortnite.com/Devices"],
+        },
+      ],
+    };
+    const llm: LLMAdapter = {
+      async chat() {
+        throw new Error("JSON patch path should not run");
+      },
+    };
+    let generateCalls = 0;
+    const generator = {
+      async generate() {
+        generateCalls++;
+        return repairedModule;
+      },
+    } as unknown as VerseGenerator;
+
+    const repairLoop = new RepairLoop(llm, 3, {}, { generator, emitter: new VerseEmitter(), modulePlan });
+    const result = await repairLoop.run(project);
+
+    expect(result.passed).toBe(true);
+    expect(generateCalls).toBe(1);
+    expect(result.repairs.some((r) => r.includes("[verse-regen] EconomyManager"))).toBe(true);
+    expect(project.scripts[0]).toEqual(repairedModule);
+  });
+
+  it("deterministically removes unbound Agent and placeholder Verse lint failures", async () => {
+    const project = makeProject({
+      scripts: [
+        {
+          kind: "module",
+          name: "BadManager",
+          imports: [{ kind: "import", path: "/Fortnite.com/Devices" }],
+          declarations: [
+            {
+              kind: "class",
+              name: "bad_manager",
+              extends: "creative_device",
+              fields: [],
+              methods: [
+                {
+                  kind: "function",
+                  name: "OnBegin",
+                  params: [],
+                  returnType: "void",
+                  attributes: ["override", "suspends"],
+                  body: [
+                    { kind: "statement", code: "SomeDevice.SomeEvent.Subscribe(Handler)" },
+                    { kind: "statement", code: "if (Player := player[Agent]):" },
+                    { kind: "statement", code: "    Print(\"bad\")" },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const llm: LLMAdapter = {
+      async chat() {
+        throw new Error("JSON patch path should not run");
+      },
+    };
+
+    const repairLoop = new RepairLoop(llm, 3, {});
+    const result = await repairLoop.run(project);
+
+    expect(result.passed).toBe(true);
+    expect(result.repairs.some((r) => r.includes("Removed unbound Agent usage"))).toBe(true);
+    expect(result.repairs.some((r) => r.includes("Replaced placeholder Verse statement"))).toBe(true);
+    const body = project.scripts[0].declarations[0].kind === "class"
+      ? project.scripts[0].declarations[0].methods[0].body.map((s) => s.code).join("\n")
+      : "";
+    expect(body).not.toContain("SomeDevice");
+    expect(body).not.toContain("[Agent]");
   });
 });

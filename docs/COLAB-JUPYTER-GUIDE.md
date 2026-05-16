@@ -60,6 +60,33 @@ uefn-ai create "A compact lumber tycoon for 4 players with one upgrade lane and 
 
 The budget can be very low because Ollama/local calls are priced at `$0` in ForgeAI's ledger. It is still useful as a guardrail if fallback providers are enabled.
 
+## Hybrid Ollama planning + paid Verse generation
+
+For tycoon scaffolds, the highest-leverage quality upgrade is often to keep the planning stages on the free Colab/Ollama model and use a stronger hosted model only for stage 8 Verse generation.
+
+Example:
+
+```bash
+export FORGEAI_OLLAMA_BASE_URL="https://YOUR-NGROK-URL.ngrok-free.app"
+export ANTHROPIC_API_KEY="sk-ant-..."
+
+uefn-ai create "A compact lumber tycoon for 4 players with one upgrade lane and worker automation." \
+  --provider ollama \
+  --model qwen2.5-coder:7b-instruct \
+  --ollama-url "$FORGEAI_OLLAMA_BASE_URL" \
+  --verse-provider anthropic \
+  --verse-model claude-sonnet-4-20250514 \
+  --genre tycoon \
+  --template tycoon/lumber-mill \
+  --seed 101 \
+  --out ./output/hybrid-lumber \
+  --budget 0.75 \
+  --repair \
+  --zip
+```
+
+The shared budget applies across both the Ollama planning adapter and the Verse override adapter. Memo-cache keys include stage overrides, so hybrid Verse outputs do not collide with pure-Ollama runs.
+
 ## Testing with the Antigravity Colab extension
 
 If you are using Antigravity IDE with the Colab extension, use it as the interactive runner for `notebooks/forgeai_colab_t4_ollama_ngrok.ipynb`.

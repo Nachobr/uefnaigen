@@ -1,5 +1,6 @@
-import type { WorldProject } from "@forgeai/schemas";
-import type { LLMAdapter } from "@forgeai/ai";
+import type { VerseModule, WorldProject } from "@forgeai/schemas";
+import type { LLMAdapter, ModulePlan, VerseGenerator } from "@forgeai/ai";
+import { VerseEmitter, lintVerseCode } from "@forgeai/verse";
 import { runAllValidators, type RunValidatorsOptions } from "./runner.js";
 import type { ValidationResult } from "./types.js";
 
@@ -16,6 +17,12 @@ interface CategorizedError {
   category: ErrorCategory;
   validator: string;
   message: string;
+}
+
+interface VerseRepairContext {
+  generator: VerseGenerator;
+  emitter: VerseEmitter;
+  modulePlan: ModulePlan;
 }
 
 const SYSTEM_PROMPT = `You are a UEFN project repair agent. Given validation errors on a WorldProject JSON, output a JSON patch to fix them.
@@ -44,19 +51,31 @@ export class RepairLoop {
     private llm: LLMAdapter,
     private maxPasses: number = 3,
     private validatorOptions: RunValidatorsOptions = {},
+    private verseRepairContext?: VerseRepairContext,
   ) {}
 
   async run(project: WorldProject): Promise<RepairResult> {
     const repairs: string[] = [];
     let passesUsed = 0;
+    const verseRegenAttempts = new Map<string, number>();
 
     for (let i = 0; i < this.maxPasses; i++) {
       passesUsed++;
-      const results = runAllValidators(project, this.validatorOptions);
+      let results = runAllValidators(project, this.validatorOptions);
       const allPassed = results.every((r) => r.passed);
 
       if (allPassed) {
         return { passed: true, passesUsed, finalResults: results, repairs };
+      }
+
+      const verseRepairs = await this.regenerateVerseModules(project, results, verseRegenAttempts);
+      if (verseRepairs.length > 0) {
+        repairs.push(...verseRepairs.map((r) => `[pass ${passesUsed}][verse-regen] ${r}`));
+        const postVerseResults = runAllValidators(project, this.validatorOptions);
+        if (postVerseResults.every((r) => r.passed)) {
+          return { passed: true, passesUsed, finalResults: postVerseResults, repairs };
+        }
+        results = postVerseResults;
       }
 
       const errors = results
@@ -70,6 +89,7 @@ export class RepairLoop {
         if (postFixResults.every((r) => r.passed)) {
           return { passed: true, passesUsed, finalResults: postFixResults, repairs };
         }
+        results = postFixResults;
         const remainingErrors = postFixResults
           .filter((r) => !r.passed)
           .flatMap((r) => r.errors.map((e) => `[${r.validator}] ${e}`));
@@ -115,8 +135,52 @@ export class RepairLoop {
     };
   }
 
-  private applyDeterministicFixes(project: WorldProject, errors: string[]): string[] {
+  private async regenerateVerseModules(
+    project: WorldProject,
+    results: ValidationResult[],
+    attempts: Map<string, number>,
+  ): Promise<string[]> {
+    if (!this.verseRepairContext) return [];
+
+    const verseLintFailures = results.filter((r) => r.validator === "verse-lint" && !r.passed);
+    if (verseLintFailures.length === 0) return [];
+
+    const moduleNames = new Set<string>();
+    for (const result of verseLintFailures) {
+      for (const error of result.errors) {
+        const moduleName = error.split(":", 1)[0]?.trim();
+        if (moduleName) moduleNames.add(moduleName);
+      }
+    }
+
     const repairs: string[] = [];
+    for (const moduleName of moduleNames) {
+      const used = attempts.get(moduleName) ?? 0;
+      if (used >= 2) continue;
+
+      const planEntry = this.verseRepairContext.modulePlan.modules.find(
+        (m) => m.className === moduleName || m.moduleName === moduleName,
+      );
+      if (!planEntry) continue;
+
+      attempts.set(moduleName, used + 1);
+      try {
+        const regenerated = await this.verseRepairContext.generator.generate(planEntry);
+        this.verseRepairContext.emitter.emit(regenerated);
+        lintVerseCode(this.verseRepairContext.emitter.emit(regenerated));
+        replaceScript(project.scripts, moduleName, regenerated);
+        repairs.push(`${moduleName} (attempt ${used + 1}/2)`);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        repairs.push(`${moduleName} failed (attempt ${used + 1}/2): ${message}`);
+      }
+    }
+
+    return repairs;
+  }
+
+  private applyDeterministicFixes(project: WorldProject, errors: string[]): string[] {
+    const repairs: string[] = this.applyDeterministicVerseFixes(project, errors);
 
     for (const error of errors) {
       const dupDevice = error.match(/Duplicate device ID: "(.+?)"/);
@@ -201,6 +265,50 @@ export class RepairLoop {
     return repairs;
   }
 
+  private applyDeterministicVerseFixes(project: WorldProject, errors: string[]): string[] {
+    if (!errors.some((e) => e.includes("[verse-lint]"))) return [];
+
+    const repairs: string[] = [];
+    for (const mod of project.scripts) {
+      for (const decl of mod.declarations) {
+        if (decl.kind !== "class") continue;
+        for (const method of decl.methods) {
+          let removedAgentBlock = false;
+          const body = [];
+          for (const stmt of method.body) {
+            if (isPromptPlaceholder(stmt.code)) {
+              body.push({ ...stmt, code: 'Print("ForgeAI removed placeholder event subscription")' });
+              repairs.push(`Replaced placeholder Verse statement in ${mod.name}.${method.name}`);
+              removedAgentBlock = false;
+              continue;
+            }
+
+            if (/\[\s*Agent\s*\]/.test(stmt.code) && !hasAgentParam(method.params)) {
+              if (method.name === "OnBegin") {
+                body.push({ ...stmt, code: 'Print("ForgeAI skipped agent-scoped startup logic without Agent context")' });
+                repairs.push(`Removed unbound Agent usage from ${mod.name}.${method.name}`);
+                removedAgentBlock = true;
+                continue;
+              }
+              method.params = [...method.params, { name: "Agent", type: "agent" }];
+              repairs.push(`Added Agent parameter to ${mod.name}.${method.name}`);
+            }
+
+            if (removedAgentBlock && /^\s+/.test(stmt.code)) {
+              repairs.push(`Removed orphaned indented statement from ${mod.name}.${method.name}`);
+              continue;
+            }
+            removedAgentBlock = false;
+            body.push(stmt);
+          }
+          method.body = body;
+        }
+      }
+    }
+
+    return [...new Set(repairs)];
+  }
+
   private categorizeErrors(results: ValidationResult[]): CategorizedError[] {
     return results
       .filter((r) => !r.passed)
@@ -245,4 +353,18 @@ function applyFix(obj: Record<string, unknown>, path: string, value: unknown): v
     current = current[key] as Record<string, unknown>;
   }
   current[parts[parts.length - 1]] = value;
+}
+
+function isPromptPlaceholder(code: string): boolean {
+  return /\bSomeDevice\.SomeEvent\b|\bSomeEvent\.Subscribe\b|Subscribe\s*\(\s*Handler\s*\)/.test(code);
+}
+
+function hasAgentParam(params: Array<{ name: string; type: string }>): boolean {
+  return params.some((p) => p.name === "Agent");
+}
+
+function replaceScript(scripts: VerseModule[], moduleName: string, regenerated: VerseModule): void {
+  const index = scripts.findIndex((s) => s.name === moduleName || s.name === regenerated.name);
+  if (index === -1) return;
+  scripts[index] = regenerated;
 }

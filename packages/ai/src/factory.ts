@@ -43,6 +43,8 @@ export interface FallbackFactoryOptions {
   logger?: FallbackLogger;
 }
 
+const stageAdapterCache = new Map<string, LLMAdapter>();
+
 /**
  * Create an adapter with automatic fallback chain.
  * Leads with the configured provider/model, then appends every other provider
@@ -94,4 +96,27 @@ export function createAdapterWithFallback(
     autoPullLocalModel: options.autoPullLocalModel,
     logger: options.logger,
   });
+}
+
+export function createAdapterForStage(
+  config: ForgeAIConfig,
+  stageName: string,
+  options: FallbackFactoryOptions = {},
+): LLMAdapter | null {
+  const override = config.stageOverrides?.[stageName];
+  if (!override) return null;
+
+  const stageConfig: ForgeAIConfig = {
+    ...config,
+    provider: override.provider ?? config.provider,
+    model: override.model ?? config.model,
+    ollamaBaseUrl: override.ollamaUrl ?? config.ollamaBaseUrl,
+  };
+  const cacheKey = `${stageName}:${stageConfig.provider}:${stageConfig.model}:${stageConfig.ollamaBaseUrl}`;
+  const cached = stageAdapterCache.get(cacheKey);
+  if (cached) return cached;
+
+  const adapter = createAdapterWithFallback(stageConfig, options);
+  stageAdapterCache.set(cacheKey, adapter);
+  return adapter;
 }

@@ -79,12 +79,21 @@ describe("seedDefaultKnowledge", () => {
     expect(store.size).toBeGreaterThanOrEqual(8);
   });
 
-  it("does not re-seed if store already has entries", () => {
+  it("is idempotent — calling seed twice does not duplicate entries", () => {
     const store = new KnowledgeStore({ persist: false });
     store.clear();
-    store.add({ id: "existing", type: "verse_pattern", title: "X", content: "x", tags: ["x"] });
-    const sizeBefore = store.size;
     seedDefaultKnowledge(store);
-    expect(store.size).toBe(sizeBefore);
+    const sizeAfterFirst = store.size;
+    seedDefaultKnowledge(store);
+    expect(store.size).toBe(sizeAfterFirst);
+  });
+
+  it("preserves user-added entries while filling in missing seeded entries", () => {
+    const store = new KnowledgeStore({ persist: false });
+    store.clear();
+    store.add({ id: "user_custom", type: "verse_pattern", title: "X", content: "x", tags: ["x"] });
+    seedDefaultKnowledge(store);
+    expect(store.get("user_custom")).toBeDefined();
+    expect(store.get("verse_failable_pattern")).toBeDefined();
   });
 });

@@ -18,16 +18,22 @@ export interface UsageEvent {
   timestamp: string;
 }
 
+export interface SharedBudget {
+  spentUsd: number;
+}
+
 export interface BudgetAdapterOptions {
   provider?: ProviderId;
   model?: string;
   /** Persisted cumulative spend already consumed before this process started (for cross-process budgets). */
   initialSpentUsd?: number;
+  /** Shared in-process spend pool used when multiple adapters participate in one run. */
+  sharedBudget?: SharedBudget;
   onUsage?: (event: UsageEvent) => void;
 }
 
 export class BudgetAdapter implements LLMAdapter {
-  private spentUsd: number;
+  private budgetState: SharedBudget;
   private provider: ProviderId;
   private model: string;
   private onUsage?: (event: UsageEvent) => void;
@@ -39,20 +45,20 @@ export class BudgetAdapter implements LLMAdapter {
   ) {
     this.provider = options.provider ?? "anthropic";
     this.model = options.model ?? "";
-    this.spentUsd = options.initialSpentUsd ?? 0;
+    this.budgetState = options.sharedBudget ?? { spentUsd: options.initialSpentUsd ?? 0 };
     this.onUsage = options.onUsage;
   }
 
   get totalSpentUsd(): number {
-    return this.spentUsd;
+    return this.budgetState.spentUsd;
   }
 
   async chat(
     messages: LLMMessage[],
     options?: { temperature?: number; maxTokens?: number; jsonMode?: boolean },
   ): Promise<LLMResponse> {
-    if (this.spentUsd >= this.budgetUsd) {
-      throw new BudgetExceededError(this.spentUsd, this.budgetUsd);
+    if (this.budgetState.spentUsd >= this.budgetUsd) {
+      throw new BudgetExceededError(this.budgetState.spentUsd, this.budgetUsd);
     }
 
     const response = await this.inner.chat(messages, options);
@@ -63,7 +69,7 @@ export class BudgetAdapter implements LLMAdapter {
       const cost = estimated
         ? estimateCostUsd(this.provider, this.model, response.usage.inputTokens, response.usage.outputTokens)
         : reportedCost;
-      this.spentUsd += cost;
+      this.budgetState.spentUsd += cost;
       this.onUsage?.({
         provider: this.provider,
         model: this.model,
@@ -75,8 +81,8 @@ export class BudgetAdapter implements LLMAdapter {
       });
     }
 
-    if (this.spentUsd > this.budgetUsd) {
-      throw new BudgetExceededError(this.spentUsd, this.budgetUsd);
+    if (this.budgetState.spentUsd > this.budgetUsd) {
+      throw new BudgetExceededError(this.budgetState.spentUsd, this.budgetUsd);
     }
 
     return response;

@@ -51,4 +51,22 @@ describe("computeCacheKey", () => {
       computeCacheKey({ ...base, parentProjectHash: "parent-b" }),
     );
   });
+
+  it("different stage overrides produce different keys", () => {
+    const base = {
+      prompt: "lumber tycoon",
+      templateId: "tycoon/base",
+      provider: "ollama",
+      model: "qwen2.5-coder:7b-instruct",
+      seed: 1,
+    };
+    expect(computeCacheKey(base)).not.toBe(
+      computeCacheKey({
+        ...base,
+        stageOverrides: {
+          "8-verseFiles": { provider: "anthropic", model: "claude-sonnet-4-20250514" },
+        },
+      }),
+    );
+  });
 });

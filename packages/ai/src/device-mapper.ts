@@ -5,7 +5,7 @@ import { parseJsonResponse } from "./parse-json.js";
 import { applyNormalizers } from "./structured-output.js";
 import { withKnowledgeContext } from "./prompt-context.js";
 import type { SystemsDesign } from "./systems-planner.js";
-import type { LayoutSpec } from "@forgeai/schemas";
+import type { DeviceInstance as DeviceInstanceType, LayoutSpec } from "@forgeai/schemas";
 
 const DeviceArray = z.array(DeviceInstance);
 
@@ -78,18 +78,82 @@ Produce a JSON array of DeviceInstance objects with exact coordinates within eac
       { temperature: 0.1, maxTokens: 8192, jsonMode: true },
     );
 
-    let parsed = parseJsonResponse(response.content, "DeviceMapper");
-
-    // Handle wrapped responses like { "devices": [...] }
-    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-      const obj = parsed as Record<string, unknown>;
-      const arrayKey = Object.keys(obj).find((k) => Array.isArray(obj[k]));
-      if (arrayKey) {
-        parsed = obj[arrayKey];
-      }
-    }
+    let parsed = normalizeDeviceInstances(parseJsonResponse(response.content, "DeviceMapper"), layout, systemsDesign);
 
     parsed = applyNormalizers(parsed) as typeof parsed;
     return DeviceArray.parse(parsed);
   }
+}
+
+export function normalizeDeviceInstances(
+  data: unknown,
+  layout: LayoutSpec,
+  systemsDesign: SystemsDesign,
+): unknown {
+  const collected = collectDeviceCandidates(data);
+  if (collected.length === 0) return data;
+
+  return collected.map((candidate, index) => normalizeDeviceCandidate(candidate, index, layout, systemsDesign));
+}
+
+function collectDeviceCandidates(value: unknown): Record<string, unknown>[] {
+  if (!value || typeof value !== "object") return [];
+  if (Array.isArray(value)) return value.flatMap(collectDeviceCandidates);
+
+  const obj = value as Record<string, unknown>;
+  if (isDeviceCandidate(obj)) return [obj];
+  if (Array.isArray(obj.devices)) return obj.devices.flatMap(collectDeviceCandidates);
+  if (obj.devices && typeof obj.devices === "object") return collectDeviceCandidates(obj.devices);
+
+  return Object.values(obj).flatMap(collectDeviceCandidates);
+}
+
+function isDeviceCandidate(obj: Record<string, unknown>): boolean {
+  return (
+    typeof obj.id === "string" ||
+    typeof obj.type === "string" ||
+    typeof obj.label === "string" ||
+    obj.transform !== undefined
+  );
+}
+
+function normalizeDeviceCandidate(
+  candidate: Record<string, unknown>,
+  index: number,
+  layout: LayoutSpec,
+  systemsDesign: SystemsDesign,
+): DeviceInstanceType {
+  const fallbackSystem = systemsDesign.devices[index] ?? systemsDesign.devices[0];
+  const id = typeof candidate.id === "string" ? candidate.id : fallbackSystem?.id ?? `dev_${index + 1}`;
+  const type = typeof candidate.type === "string" ? candidate.type : fallbackSystem?.type ?? "trigger";
+  const label = typeof candidate.label === "string" ? candidate.label : fallbackSystem?.label ?? id;
+  const zoneId = typeof candidate.zoneId === "string" ? candidate.zoneId : fallbackSystem?.zoneId;
+  const zone = layout.zones.find((z) => z.zoneId === zoneId) ?? layout.zones[0];
+
+  return {
+    id,
+    type,
+    label,
+    transform: DeviceInstance.shape.transform.safeParse(candidate.transform).success
+      ? candidate.transform as DeviceInstanceType["transform"]
+      : {
+          location: {
+            x: zone ? zone.footprint.x + zone.footprint.w / 2 : index * 100,
+            y: zone ? zone.footprint.y + zone.footprint.h / 2 : 0,
+            z: 0,
+          },
+          rotation: { pitch: 0, yaw: 0, roll: 0 },
+        },
+    properties: isPlainRecord(candidate.properties) ? candidate.properties as DeviceInstanceType["properties"] : {},
+    channels: DeviceInstance.shape.channels.safeParse(candidate.channels).success
+      ? candidate.channels as DeviceInstanceType["channels"]
+      : undefined,
+    events: Array.isArray(candidate.events) ? candidate.events as DeviceInstanceType["events"] : undefined,
+    zoneId,
+    tags: Array.isArray(candidate.tags) ? candidate.tags.filter((t): t is string => typeof t === "string") : undefined,
+  };
+}
+
+function isPlainRecord(value: unknown): value is Record<string, string | number | boolean | string[]> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }

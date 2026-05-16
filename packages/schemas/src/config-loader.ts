@@ -49,6 +49,9 @@ export interface CLIFlags {
   provider?: string;
   model?: string;
   ollamaUrl?: string;
+  verseProvider?: string;
+  verseModel?: string;
+  verseOllamaUrl?: string;
   out?: string;
   verbose?: boolean;
   budget?: number;
@@ -59,6 +62,15 @@ function fromCLIFlags(flags: CLIFlags): Record<string, unknown> {
   if (flags.provider) result.provider = flags.provider;
   if (flags.model) result.model = flags.model;
   if (flags.ollamaUrl) result.ollamaBaseUrl = flags.ollamaUrl;
+  if (flags.verseProvider || flags.verseModel || flags.verseOllamaUrl) {
+    result.stageOverrides = {
+      "8-verseFiles": {
+        provider: flags.verseProvider,
+        model: flags.verseModel,
+        ollamaUrl: flags.verseOllamaUrl,
+      },
+    };
+  }
   if (flags.out) result.outputDir = flags.out;
   if (flags.verbose !== undefined) result.verbose = flags.verbose;
   if (flags.budget !== undefined) result.budgetUsd = flags.budget;

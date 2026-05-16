@@ -67,6 +67,19 @@ describe("loadConfig", () => {
     expect(loadConfig({ ollamaUrl: "http://localhost:11434" }).ollamaBaseUrl).toBe("http://localhost:11434");
   });
 
+  it("sets Verse stage override from CLI flags", () => {
+    const config = loadConfig({
+      verseProvider: "anthropic",
+      verseModel: "claude-sonnet-4-20250514",
+      verseOllamaUrl: "https://verse.example.ngrok-free.app",
+    });
+    expect(config.stageOverrides?.["8-verseFiles"]).toEqual({
+      provider: "anthropic",
+      model: "claude-sonnet-4-20250514",
+      ollamaUrl: "https://verse.example.ngrok-free.app",
+    });
+  });
+
   it("trims whitespace from Ollama base URL", () => {
     process.env.FORGEAI_OLLAMA_BASE_URL = "https://example.ngrok-free.app ";
     expect(loadConfig().ollamaBaseUrl).toBe("https://example.ngrok-free.app");

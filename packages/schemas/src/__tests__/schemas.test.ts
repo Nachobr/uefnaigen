@@ -460,6 +460,20 @@ describe("ForgeAIConfig", () => {
     const c = ForgeAIConfig.parse({ apiKeys: {}, budgetUsd: 5.0 });
     expect(c.budgetUsd).toBe(5.0);
   });
+
+  it("accepts per-stage provider overrides", () => {
+    const c = ForgeAIConfig.parse({
+      apiKeys: {},
+      stageOverrides: {
+        "8-verseFiles": {
+          provider: "anthropic",
+          model: "claude-sonnet-4-20250514",
+        },
+      },
+    });
+    expect(c.stageOverrides?.["8-verseFiles"]?.provider).toBe("anthropic");
+    expect(c.stageOverrides?.["8-verseFiles"]?.model).toBe("claude-sonnet-4-20250514");
+  });
 });
 
 // ── WorldProject Tests ──

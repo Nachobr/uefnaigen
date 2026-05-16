@@ -64,4 +64,23 @@ describe("BudgetAdapter", () => {
     const adapter = new BudgetAdapter(stub, 1, { provider: "anthropic", model: "claude-sonnet-4-20250514" });
     await expect(adapter.chat([])).rejects.toBeInstanceOf(BudgetExceededError);
   });
+
+  it("shares spend across multiple budget adapter instances", async () => {
+    const sharedBudget = { spentUsd: 0 };
+    const first = new BudgetAdapter(
+      new StubAdapter({ content: "ok", usage: { inputTokens: 100, outputTokens: 100, costUsd: 0.6 } }),
+      1,
+      { provider: "anthropic", sharedBudget },
+    );
+    const second = new BudgetAdapter(
+      new StubAdapter({ content: "ok", usage: { inputTokens: 100, outputTokens: 100, costUsd: 0.5 } }),
+      1,
+      { provider: "anthropic", sharedBudget },
+    );
+
+    await first.chat([]);
+    await expect(second.chat([])).rejects.toBeInstanceOf(BudgetExceededError);
+    expect(first.totalSpentUsd).toBeCloseTo(1.1);
+    expect(second.totalSpentUsd).toBeCloseTo(1.1);
+  });
 });
