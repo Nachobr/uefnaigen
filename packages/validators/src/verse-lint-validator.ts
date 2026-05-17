@@ -8,6 +8,51 @@ const PROMPT_LEAK_PATTERNS: { pattern: RegExp; label: string }[] = [
   { pattern: /Subscribe\s*\(\s*Handler\s*\)/, label: "subscribes to undefined 'Handler' callback (likely prompt copy)" },
 ];
 
+// Hallucinated members on the built-in `player` type. The Verse `player` type
+// has no game-specific fields, so any reference to one of these is invented.
+const INVENTED_PLAYER_MEMBERS = [
+  "Currency",
+  "Score",
+  "PrestigeLevel",
+  "ApplyReward",
+  "Coins",
+  "Gold",
+  "XP",
+  "Level",
+  "Inventory",
+];
+
+// Identifiers commonly hallucinated as ambient global singletons. They are
+// never auto-imported and must instead be exposed as @editable fields.
+const INVENTED_GLOBAL_SYSTEMS = [
+  "PrestigeSystem",
+  "EconomyManager",
+  "Economy",
+  "InventorySystem",
+  "ScoreManager",
+  "QuestSystem",
+  "ShopSystem",
+];
+
+function buildInventedAccessPatterns(): { pattern: RegExp; label: string }[] {
+  const patterns: { pattern: RegExp; label: string }[] = [];
+  for (const member of INVENTED_PLAYER_MEMBERS) {
+    patterns.push({
+      pattern: new RegExp(`\\bPlayer\\.${member}\\b`),
+      label: `invented Player member 'Player.${member}' (Verse 'player' type has no such field — store per-agent state in a [agent]T map)`,
+    });
+  }
+  for (const sys of INVENTED_GLOBAL_SYSTEMS) {
+    patterns.push({
+      pattern: new RegExp(`\\b${sys}\\.[A-Za-z_]`),
+      label: `invented global system object '${sys}.*' (no auto-imported singleton — expose as an @editable device field)`,
+    });
+  }
+  return patterns;
+}
+
+const INVENTED_ACCESS_PATTERNS = buildInventedAccessPatterns();
+
 export class VerseLintValidator implements Validator {
   name = "verse-lint";
 
@@ -33,6 +78,17 @@ export class VerseLintValidator implements Validator {
         if (pattern.test(code)) {
           errors.push(`${mod.name}: ${label}`);
         }
+      }
+
+      const declaredNames = collectDeclaredNames(mod);
+      for (const { pattern, label } of INVENTED_ACCESS_PATTERNS) {
+        const match = code.match(pattern);
+        if (!match) continue;
+        // For invented global singletons, skip when the identifier is actually
+        // declared in this module — it may be a legitimate user-defined class.
+        const leading = match[0].split(".")[0];
+        if (leading !== "Player" && declaredNames.has(leading)) continue;
+        errors.push(`${mod.name}: ${label}`);
       }
 
       collectAstHallucinations(mod).forEach((msg) => errors.push(`${mod.name}: ${msg}`));

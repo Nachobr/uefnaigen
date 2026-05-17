@@ -337,6 +337,120 @@ describe("VerseLintValidator", () => {
     expect(result.errors.some((e) => e.includes("'Agent'"))).toBe(false);
   });
 
+  it("flags invented Player.* members (Currency, Score, PrestigeLevel, ApplyReward)", () => {
+    const project = makeProject({
+      scripts: [
+        {
+          kind: "module",
+          name: "Bad",
+          imports: [],
+          declarations: [
+            {
+              kind: "class",
+              name: "bad",
+              extends: "creative_device",
+              fields: [],
+              methods: [
+                {
+                  kind: "function",
+                  name: "Award",
+                  params: [{ name: "Player", type: "agent" }],
+                  returnType: "void",
+                  attributes: [],
+                  body: [
+                    { kind: "statement", code: "set Player.Currency += 100" },
+                    { kind: "statement", code: "set Player.Score = 0" },
+                    { kind: "statement", code: "if (Player.PrestigeLevel > 0):" },
+                    { kind: "statement", code: "    Player.ApplyReward(10)" },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const result = new VerseLintValidator().validate(project);
+    expect(result.passed).toBe(false);
+    expect(result.errors.some((e) => e.includes("Player.Currency"))).toBe(true);
+    expect(result.errors.some((e) => e.includes("Player.Score"))).toBe(true);
+    expect(result.errors.some((e) => e.includes("Player.PrestigeLevel"))).toBe(true);
+    expect(result.errors.some((e) => e.includes("Player.ApplyReward"))).toBe(true);
+  });
+
+  it("flags invented global system singletons like PrestigeSystem.*", () => {
+    const project = makeProject({
+      scripts: [
+        {
+          kind: "module",
+          name: "Bad",
+          imports: [],
+          declarations: [
+            {
+              kind: "class",
+              name: "bad",
+              extends: "creative_device",
+              fields: [],
+              methods: [
+                {
+                  kind: "function",
+                  name: "OnBegin",
+                  params: [],
+                  returnType: "void",
+                  attributes: ["override", "suspends"],
+                  body: [{ kind: "statement", code: "PrestigeSystem.Initialize()" }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const result = new VerseLintValidator().validate(project);
+    expect(result.passed).toBe(false);
+    expect(result.errors.some((e) => e.includes("PrestigeSystem"))).toBe(true);
+  });
+
+  it("does not flag global system identifiers when they are user-declared classes", () => {
+    const project = makeProject({
+      scripts: [
+        {
+          kind: "module",
+          name: "Ok",
+          imports: [],
+          declarations: [
+            {
+              kind: "class",
+              name: "PrestigeSystem",
+              extends: "creative_device",
+              fields: [],
+              methods: [
+                {
+                  kind: "function",
+                  name: "Initialize",
+                  params: [],
+                  returnType: "void",
+                  attributes: [],
+                  body: [{ kind: "statement", code: "Print(\"ok\")" }],
+                },
+                {
+                  kind: "function",
+                  name: "OnBegin",
+                  params: [],
+                  returnType: "void",
+                  attributes: ["override", "suspends"],
+                  body: [{ kind: "statement", code: "PrestigeSystem.Initialize()" }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const result = new VerseLintValidator().validate(project);
+    expect(result.errors.some((e) => e.includes("PrestigeSystem"))).toBe(false);
+  });
+
   it("flags Subscribe to a callback that is not declared in the module", () => {
     const project = makeProject({
       scripts: [

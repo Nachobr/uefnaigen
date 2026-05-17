@@ -356,7 +356,11 @@ function applyFix(obj: Record<string, unknown>, path: string, value: unknown): v
 }
 
 function isPromptPlaceholder(code: string): boolean {
-  return /\bSomeDevice\.SomeEvent\b|\bSomeEvent\.Subscribe\b|Subscribe\s*\(\s*Handler\s*\)/.test(code);
+  return (
+    /\bSomeDevice\.SomeEvent\b|\bSomeEvent\.Subscribe\b|Subscribe\s*\(\s*Handler\s*\)/.test(code) ||
+    /\bPlayer\.(Currency|Score|PrestigeLevel|ApplyReward|Coins|Gold|XP|Level|Inventory)\b/.test(code) ||
+    /\b(PrestigeSystem|EconomyManager|Economy|InventorySystem|ScoreManager|QuestSystem|ShopSystem)\.[A-Za-z_]/.test(code)
+  );
 }
 
 function hasAgentParam(params: Array<{ name: string; type: string }>): boolean {
