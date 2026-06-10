@@ -56,6 +56,9 @@ importers:
       '@forgeai/templates':
         specifier: workspace:*
         version: link:../../packages/templates
+      '@forgeai/uefn-bridge':
+        specifier: workspace:*
+        version: link:../../packages/uefn-bridge
       '@forgeai/validators':
         specifier: workspace:*
         version: link:../../packages/validators
@@ -288,6 +291,28 @@ importers:
         specifier: workspace:*
         version: link:../schemas
     devDependencies:
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@25.6.0)(tsx@4.21.0)(yaml@2.8.3)
+
+  packages/uefn-bridge:
+    dependencies:
+      '@forgeai/core':
+        specifier: workspace:*
+        version: link:../core
+      '@forgeai/schemas':
+        specifier: workspace:*
+        version: link:../schemas
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^25.6.0
+        version: 25.6.0
       typescript:
         specifier: ^5.8.0
         version: 5.9.3

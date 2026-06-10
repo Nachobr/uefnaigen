@@ -3,6 +3,7 @@ import { accessSync, constants, existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { loadConfig, type ForgeAIConfig, type LLMProvider } from "@forgeai/schemas";
+import { discoverUefnListener } from "@forgeai/uefn-bridge";
 
 type CheckStatus = "pass" | "warn" | "fail";
 
@@ -17,8 +18,9 @@ export const doctorCommand = new Command("doctor")
   .option("--provider <id>", "Choose AI provider")
   .option("--model <id>", "Override default model")
   .option("--ollama-url <url>", "Ollama-compatible base URL")
+  .option("--live", "Check for a live UEFN listener")
   .option("--json", "Machine-readable output")
-  .action(async (options: { json?: boolean; provider?: string; model?: string; ollamaUrl?: string }) => {
+  .action(async (options: { json?: boolean; live?: boolean; provider?: string; model?: string; ollamaUrl?: string }) => {
     const checks = await runDoctorChecks(options);
     const ok = checks.every((check) => check.status !== "fail");
 
@@ -36,7 +38,7 @@ export const doctorCommand = new Command("doctor")
     if (!ok) process.exitCode = 1;
   });
 
-async function runDoctorChecks(options: { provider?: string; model?: string; ollamaUrl?: string } = {}): Promise<DoctorCheck[]> {
+async function runDoctorChecks(options: { live?: boolean; provider?: string; model?: string; ollamaUrl?: string } = {}): Promise<DoctorCheck[]> {
   const checks: DoctorCheck[] = [];
   const nodeVersion = process.version;
   const nodeMajor = parseInt(nodeVersion.slice(1), 10);
@@ -126,7 +128,27 @@ async function runDoctorChecks(options: { provider?: string; model?: string; oll
       : "UEFN_PATH not set; import must be done manually",
   });
 
+  if (options.live) checks.push(await checkUefnListener());
+
   return checks;
+}
+
+async function checkUefnListener(): Promise<DoctorCheck> {
+  const client = await discoverUefnListener();
+  if (!client) {
+    return {
+      name: "UEFN listener",
+      status: "warn",
+      message: "no listener on 8765-8770 — open UEFN with the ForgeAI listener installed",
+    };
+  }
+  const capabilities = await client.capabilities();
+  const port = capabilities?.port ? `port ${capabilities.port}` : "detected port";
+  return {
+    name: "UEFN listener",
+    status: "pass",
+    message: `listening on ${port} (${capabilities?.forgeai_fork ? `fork ${capabilities.forgeai_fork}` : "upstream"})`,
+  };
 }
 
 function checkWritablePath(name: string, path: string, create: boolean): DoctorCheck {

@@ -1,0 +1,24 @@
+{
+  "name": "@forgeai/uefn-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc && node -e \"const fs=require('node:fs'); fs.cpSync('src/asset-map','dist/asset-map',{recursive:true});\"",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "clean": "node -e \"import('node:fs').then(({rmSync})=>rmSync('dist',{recursive:true,force:true}))\""
+  },
+  "dependencies": {
+    "@forgeai/core": "workspace:*",
+    "@forgeai/schemas": "workspace:*",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0"
+  }
+}

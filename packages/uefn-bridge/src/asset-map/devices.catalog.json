@@ -1,0 +1,15 @@
+{
+  "trigger": { "assetPath": null },
+  "button": { "assetPath": null },
+  "item_granter": { "assetPath": null },
+  "item_spawner": { "assetPath": null },
+  "barrier": { "assetPath": null },
+  "tracker": { "assetPath": null },
+  "score_manager": { "assetPath": null },
+  "creature_spawner": { "assetPath": null },
+  "save_point": { "assetPath": null },
+  "teleporter": { "assetPath": null },
+  "hud_message": { "assetPath": null },
+  "prop_mover": { "assetPath": null },
+  "timer": { "assetPath": null }
+}

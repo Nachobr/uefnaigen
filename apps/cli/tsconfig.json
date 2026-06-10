@@ -9,6 +9,7 @@
     { "path": "../../packages/core" },
     { "path": "../../packages/packager" },
     { "path": "../../packages/schemas" },
-    { "path": "../../packages/templates" }
+    { "path": "../../packages/templates" },
+    { "path": "../../packages/uefn-bridge" }
   ]
 }
